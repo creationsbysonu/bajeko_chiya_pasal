@@ -56,8 +56,9 @@ services:
           property: connectionString
 
   # --- React SPA (Vite build, served as a Render static site) ---
-  - type: static-site
+  - type: web
     name: purano-dhun
+    runtime: static
     plan: free
     buildCommand: cd frontend && npm ci && npm run build
     staticPublishPath: frontend/dist
