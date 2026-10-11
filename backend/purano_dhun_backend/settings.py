@@ -218,6 +218,13 @@ if not DEBUG:
     SECURE_SSL_REDIRECT = _ssl_redirect
     SESSION_COOKIE_SECURE = _ssl_redirect
     CSRF_COOKIE_SECURE = _ssl_redirect
+    # On Render the SPA (purano-dhun.onrender.com) and the API
+    # (purano-dhun-api.onrender.com) are different sites per the Public Suffix
+    # List, so the browser drops SameSite=Lax session/CSRF cookies on API calls.
+    # SameSite=None (only valid together with Secure) lets the login stick.
+    if _ssl_redirect:
+        SESSION_COOKIE_SAMESITE = 'None'
+        CSRF_COOKIE_SAMESITE = 'None'
     if _ssl_redirect:
         SECURE_HSTS_SECONDS = 31536000
         SECURE_HSTS_INCLUDE_SUBDOMAINS = True
