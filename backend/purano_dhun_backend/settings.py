@@ -6,6 +6,7 @@ Production-ready configuration for Purano Dhun (पुरानो धुन).
 import os
 from pathlib import Path
 from dotenv import load_dotenv
+from corsheaders.defaults import default_headers
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -191,6 +192,9 @@ CORS_ALLOWED_ORIGINS = [
     if origin.strip()
 ]
 CORS_ALLOW_CREDENTIALS = True
+# The SPA sends X-Session-Key (guest favorites identity) on every API call; the
+# browser's preflight is rejected unless that header is explicitly allowed.
+CORS_ALLOW_HEADERS = (*default_headers, 'x-session-key')
 
 # CSRF settings (comma-separated via env)
 _default_csrf = 'http://localhost:5173,http://127.0.0.1:5173,http://localhost:8000'
