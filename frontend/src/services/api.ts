@@ -3,7 +3,10 @@ import {
   AdminStats, TakedownTicket, AuditLogItem, AuthUser
 } from '../types';
 
-const API_BASE = '/api';
+// On Render the SPA is a static site on its own subdomain, so the API base
+// is injected at build time (VITE_API_BASE). Locally it falls back to the
+// same-origin "/api" dev-server proxy.
+const API_BASE: string = import.meta.env.VITE_API_BASE || '/api';
 const CSRF_COOKIE_NAME = 'csrftoken';
 
 let csrfTokenPromise: Promise<string | null> | null = null;

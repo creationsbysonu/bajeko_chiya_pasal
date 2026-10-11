@@ -156,6 +156,32 @@ Open `http://localhost:5173` in your browser.
 
 ---
 
+## ☁️ Deploy on Render (recommended PaaS)
+
+The repo ships a `render.yaml` blueprint that provisions everything:
+
+1. Push this repo to GitHub (CI runs backend tests, frontend tests + build,
+   and both Docker image builds on every push).
+2. On [render.com](https://render.com): **New → Blueprint → select the repo**.
+   Render reads `render.yaml` and creates:
+   - **purano-dhun-api** — Django (gunicorn) from `backend/Dockerfile`
+   - **purano-dhun** — the React SPA as a static site
+   - **purano-dhun-db** — managed PostgreSQL (auto-wired via `DATABASE_URL`)
+3. After the first deploy, create the admin via the API service's Shell:
+   `python manage.py createsuperuser`
+
+Notes:
+- Free plan: services spin down after ~15 min idle (~60s cold start), and
+  **free Postgres is wiped every 90 days** — switch the database plan to
+  "paid" (or back up with `pg_dump`) for anything you care about.
+- Renaming services? Update the `onrender.com` URLs in `render.yaml`
+  (`DJANGO_ALLOWED_HOSTS`, `CORS_ALLOWED_ORIGINS`, `CSRF_TRUSTED_ORIGINS`,
+  `VITE_API_BASE`) to the real hostnames.
+- Custom domain later: add it in the Render dashboard; the settings already
+  honor `X-Forwarded-Proto` for HTTPS.
+
+---
+
 ## 🔑 Administrative Access
 
 - Create a Django staff or superuser account, then sign in through **Admin Portal** or visit `/django-admin/`.

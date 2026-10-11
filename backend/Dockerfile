@@ -19,5 +19,6 @@ EXPOSE 8000
 
 # Invoked via `sh` so bind mounts in the dev stack can't break the exec bit
 ENTRYPOINT ["sh", "./docker-entrypoint.sh"]
-CMD ["gunicorn", "purano_dhun_backend.wsgi:application", \
-     "--bind", "0.0.0.0:8000", "--workers", "3", "--access-logfile", "-"]
+# PaaS platforms (Render etc.) inject $PORT and expect the app to bind it;
+# local docker-compose keeps the default 8000.
+CMD ["sh", "-c", "gunicorn purano_dhun_backend.wsgi:application --bind 0.0.0.0:${PORT:-8000} --workers ${GUNICORN_WORKERS:-2} --access-logfile -"]

@@ -83,6 +83,12 @@ POSTGRES_DB = os.environ.get('POSTGRES_DB')
 if DATABASE_URL:
     import urllib.parse
     parsed = urllib.parse.urlparse(DATABASE_URL)
+    # Honour query params like ?sslmode=require (Render and others append them)
+    db_options = {}
+    if parsed.query:
+        query_params = urllib.parse.parse_qs(parsed.query)
+        if 'sslmode' in query_params:
+            db_options['OPTIONS'] = {'sslmode': query_params['sslmode'][0]}
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
@@ -91,6 +97,7 @@ if DATABASE_URL:
             'PASSWORD': parsed.password or '',
             'HOST': parsed.hostname or 'localhost',
             'PORT': parsed.port or '5432',
+            **db_options,
         }
     }
 elif POSTGRES_DB:
