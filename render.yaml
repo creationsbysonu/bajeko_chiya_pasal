@@ -51,7 +51,8 @@ services:
       - key: CSRF_TRUSTED_ORIGINS
         value: https://purano-dhun.onrender.com
       # Managed Postgres connection (settings.py switches off SQLite on this)
-      - fromDatabase:
+      - key: DATABASE_URL
+        fromDatabase:
           name: purano-dhun-db
           property: connectionString
 
