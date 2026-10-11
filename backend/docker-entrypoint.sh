@@ -10,6 +10,16 @@ python manage.py migrate --noinput
 echo "==> Collecting static files..."
 python manage.py collectstatic --noinput
 
+# Optional admin bootstrap for hosts without a shell (e.g. Render free tier).
+# Set DJANGO_SUPERUSER_USERNAME, DJANGO_SUPERUSER_EMAIL and
+# DJANGO_SUPERUSER_PASSWORD. Skipped if the user already exists, so it is safe
+# to leave set across restarts.
+if [ -n "$DJANGO_SUPERUSER_USERNAME" ] && [ -n "$DJANGO_SUPERUSER_PASSWORD" ]; then
+    echo "==> Ensuring admin user exists..."
+    python manage.py createsuperuser --noinput >/dev/null 2>&1 || \
+        echo "    (admin user already exists or could not be created; continuing)"
+fi
+
 # Decide whether to seed: forced by env, or automatically on an empty DB.
 should_seed="${SEED_CATALOG:-}"
 if [ -z "$should_seed" ]; then
