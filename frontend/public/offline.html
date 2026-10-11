@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ne">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Offline | पुरानो धुन (Purano Dhun)</title>
+  <style>
+    body {
+      background-color: #171614;
+      color: #F2E8D5;
+      font-family: 'Inter', system-ui, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 24px;
+      text-align: center;
+      box-sizing: border-box;
+    }
+    .card {
+      background: #24211E;
+      border: 1px solid #C7A66A40;
+      border-radius: 16px;
+      padding: 32px 24px;
+      max-width: 480px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+    h1 {
+      color: #C7A66A;
+      margin-top: 0;
+      font-size: 1.6rem;
+    }
+    p {
+      line-height: 1.6;
+      color: #F2E8D5CC;
+      font-size: 0.95rem;
+    }
+    .badge {
+      display: inline-block;
+      background: #B96B4A30;
+      color: #CD7E5D;
+      border: 1px solid #B96B4A60;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      margin-bottom: 16px;
+    }
+    .btn {
+      margin-top: 20px;
+      background: #C7A66A;
+      color: #171614;
+      border: none;
+      padding: 10px 24px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="badge">इन्टरनेट विच्छेद / Offline Mode</div>
+    <h1>रेडियो सम्पर्क टुटेको छ</h1>
+    <p>तपाईं अहिले अफलाइन हुनुहुन्छ। पुरानो धुनको इन्टरफेस सुरक्षित छ, तर आधिकारिक युट्युब स्ट्रिमिङको लागि सक्रिय इन्टरनेट जडान आवश्यक पर्दछ।</p>
+    <p>You are currently offline. While the app shell remains available, streaming audio via official YouTube embeds requires an active network connection.</p>
+    <button class="btn" onclick="window.location.reload()">पुनः प्रयास गर्नुहोस् / Retry</button>
+  </div>
+</body>
+</html>

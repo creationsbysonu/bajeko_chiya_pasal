@@ -1,0 +1,17 @@
+{
+  "name": "Purano Dhun - पुरानो धुन",
+  "short_name": "Purano Dhun",
+  "description": "Nepali Music Radio & Nostalgia Platform — नेपाली संगीत, पुराना सम्झना।",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#171614",
+  "theme_color": "#171614",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
