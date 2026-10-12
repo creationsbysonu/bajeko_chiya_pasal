@@ -6,10 +6,10 @@ interface BrandMarkProps {
 }
 
 /**
- * Purano Dhun brand mark — a chiya glass (kulhad) glowing inside a vinyl
- * record, the round shape doubling as a radio dial. The glass is the warm
- * memory; the record is the music. One component drives the nav, footer,
- * manifest and favicon artwork so branding never drifts again.
+ * Purano Dhun brand mark — a minimal vinyl record with a central
+ * play pointer. Clean geometry keeps it legible at favicon (16px)
+ * down to nav tiles, while the warm gradient preserves the
+ * nostalgic, heritage feel of the platform.
  */
 export const BrandMark: React.FC<BrandMarkProps> = ({ size = 28, className = '' }) => (
   <svg
@@ -22,55 +22,52 @@ export const BrandMark: React.FC<BrandMarkProps> = ({ size = 28, className = '' 
     className={className}
   >
     <defs>
-      <radialGradient id="pd-disc" cx="50%" cy="38%" r="72%">
-        <stop offset="0%" stopColor="#2B2521" />
-        <stop offset="70%" stopColor="#1A1613" />
-        <stop offset="100%" stopColor="#100D0B" />
+      <radialGradient id="pd-disc" cx="38%" cy="35%" r="72%">
+        <stop offset="0%" stopColor="#3D302A" />
+        <stop offset="65%" stopColor="#2A1F19" />
+        <stop offset="100%" stopColor="#140F0C" />
       </radialGradient>
-      <linearGradient id="pd-chai" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stopColor="#E8B04B" />
-        <stop offset="55%" stopColor="#C77E2C" />
-        <stop offset="100%" stopColor="#8A4E16" />
-      </linearGradient>
       <linearGradient id="pd-ring" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0%" stopColor="#E3C078" />
-        <stop offset="55%" stopColor="#C7A66A" />
-        <stop offset="100%" stopColor="#8A6B3A" />
+        <stop offset="0%" stopColor="#E8B04B" stopOpacity="0.35" />
+        <stop offset="100%" stopColor="#C77E2C" stopOpacity="0.35" />
       </linearGradient>
+      <radialGradient id="pd-center" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stopColor="#3D302A" />
+        <stop offset="70%" stopColor="#231B15" />
+        <stop offset="100%" stopColor="#140F0C" />
+      </radialGradient>
     </defs>
 
-    {/* Vinyl record body */}
-    <circle cx="48" cy="48" r="45" fill="url(#pd-disc)" />
-    <circle cx="48" cy="48" r="45" stroke="url(#pd-ring)" strokeWidth="3" />
-    {/* Grooves */}
-    <circle cx="48" cy="48" r="37.5" stroke="#C7A66A" strokeOpacity="0.16" strokeWidth="1" />
-    <circle cx="48" cy="48" r="31" stroke="#C7A66A" strokeOpacity="0.12" strokeWidth="1" />
-    <circle cx="48" cy="48" r="24.5" stroke="#C7A66A" strokeOpacity="0.16" strokeWidth="1" />
+    {/* Record body */}
+    <circle cx="48" cy="48" r="44" fill="url(#pd-disc)" />
 
-    {/* Label ring */}
-    <circle cx="48" cy="50" r="17.5" fill="#241E18" stroke="url(#pd-ring)" strokeWidth="1.6" />
+    {/* Record ring */}
+    <circle cx="48" cy="48" r="44" stroke="url(#pd-ring)" strokeWidth="1.8" />
 
-    {/* Chiya kulhad glass */}
+    {/* Grooves — 3 clean lines */}
+    <circle cx="48" cy="48" r="36" stroke="rgba(232,176,75,0.14)" strokeWidth="1" />
+    <circle cx="48" cy="48" r="30" stroke="rgba(232,176,75,0.14)" strokeWidth="1" />
+    <circle cx="48" cy="48" r="23.5" stroke="rgba(232,176,75,0.14)" strokeWidth="1" />
+
+    {/* Center label */}
+    <circle cx="48" cy="48" r="16" fill="url(#pd-center)" />
+
+    {/* Center ring (inner label edge) */}
+    <circle cx="48" cy="48" r="12.5" stroke="rgba(232,176,75,0.25)" strokeWidth="1.2" />
+
+    {/* Central play pointer */}
     <path
-      d="M38.5 41.5h19l-2.3 14.6a5.2 5.2 0 0 1-5.2 4.5h-4a5.2 5.2 0 0 1-5.2-4.5l-2.3-14.6Z"
-      fill="url(#pd-chai)"
+      d="M48 38 L52 48 L48 58 L44 48 Z"
+      fill="#E8B04B"
+      opacity="0.95"
     />
-    {/* Froth / malai top */}
-    <ellipse cx="48" cy="41.5" rx="9.5" ry="3.1" fill="#F4E3C2" />
-    <ellipse cx="48" cy="41.2" rx="6.4" ry="1.9" fill="#FFF7E6" />
-    {/* Glass highlight */}
-    <path d="M41.6 44.5l-1.2 8.4a3.4 3.4 0 0 0 3 3.8" stroke="#F6DCAB" strokeOpacity="0.65" strokeWidth="1.6" strokeLinecap="round" />
-
-    {/* Steam — twin memory wisps above the chai */}
+    {/* Play pointer highlight */}
     <path
-      d="M44.5 34.5c-2-2.6 2-4.4 0-7M51.5 34.5c-2-2.6 2-4.4 0-7"
-      stroke="#E8B04B"
-      strokeOpacity="0.9"
-      strokeWidth="1.8"
+      d="M46.5 41 L48 43 L49.5 41"
+      fill="none"
+      stroke="#FFF3D6"
+      strokeWidth="1"
       strokeLinecap="round"
     />
-
-    {/* Spindle dot */}
-    <circle cx="48" cy="66.5" r="2.1" fill="url(#pd-ring)" />
   </svg>
 );

@@ -1,13 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
   <rect width="100" height="100" rx="22" fill="#171614"/>
-  <rect x="8" y="8" width="84" height="84" rx="16" stroke="#C7A66A" stroke-width="2.5" fill="#24211E"/>
-  <!-- Radio Dial Grill -->
-  <path d="M22 28H78M22 36H78M22 44H78" stroke="#C7A66A" stroke-opacity="0.35" stroke-width="2" stroke-linecap="round"/>
-  <!-- Tuner Dial Circle -->
-  <circle cx="50" cy="64" r="18" fill="#171614" stroke="#C7A66A" stroke-width="3"/>
-  <circle cx="50" cy="64" r="7" fill="#C7A66A"/>
-  <!-- Tuner Needle -->
-  <line x1="50" y1="64" x2="60" y2="52" stroke="#B96B4A" stroke-width="3.5" stroke-linecap="round"/>
-  <!-- Vintage Indicator Light -->
-  <circle cx="76" cy="22" r="3.5" fill="#B96B4A"/>
+  <rect x="8" y="8" width="84" height="84" rx="16" stroke="#E8B04B" stroke-width="2.5" fill="#24211E"/>
+  <!-- Record + Play Pointer -->
+  <circle cx="50" cy="50" r="30" fill="#140F0C"/>
+  <circle cx="50" cy="50" r="30" stroke="#E8B04B" stroke-width="1.5" stroke-opacity="0.5"/>
+  <circle cx="50" cy="50" r="22" stroke="rgba(232,176,75,0.12)" stroke-width="1"/>
+  <circle cx="50" cy="50" r="14" fill="#1A1310"/>
+  <circle cx="50" cy="50" r="10.5" stroke="rgba(232,176,75,0.25)" stroke-width="1.2"/>
+  <!-- Play pointer -->
+  <path d="M50 40 L54 50 L50 60 L46 50 Z" fill="#E8B04B"/>
+  <circle cx="50" cy="50" r="2" fill="#3D302A"/>
 </svg>

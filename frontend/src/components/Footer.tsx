@@ -1,6 +1,7 @@
 import React from 'react';
 import { useI18n } from '../context/I18nContext';
-import { Radio, ShieldCheck, Heart, ExternalLink, Lock } from 'lucide-react';
+import { ShieldCheck, Heart, ExternalLink, Lock } from 'lucide-react';
+import { BrandMark } from './BrandMark';
 
 interface FooterProps {
   onOpenTakedown: () => void;
@@ -29,9 +30,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenTakedown, onOpenAdmin }) =
           {/* Brand */}
           <div className="space-y-4">
             <div className="flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-lg bg-red-600 flex items-center justify-center flex-shrink-0">
-                <Radio className="w-3.5 h-3.5 text-white" />
-              </div>
+              <BrandMark size={34} />
               <span className="text-sm font-bold text-white tracking-wide">PURANO DHUN</span>
             </div>
             <p className="text-xs leading-relaxed font-nepali">
