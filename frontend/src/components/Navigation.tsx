@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { ShieldAlert, Menu, X, Radio } from 'lucide-react';
+import { ShieldAlert, Menu, X } from 'lucide-react';
 import { useI18n } from '../context/I18nContext';
 import { usePlayer } from '../context/PlayerContext';
+import { BrandMark } from './BrandMark';
 
 interface NavigationProps {
   currentTab: string;
@@ -48,12 +49,17 @@ export const Navigation: React.FC<NavigationProps> = ({
             onClick={() => setCurrentTab('home')}
             className="flex items-center gap-2.5 group flex-shrink-0"
           >
-            <div className="w-7 h-7 rounded-lg bg-red-600 flex items-center justify-center flex-shrink-0 transition-transform duration-200 group-hover:scale-110">
-              <Radio className="w-3.5 h-3.5 text-white" />
+            <div className="flex items-center gap-2.5 transition-transform duration-200 group-hover:scale-[1.03]">
+              <BrandMark size={30} />
+              <span className="leading-tight">
+                <span className="block text-sm font-bold text-white tracking-wide group-hover:text-red-400 transition-colors duration-200">
+                  PURANO DHUN
+                </span>
+                <span className="block text-[10px] font-nepali text-neutral-500 group-hover:text-neutral-400 transition-colors duration-200">
+                  पुरानो धुन
+                </span>
+              </span>
             </div>
-            <span className="text-sm font-bold text-white tracking-wide group-hover:text-red-400 transition-colors duration-200">
-              PURANO DHUN
-            </span>
           </button>
 
           {/* Desktop Nav Links */}

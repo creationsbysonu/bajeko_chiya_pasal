@@ -269,7 +269,7 @@ export const api = {
   },
 
   async handleTakedownAction(id: number, status: string, notes: string): Promise<TakedownTicket> {
-    const res = await fetch(`${API_BASE}/admin/takedowns/${id}/action/`, {
+    const res = await apiFetch(`${API_BASE}/admin/takedowns/${id}/action/`, {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
