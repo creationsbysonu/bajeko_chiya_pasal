@@ -9,7 +9,7 @@ from .views import (
     AdminArtistManagementView, AdminArtistDetailManagementView,
     AdminGenreManagementView, AdminGenreDetailManagementView,
     AdminGenreCategoryManagementView, AdminGenreCategoryDetailManagementView,
-    AdminStationManagementView, AdminStationQueueView,
+    AdminStationManagementView, AdminStationQueueView, AdminInsightsView,
     AdminTakedownListView, AdminTakedownActionView, PublicTakedownStatusView,
     AdminAuditLogsView,
     AuthLoginView, AuthLogoutView, AuthUserView, AuthCsrfView, AuthChangePasswordView,
@@ -43,6 +43,7 @@ urlpatterns = [
 
     # Admin protected
     path('admin/stats/', AdminStatsView.as_view(), name='admin-stats'),
+    path('admin/insights/', AdminInsightsView.as_view(), name='admin-insights'),
     path('admin/songs/', AdminSongManagementView.as_view(), name='admin-song-create'),
     path('admin/songs/bulk/', AdminSongBulkActionView.as_view(), name='admin-song-bulk'),
     path('admin/songs/<int:pk>/', AdminSongManagementView.as_view(), name='admin-song-manage'),

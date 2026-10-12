@@ -38,6 +38,7 @@ from .genre_category_views import (
     category_payload,
 )
 from .station_queue_views import AdminStationQueueView
+from .insights_views import AdminInsightsView
 
 
 def _validate_genre_category(value):
@@ -258,15 +259,34 @@ class FeaturedContentView(APIView):
         featured_stations = Station.objects.filter(is_active=True, is_featured=True).annotate(
             songs_count=Count('station_songs', filter=Q(station_songs__song__publication_status='published'))
         )[:6]
-        
-        featured_songs = Song.objects.filter(
-            publication_status='published',
-            metadata_verification_status='verified'
-        ).select_related('artist', 'primary_genre')[:8]
-        if not featured_songs.exists():
-            featured_songs = Song.objects.filter(
-                publication_status='published'
-            ).select_related('artist', 'primary_genre')[:8]
+
+        # Manually pinned featured songs come first (ordered), then auto-fill
+        # the remaining slots with verified published songs. If nothing is
+        # pinned we fall back to the previous auto behaviour entirely.
+        pinned = list(
+            Song.objects.filter(publication_status='published', is_featured=True)
+            .select_related('artist', 'primary_genre').order_by('featured_order', '-release_year')[:8]
+        )
+        if pinned:
+            featured_songs = pinned
+            if len(pinned) < 8:
+                exclude_ids = [song.id for song in pinned]
+                filler = list(
+                    Song.objects.filter(publication_status='published', metadata_verification_status='verified')
+                    .exclude(id__in=exclude_ids)
+                    .select_related('artist', 'primary_genre').order_by('-play_count')[:8 - len(pinned)]
+                )
+                featured_songs = pinned + filler
+        else:
+            featured_songs = list(
+                Song.objects.filter(publication_status='published', metadata_verification_status='verified')
+                .select_related('artist', 'primary_genre')[:8]
+            )
+            if not featured_songs:
+                featured_songs = list(
+                    Song.objects.filter(publication_status='published')
+                    .select_related('artist', 'primary_genre')[:8]
+                )
 
         return Response({
             'stations': StationSerializer(featured_stations, many=True).data,

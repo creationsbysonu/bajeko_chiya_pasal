@@ -214,6 +214,11 @@ class Song(models.Model):
         db_index=True
     )
     play_count = models.PositiveIntegerField(default=0)
+    # Manual home-page "featured" curation. When any songs are flagged here,
+    # the home hero shows them (ordered) and auto-fills the rest; if none are
+    # flagged it falls back to verified published songs automatically.
+    is_featured = models.BooleanField(default=False, db_index=True)
+    featured_order = models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

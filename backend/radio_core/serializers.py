@@ -74,7 +74,7 @@ class SongSerializer(serializers.ModelSerializer):
             'playback_provider', 'provider_video_id', 'provider_url',
             'source_url', 'attribution',
             'metadata_verification_status', 'publication_status',
-            'play_count', 'created_at'
+            'play_count', 'is_featured', 'featured_order', 'created_at'
         ]
         read_only_fields = ['id', 'created_at', 'play_count']
 

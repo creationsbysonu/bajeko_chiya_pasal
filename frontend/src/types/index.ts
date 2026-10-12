@@ -67,6 +67,8 @@ export interface Song {
   metadata_verification_status: 'verified' | 'community_submitted' | 'demo';
   publication_status: 'published' | 'draft' | 'disputed' | 'taken_down';
   play_count: number;
+  is_featured?: boolean;
+  featured_order?: number;
   created_at: string;
 }
 
@@ -149,6 +151,24 @@ export interface StationQueueItem {
   artist_name: string | null;
   publication_status: string;
   artwork_url: string;
+}
+
+export interface AdminInsights {
+  window_days: number;
+  total_events: number;
+  event_breakdown: Record<string, number>;
+  starts: number;
+  completes: number;
+  skips: number;
+  errors: number;
+  completion_rate: number;
+  unique_sessions: number;
+  total_favorites: number;
+  top_songs: { song_id: number; title: string; artist_name: string | null; events: number }[];
+  most_played: { song_id: number; title: string; artist_name: string | null; play_count: number }[];
+  most_favorited: { song_id: number; title: string; artist_name: string | null; favorites: number }[];
+  top_stations: { station_id: number; title: string; events: number }[];
+  error_events: { id: number; song_id: number | null; song_title: string | null; message: string; timestamp: string }[];
 }
 
 

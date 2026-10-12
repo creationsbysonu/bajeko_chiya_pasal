@@ -1,6 +1,6 @@
 import {
   Artist, Genre, GenreCategory, Song, Station, FavoriteItem,
-  AdminStats, TakedownTicket, TakedownListResponse, StationQueueItem, AuditLogItem, AuthUser
+  AdminStats, AdminInsights, TakedownTicket, TakedownListResponse, StationQueueItem, AuditLogItem, AuthUser
 } from '../types';
 
 // On Render the SPA is a static site on its own subdomain, so the API base
@@ -243,6 +243,15 @@ export const api = {
       headers: { 'Content-Type': 'application/json' },
     });
     if (!res.ok) throw new Error('Admin authentication required');
+    return res.json();
+  },
+
+  async getAdminInsights(days = 30): Promise<AdminInsights> {
+    const res = await fetch(`${API_BASE}/admin/insights/?days=${days}`, {
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+    });
+    if (!res.ok) throw new Error('Failed to load insights');
     return res.json();
   },
 

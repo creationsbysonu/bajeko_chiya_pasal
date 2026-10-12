@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { X, Lock, LogOut, AlertTriangle, ShieldCheck, FileText, Database, Plus, Search, Radio, Trash2, RefreshCw, ShieldQuestion, FolderTree, ChevronLeft, ChevronRight, Pencil, ArrowUp, ArrowDown, ListMusic } from 'lucide-react';
+import { X, Lock, LogOut, AlertTriangle, ShieldCheck, FileText, Database, Plus, Search, Radio, Trash2, RefreshCw, ShieldQuestion, FolderTree, ChevronLeft, ChevronRight, Pencil, ArrowUp, ArrowDown, ListMusic, TrendingUp, Star } from 'lucide-react';
 import { api } from '../services/api';
-import { AdminStats, TakedownTicket, AuditLogItem, Song, Station, Artist, AuthUser, Genre, GenreCategory, StationQueueItem } from '../types';
+import { AdminStats, TakedownTicket, AuditLogItem, Song, Station, Artist, AuthUser, Genre, GenreCategory, StationQueueItem, AdminInsights } from '../types';
 import { resolveCategories, categoryLabel } from '../utils/genreTaxonomy';
 
 
@@ -28,7 +28,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, onCatal
   const [securityError, setSecurityError] = useState<string | null>(null);
   const [securitySuccess, setSecuritySuccess] = useState<string | null>(null);
 
-  const [activeTab, setActiveTab] = useState<'stats' | 'songs' | 'addSong' | 'taxonomy' | 'stations' | 'takedowns' | 'audit' | 'security'>('stats');
+  const [activeTab, setActiveTab] = useState<'stats' | 'insights' | 'songs' | 'addSong' | 'taxonomy' | 'stations' | 'takedowns' | 'audit' | 'security'>('stats');
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [songs, setSongs] = useState<Song[]>([]);
   const [stations, setStations] = useState<Station[]>([]);
@@ -99,6 +99,11 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, onCatal
   const [ticketStatusFilter, setTicketStatusFilter] = useState('all');
   const [ticketSearch, setTicketSearch] = useState('');
   const [ticketNotes, setTicketNotes] = useState<Record<number, string>>({});
+
+  // Insights / analytics dashboard state
+  const [insights, setInsights] = useState<AdminInsights | null>(null);
+  const [insightsDays, setInsightsDays] = useState(30);
+  const [insightsBusy, setInsightsBusy] = useState(false);
 
 
   const loadCaptcha = async () => {
@@ -240,6 +245,19 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, onCatal
     }
   };
 
+  const loadInsights = async (days?: number) => {
+    const window = days ?? insightsDays;
+    setInsightsBusy(true);
+    try {
+      const data = await api.getAdminInsights(window);
+      setInsights(data);
+    } catch (err) {
+      console.error('Failed to load insights', err);
+    } finally {
+      setInsightsBusy(false);
+    }
+  };
+
   const loadAdminData = async () => {
     try {
       const [statsData, takedownData, auditData, stationsData, artistsData, genresData, categoriesData] = await Promise.all([
@@ -263,6 +281,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, onCatal
       console.error('Failed to load admin data', err);
     }
     await loadSongs();
+    await loadInsights();
   };
 
   const handleTogglePublication = async (song: Song) => {
@@ -605,6 +624,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, onCatal
         theme_color: editingStation.theme_color,
         display_order: editingStation.display_order,
         is_active: editingStation.is_active,
+        is_featured: editingStation.is_featured,
       });
       setEditingStation(null);
       loadAdminData();
@@ -645,6 +665,50 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, onCatal
       onCatalogUpdated?.();
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Failed to delete station.');
+    }
+  };
+
+  // ---- Featured content curation (home hero) ----
+
+  const sortedFeaturedSongs = songs
+    .filter((s) => s.is_featured)
+    .sort((a, b) => (a.featured_order ?? 0) - (b.featured_order ?? 0));
+
+  const handleToggleSongFeatured = async (song: Song) => {
+    try {
+      const payload = song.is_featured
+        ? { is_featured: false }
+        : { is_featured: true, featured_order: sortedFeaturedSongs.length };
+      await api.updateAdminSong(song.id, payload);
+      await loadSongs();
+      onCatalogUpdated?.();
+    } catch {
+      alert('Failed to update featured song.');
+    }
+  };
+
+  const handleMoveFeaturedSong = async (song: Song, direction: -1 | 1) => {
+    const ordered = [...sortedFeaturedSongs];
+    const index = ordered.findIndex((s) => s.id === song.id);
+    const target = ordered[index + direction];
+    if (!target) return;
+    try {
+      await api.updateAdminSong(song.id, { featured_order: target.featured_order ?? 0 });
+      await api.updateAdminSong(target.id, { featured_order: song.featured_order ?? 0 });
+      await loadSongs();
+      onCatalogUpdated?.();
+    } catch {
+      alert('Failed to reorder featured songs.');
+    }
+  };
+
+  const handleToggleStationFeatured = async (station: Station) => {
+    try {
+      await api.updateAdminStation(station.id, { is_featured: !station.is_featured });
+      loadAdminData();
+      onCatalogUpdated?.();
+    } catch {
+      alert('Failed to update featured station.');
     }
   };
 
@@ -739,6 +803,8 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, onCatal
         attribution: editingSong.attribution || '',
         publication_status: editingSong.publication_status,
         metadata_verification_status: editingSong.metadata_verification_status,
+        is_featured: editingSong.is_featured ?? false,
+        featured_order: editingSong.featured_order ?? 0,
         secondary_genres: editingSong.secondary_genres ?? [],
       });
       setEditingSong(null);
@@ -1062,6 +1128,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, onCatal
               <div className="flex items-center gap-2 border-b border-white/10 pb-3 mb-6 overflow-x-auto">
                 {[
                   { id: 'stats', label: 'Overview', icon: Database },
+                  { id: 'insights', label: 'Insights', icon: TrendingUp },
                   { id: 'songs', label: `Catalog (${songCount})`, icon: ShieldCheck },
                   { id: 'addSong', label: 'Add Track', icon: Plus },
                   { id: 'taxonomy', label: `Taxonomy (${genres.length})`, icon: FolderTree },
@@ -1154,9 +1221,187 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, onCatal
                 </div>
               )}
 
+              {/* Tab: Insights (listening analytics) */}
+              {activeTab === 'insights' && (
+                <div className="space-y-6">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-mono text-neutral-500 uppercase">Window</span>
+                    {[7, 30, 90].map((days) => (
+                      <button
+                        key={days}
+                        onClick={() => { setInsightsDays(days); loadInsights(days); }}
+                        className={`px-3 py-1 rounded-full text-[11px] font-semibold border transition-all ${
+                          insightsDays === days
+                            ? 'bg-red-600 text-white border-red-600 font-bold'
+                            : 'bg-black text-neutral-400 hover:text-white border-white/10 hover:border-white/20'
+                        }`}
+                      >
+                        {days}d
+                      </button>
+                    ))}
+                    <button
+                      onClick={() => loadInsights()}
+                      disabled={insightsBusy}
+                      className="p-1.5 rounded-full text-neutral-400 hover:text-white hover:bg-white/5 transition-colors disabled:opacity-50"
+                      title="Refresh insights"
+                    >
+                      <RefreshCw className={`w-3.5 h-3.5 ${insightsBusy ? 'animate-spin' : ''}`} />
+                    </button>
+                  </div>
+
+                  {!insights ? (
+                    <p className="text-xs text-neutral-500 font-mono text-center py-8">
+                      {insightsBusy ? 'Loading insights…' : 'No playback data yet.'}
+                    </p>
+                  ) : (
+                    <>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                        <div className="p-4 rounded-2xl bg-black border border-white/10">
+                          <span className="text-xs font-mono text-neutral-400">PLAYBACK EVENTS</span>
+                          <p className="font-serif text-3xl font-bold text-white mt-1">{insights.total_events}</p>
+                        </div>
+                        <div className="p-4 rounded-2xl bg-black border border-white/10">
+                          <span className="text-xs font-mono text-neutral-400">COMPLETION RATE</span>
+                          <p className="font-serif text-3xl font-bold text-red-500 mt-1">{insights.completion_rate}%</p>
+                        </div>
+                        <div className="p-4 rounded-2xl bg-black border border-white/10">
+                          <span className="text-xs font-mono text-neutral-400">LISTENERS</span>
+                          <p className="font-serif text-3xl font-bold text-white mt-1">{insights.unique_sessions}</p>
+                        </div>
+                        <div className="p-4 rounded-2xl bg-black border border-white/10">
+                          <span className="text-xs font-mono text-neutral-400">SKIPS</span>
+                          <p className="font-serif text-3xl font-bold text-white mt-1">{insights.skips}</p>
+                        </div>
+                        <div className="p-4 rounded-2xl bg-black border border-white/10">
+                          <span className="text-xs font-mono text-neutral-400">ERRORS</span>
+                          <p className="font-serif text-3xl font-bold text-red-500 mt-1">{insights.errors}</p>
+                        </div>
+                        <div className="p-4 rounded-2xl bg-black border border-white/10">
+                          <span className="text-xs font-mono text-neutral-400">FAVORITES (ALL TIME)</span>
+                          <p className="font-serif text-3xl font-bold text-white mt-1">{insights.total_favorites}</p>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                        <div className="p-4 rounded-2xl bg-black border border-white/10 space-y-2">
+                          <h4 className="font-serif text-sm font-bold text-white">Trending songs (window)</h4>
+                          {insights.top_songs.length === 0 && (
+                            <p className="text-xs text-neutral-500 font-mono">No playback events in this window.</p>
+                          )}
+                          {insights.top_songs.map((row) => (
+                            <div key={row.song_id} className="flex items-center justify-between gap-3 text-xs">
+                              <span className="text-white truncate">{row.title} <span className="text-neutral-500">· {row.artist_name}</span></span>
+                              <span className="font-mono text-red-400 font-bold flex-shrink-0">{row.events}</span>
+                            </div>
+                          ))}
+                        </div>
+                        <div className="p-4 rounded-2xl bg-black border border-white/10 space-y-2">
+                          <h4 className="font-serif text-sm font-bold text-white">Most played (all time)</h4>
+                          {insights.most_played.length === 0 && (
+                            <p className="text-xs text-neutral-500 font-mono">No plays recorded yet.</p>
+                          )}
+                          {insights.most_played.map((row) => (
+                            <div key={row.song_id} className="flex items-center justify-between gap-3 text-xs">
+                              <span className="text-white truncate">{row.title} <span className="text-neutral-500">· {row.artist_name}</span></span>
+                              <span className="font-mono text-red-400 font-bold flex-shrink-0">{row.play_count}</span>
+                            </div>
+                          ))}
+                        </div>
+                        <div className="p-4 rounded-2xl bg-black border border-white/10 space-y-2">
+                          <h4 className="font-serif text-sm font-bold text-white">Most favorited</h4>
+                          {insights.most_favorited.length === 0 && (
+                            <p className="text-xs text-neutral-500 font-mono">No favorites yet.</p>
+                          )}
+                          {insights.most_favorited.map((row) => (
+                            <div key={row.song_id} className="flex items-center justify-between gap-3 text-xs">
+                              <span className="text-white truncate">{row.title} <span className="text-neutral-500">· {row.artist_name}</span></span>
+                              <span className="font-mono text-red-400 font-bold flex-shrink-0">{row.favorites}</span>
+                            </div>
+                          ))}
+                        </div>
+                        <div className="p-4 rounded-2xl bg-black border border-white/10 space-y-2">
+                          <h4 className="font-serif text-sm font-bold text-white">Top stations (window)</h4>
+                          {insights.top_stations.length === 0 && (
+                            <p className="text-xs text-neutral-500 font-mono">No station playbacks in this window.</p>
+                          )}
+                          {insights.top_stations.map((row) => (
+                            <div key={row.station_id} className="flex items-center justify-between gap-3 text-xs">
+                              <span className="text-white truncate">{row.title}</span>
+                              <span className="font-mono text-red-400 font-bold flex-shrink-0">{row.events}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {insights.error_events.length > 0 && (
+                        <div className="p-4 rounded-2xl bg-black border border-red-500/30 space-y-2">
+                          <h4 className="font-serif text-sm font-bold text-white flex items-center gap-2">
+                            <AlertTriangle className="w-4 h-4 text-red-500" /> Recent playback errors
+                          </h4>
+                          {insights.error_events.map((row) => (
+                            <div key={row.id} className="flex items-center justify-between gap-3 text-xs font-mono">
+                              <span className="text-neutral-300 truncate">{row.song_title ?? 'Unknown song'} — {row.message || 'playback failed'}</span>
+                              <span className="text-neutral-500 flex-shrink-0">{new Date(row.timestamp).toLocaleString()}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              )}
+
               {/* Tab 2: Catalog Management (All Songs) */}
               {activeTab === 'songs' && (
                 <div className="space-y-4">
+                  {/* Home featured curation */}
+                  <div className="p-4 rounded-2xl bg-black border border-amber-500/20 space-y-3">
+                    <h4 className="font-serif text-sm font-bold text-white flex items-center gap-2">
+                      <Star className="w-4 h-4 text-amber-400" /> Home Featured ({sortedFeaturedSongs.length}/8)
+                    </h4>
+                    {sortedFeaturedSongs.length === 0 ? (
+                      <p className="text-xs text-neutral-500 font-mono">
+                        Nothing pinned — the home page auto-shows verified songs. Use the star on any song below to pin it.
+                      </p>
+                    ) : (
+                      <div className="space-y-2">
+                        {sortedFeaturedSongs.map((featured, index, arr) => (
+                          <div key={featured.id} className="p-2.5 rounded-xl bg-neutral-900 border border-white/10 flex items-center gap-3">
+                            <span className="text-[11px] font-mono text-neutral-500 w-6 text-center">{index + 1}</span>
+                            <div className="min-w-0 flex-1">
+                              <p className="text-xs font-bold text-white truncate">{featured.title}</p>
+                              <p className="text-[10px] font-mono text-neutral-500 truncate">{featured.artist_name}</p>
+                            </div>
+                            <div className="flex items-center gap-1 flex-shrink-0">
+                              <button
+                                onClick={() => handleMoveFeaturedSong(featured, -1)}
+                                disabled={index === 0}
+                                className="p-1 rounded-full text-neutral-500 hover:text-white hover:bg-white/5 disabled:opacity-30"
+                                title="Move up"
+                              >
+                                <ArrowUp className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                onClick={() => handleMoveFeaturedSong(featured, 1)}
+                                disabled={index === arr.length - 1}
+                                className="p-1 rounded-full text-neutral-500 hover:text-white hover:bg-white/5 disabled:opacity-30"
+                                title="Move down"
+                              >
+                                <ArrowDown className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                onClick={() => handleToggleSongFeatured(featured)}
+                                className="p-1.5 rounded-full text-amber-400 hover:text-amber-300 hover:bg-amber-950/40"
+                                title="Unpin from home featured"
+                              >
+                                <Star className="w-3.5 h-3.5 fill-current" />
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
                   <div className="relative">
                     <Search className="w-4 h-4 text-neutral-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
                     <input
@@ -1386,6 +1631,18 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, onCatal
                             {song.publication_status === 'published'
                               ? 'Published'
                               : song.publication_status.replace('_', ' ')}
+                          </button>
+
+                          <button
+                            onClick={() => handleToggleSongFeatured(song)}
+                            className={`p-1.5 rounded-full transition-colors ${
+                              song.is_featured
+                                ? 'text-amber-400 hover:text-amber-300 hover:bg-amber-950/40'
+                                : 'text-neutral-500 hover:text-amber-300 hover:bg-white/5'
+                            }`}
+                            title={song.is_featured ? 'Remove from home featured' : 'Pin to home featured'}
+                          >
+                            <Star className={`w-4 h-4 ${song.is_featured ? 'fill-current' : ''}`} />
                           </button>
 
                           <button
@@ -1635,6 +1892,16 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, onCatal
                         </select>
                       </div>
                     </div>
+
+                    <label className="flex items-center gap-2 text-xs text-white cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={editingSong.is_featured ?? false}
+                        onChange={(e) => setEditingSong({ ...editingSong, is_featured: e.target.checked })}
+                        className="w-4 h-4 accent-amber-500"
+                      />
+                      Pin to home featured
+                    </label>
 
                     <div className="grid grid-cols-2 gap-3">
                       <div>
