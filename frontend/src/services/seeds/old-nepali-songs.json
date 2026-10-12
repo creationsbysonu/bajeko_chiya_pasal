@@ -1,0 +1,31 @@
+[
+  {
+    "title": "Mayalu",
+    "title_ne": "मायालु",
+    "romanized_title": "Mayalu",
+    "artist": 1,
+    "artist_name": "Narayan Gopal",
+    "artist_name_ne": "नारायण गोपाल",
+    "composer": "Chittaranjan KC",
+    "composer_ne": "चित्तिराजमपानी",
+    "lyricist": "Laxmi Prasad Devkota",
+    "lyricist_ne": "लक्ष्मीस्वामी देवकोटा",
+    "album": "Devkota Sangit",
+    "album_ne": "देवकोटा संगीत",
+    "release_year": 1963,
+    "language": "Nepali",
+    "primary_genre": 1,
+    "primary_genre_name": "Folk & Lok Dohori",
+    "primary_genre_name_ne": "लोक र सांस्कृतिक गीत",
+    "secondary_genres": [2, 3],
+    "secondary_genre_names": ["Lok Dohori", "Classical"],
+    "mood_tags": ["nostalgic", "sentimental", "folk", "classic"],
+    "decade": "1960s",
+    "duration_seconds": 195,
+    "artwork_url": "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1200&q=80",
+    "playback_provider": "youtube",
+    "provider_video_id": "YOUR_YOUTUBE_ID_HERE",
+    "attribution": "Official Music Archive - Narayan Gopal",
+    "metadata_verification_status": "verified"
+  }
+]
