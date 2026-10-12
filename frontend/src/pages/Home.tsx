@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Hero } from '../components/Hero';
 import { StationCard } from '../components/StationCard';
 import { SongCard } from '../components/SongCard';
-import { Station, Song, Genre } from '../types';
+import { Station, Song, Genre, GenreCategory } from '../types';
 import { useI18n } from '../context/I18nContext';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { groupGenresByCategory } from '../utils/genreTaxonomy';
@@ -11,6 +11,7 @@ interface HomeProps {
   stations: Station[];
   featuredSongs: Song[];
   genres: Genre[];
+  categories?: GenreCategory[];
   decades: { decade: string; count: number }[];
   onSelectGenre: (genreSlug: string) => void;
   onSelectDecade: (decade: string) => void;
@@ -21,6 +22,7 @@ export const Home: React.FC<HomeProps> = ({
   stations,
   featuredSongs,
   genres,
+  categories,
   decades,
   onSelectGenre,
   onSelectDecade,
@@ -28,7 +30,7 @@ export const Home: React.FC<HomeProps> = ({
 }) => {
   const { locale, t } = useI18n();
   const [openFaq, setOpenFaq] = useState<number | null>(null);
-  const genreGroups = groupGenresByCategory(genres);
+  const genreGroups = groupGenresByCategory(genres, categories);
 
   const faqs = [
     {

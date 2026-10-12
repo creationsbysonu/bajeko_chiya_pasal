@@ -1,8 +1,24 @@
 from rest_framework import serializers
 from .models import (
-    Artist, Genre, Song, Station, StationSong,
+    Artist, Genre, GenreCategory, Song, Station, StationSong,
     Favorite, PlaybackEvent, TakedownRequest, AuditLog
 )
+
+
+class GenreCategorySerializer(serializers.ModelSerializer):
+    """Dynamic genre category registry (create/rename/reorder/delete from admin)."""
+
+    genres_count = serializers.IntegerField(read_only=True, default=0)
+    songs_count = serializers.IntegerField(read_only=True, default=0)
+
+    class Meta:
+        model = GenreCategory
+        fields = [
+            'id', 'slug', 'name', 'name_ne', 'description',
+            'display_order', 'is_active', 'genres_count', 'songs_count',
+            'created_at',
+        ]
+        read_only_fields = ['id', 'created_at']
 
 
 class GenreSerializer(serializers.ModelSerializer):
@@ -14,6 +30,10 @@ class GenreSerializer(serializers.ModelSerializer):
             'id', 'name', 'name_ne', 'slug', 'category',
             'description', 'is_active', 'songs_count'
         ]
+        extra_kwargs = {
+            # Slug is auto-generated from the name by the admin endpoints.
+            'slug': {'required': False},
+        }
 
 
 class ArtistSerializer(serializers.ModelSerializer):
@@ -33,6 +53,13 @@ class SongSerializer(serializers.ModelSerializer):
     artist_name_ne = serializers.CharField(source='artist.display_name_ne', read_only=True)
     primary_genre_name = serializers.CharField(source='primary_genre.name', read_only=True)
     primary_genre_name_ne = serializers.CharField(source='primary_genre.name_ne', read_only=True)
+    primary_genre_category = serializers.CharField(source='primary_genre.category', read_only=True, default='')
+    secondary_genres = serializers.PrimaryKeyRelatedField(
+        many=True,
+        queryset=Genre.objects.all(),
+        required=False,
+    )
+    secondary_genre_names = serializers.SerializerMethodField()
 
     class Meta:
         model = Song
@@ -42,6 +69,7 @@ class SongSerializer(serializers.ModelSerializer):
             'featured_artists', 'composer', 'lyricist',
             'album', 'film_or_source', 'release_year', 'language',
             'primary_genre', 'primary_genre_name', 'primary_genre_name_ne',
+            'primary_genre_category', 'secondary_genres', 'secondary_genre_names',
             'mood_tags', 'decade', 'duration_seconds', 'artwork_url',
             'playback_provider', 'provider_video_id', 'provider_url',
             'source_url', 'attribution',
@@ -49,6 +77,18 @@ class SongSerializer(serializers.ModelSerializer):
             'play_count', 'created_at'
         ]
         read_only_fields = ['id', 'created_at', 'play_count']
+
+    def get_secondary_genre_names(self, obj):
+        return [genre.name for genre in obj.secondary_genres.all()]
+
+    def validate(self, attrs):
+        """Keep the primary genre out of the secondary genre list."""
+        attrs = super().validate(attrs)
+        primary = attrs.get('primary_genre', getattr(self.instance, 'primary_genre', None))
+        secondary = attrs.get('secondary_genres')
+        if secondary is not None and primary is not None:
+            attrs['secondary_genres'] = [genre for genre in secondary if genre.id != primary.id]
+        return attrs
 
 
 class StationSongSerializer(serializers.ModelSerializer):

@@ -1,6 +1,6 @@
 from django.contrib import admin
 from .models import (
-    Artist, Genre, Song, Station, StationSong,
+    Artist, Genre, GenreCategory, Song, Station, StationSong,
     Favorite, PlaybackEvent, TakedownRequest, AuditLog
 )
 
@@ -9,6 +9,15 @@ class ArtistAdmin(admin.ModelAdmin):
     list_display = ('display_name', 'display_name_ne', 'verification_status', 'created_at')
     search_fields = ('display_name', 'display_name_ne')
     list_filter = ('verification_status',)
+
+
+@admin.register(GenreCategory)
+class GenreCategoryAdmin(admin.ModelAdmin):
+    list_display = ('name', 'name_ne', 'slug', 'display_order', 'is_active')
+    search_fields = ('name', 'name_ne', 'slug')
+    list_filter = ('is_active',)
+    list_editable = ('display_order', 'is_active')
+    prepopulated_fields = {'slug': ('name',)}
 
 
 @admin.register(Genre)

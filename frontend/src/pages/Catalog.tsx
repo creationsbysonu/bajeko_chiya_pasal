@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Song, Genre } from '../types';
+import { Song, Genre, GenreCategory } from '../types';
 import { SongCard } from '../components/SongCard';
 import { useI18n } from '../context/I18nContext';
 import { api } from '../services/api';
@@ -24,6 +24,7 @@ export const Catalog: React.FC<CatalogProps> = ({ initialGenre, initialDecade, i
   
   const [songs, setSongs] = useState<Song[]>([]);
   const [genres, setGenres] = useState<Genre[]>([]);
+  const [categories, setCategories] = useState<GenreCategory[]>([]);
   const [languages, setLanguages] = useState<{ language: string; count: number }[]>([]);
   const [loading, setLoading] = useState(true);
   const [totalCount, setTotalCount] = useState(0);
@@ -43,9 +44,10 @@ export const Catalog: React.FC<CatalogProps> = ({ initialGenre, initialDecade, i
   useEffect(() => {
     api.getGenres().then(setGenres).catch(console.error);
     api.getLanguages().then(setLanguages).catch(console.error);
+    api.getGenreCategories().then(setCategories).catch(console.error);
   }, []);
 
-  const groupedGenres = groupGenresByCategory(genres);
+  const groupedGenres = groupGenresByCategory(genres, categories);
 
   const fetchSongs = useCallback(async () => {
     setLoading(true);

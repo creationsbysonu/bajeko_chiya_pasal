@@ -13,7 +13,7 @@ import { RadioWorldsPage } from './pages/RadioWorldsPage';
 import { Catalog } from './pages/Catalog';
 import { FavoritesPage } from './pages/FavoritesPage';
 
-import { Station, Song, Genre } from './types';
+import { Station, Song, Genre, GenreCategory } from './types';
 import { api } from './services/api';
 
 function MainApp() {
@@ -21,6 +21,7 @@ function MainApp() {
   const [stations, setStations] = useState<Station[]>([]);
   const [featuredSongs, setFeaturedSongs] = useState<Song[]>([]);
   const [genres, setGenres] = useState<Genre[]>([]);
+  const [categories, setCategories] = useState<GenreCategory[]>([]);
   const [decades, setDecades] = useState<{ decade: string; count: number }[]>([]);
 
   // Selected filters for Catalog deep-linking
@@ -34,16 +35,18 @@ function MainApp() {
 
   const loadData = async () => {
     try {
-      const [stationsData, featuredData, genresData, decadesData] = await Promise.all([
+      const [stationsData, featuredData, genresData, decadesData, categoriesData] = await Promise.all([
         api.getStations(),
         api.getFeatured(),
         api.getGenres(),
         api.getDecades(),
+        api.getGenreCategories().catch(() => [] as GenreCategory[]),
       ]);
       setStations(stationsData);
       setFeaturedSongs(featuredData.songs);
       setGenres(genresData);
       setDecades(decadesData);
+      setCategories(categoriesData);
     } catch (err) {
       console.error('Failed to load initial data', err);
     }
@@ -88,6 +91,7 @@ function MainApp() {
             stations={stations}
             featuredSongs={featuredSongs}
             genres={genres}
+            categories={categories}
             decades={decades}
             onSelectGenre={handleSelectGenre}
             onSelectDecade={handleSelectDecade}

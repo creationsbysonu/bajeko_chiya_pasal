@@ -10,6 +10,19 @@ export interface Artist {
   created_at: string;
 }
 
+export interface GenreCategory {
+  id: number;
+  slug: string;
+  name: string;
+  name_ne: string;
+  description: string;
+  display_order: number;
+  is_active: boolean;
+  genres_count: number;
+  songs_count: number;
+  created_at: string;
+}
+
 export interface Genre {
   id: number;
   name: string;
@@ -39,6 +52,9 @@ export interface Song {
   primary_genre?: number;
   primary_genre_name?: string;
   primary_genre_name_ne?: string;
+  primary_genre_category?: string;
+  secondary_genres?: number[];
+  secondary_genre_names?: string[];
   mood_tags: string[];
   decade: string;
   duration_seconds?: number;
@@ -96,6 +112,12 @@ export interface AdminStats {
   pending_takedowns: number;
   total_artists: number;
   total_stations: number;
+  total_genres?: number;
+  total_genre_categories?: number;
+  status_breakdown?: Record<string, number>;
+  language_breakdown?: Record<string, number>;
+  category_breakdown?: Record<string, number>;
+  takedown_breakdown?: Record<string, number>;
 }
 
 export interface TakedownTicket {
@@ -110,7 +132,25 @@ export interface TakedownTicket {
   status: string;
   resolution_notes: string;
   created_at: string;
+  resolved_at?: string | null;
 }
+
+export interface TakedownListResponse {
+  count: number;
+  results: TakedownTicket[];
+  available_statuses: string[];
+}
+
+export interface StationQueueItem {
+  position: number;
+  song_id: number;
+  title: string;
+  title_ne: string;
+  artist_name: string | null;
+  publication_status: string;
+  artwork_url: string;
+}
+
 
 export interface AuditLogItem {
   id: number;

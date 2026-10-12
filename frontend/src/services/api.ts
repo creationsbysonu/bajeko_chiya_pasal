@@ -1,6 +1,6 @@
 import {
-  Artist, Genre, Song, Station, FavoriteItem,
-  AdminStats, TakedownTicket, AuditLogItem, AuthUser
+  Artist, Genre, GenreCategory, Song, Station, FavoriteItem,
+  AdminStats, TakedownTicket, TakedownListResponse, StationQueueItem, AuditLogItem, AuthUser
 } from '../types';
 
 // On Render the SPA is a static site on its own subdomain, so the API base
@@ -143,6 +143,12 @@ export const api = {
     return res.json();
   },
 
+  async getGenreCategories(): Promise<GenreCategory[]> {
+    const res = await fetch(`${API_BASE}/genre-categories/`, { headers: defaultHeaders() });
+    if (!res.ok) throw new Error('Failed to fetch genre categories');
+    return res.json();
+  },
+
   async getArtists(): Promise<Artist[]> {
     const res = await fetch(`${API_BASE}/artists/`, { headers: defaultHeaders() });
     if (!res.ok) throw new Error('Failed to fetch artists');
@@ -240,8 +246,12 @@ export const api = {
     return res.json();
   },
 
-  async getAdminTakedowns(): Promise<TakedownTicket[]> {
-    const res = await fetch(`${API_BASE}/admin/takedowns/`, {
+  async getAdminTakedowns(params: { status?: string; reason?: string; search?: string } = {}): Promise<TakedownListResponse> {
+    const query = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+      if (value) query.append(key, value);
+    });
+    const res = await fetch(`${API_BASE}/admin/takedowns/?${query.toString()}`, {
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
     });
@@ -269,12 +279,161 @@ export const api = {
     return res.json();
   },
 
-  async getAdminSongs(): Promise<Song[]> {
-    const res = await fetch(`${API_BASE}/admin/songs/`, {
+  async getAdminSongs(params: {
+    search?: string;
+    status?: string;
+    genre?: string;
+    category?: string;
+    artist?: string;
+    language?: string;
+    decade?: string;
+    verification?: string;
+    ordering?: string;
+    page?: number;
+    page_size?: number;
+  } = {}): Promise<{ count: number; page: number; page_size: number; results: Song[] }> {
+    const query = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '' && value !== 'all') {
+        query.append(key, String(value));
+      }
+    });
+    const res = await fetch(`${API_BASE}/admin/songs/?${query.toString()}`, {
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
     });
     if (!res.ok) throw new Error('Failed to fetch admin songs');
+    return res.json();
+  },
+
+  // Bulk song operations: delete, move genre/category, set status/language/decade,
+  // assign artist, station add/remove, play-count reset. Supports preview mode.
+  async bulkAdminSongs(payload: {
+    action: string;
+    ids?: number[];
+    filter?: Record<string, string | number>;
+    preview?: boolean;
+    value?: string | number;
+    genre_id?: number;
+    artist_id?: number;
+    station_id?: number;
+    source_category?: string;
+    target_category?: string;
+    mapping?: Record<string, number>;
+  }): Promise<{ affected: number; preview?: boolean; [key: string]: unknown }> {
+    const res = await apiFetch(`${API_BASE}/admin/songs/bulk/`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) {
+      let message = 'Bulk action failed';
+      try {
+        const data = await res.json();
+        if (data?.error) message = data.error;
+      } catch {
+        // keep generic message
+      }
+      throw new Error(message);
+    }
+    return res.json();
+  },
+
+  // Genre management
+  async getAdminGenres(): Promise<Genre[]> {
+    const res = await fetch(`${API_BASE}/admin/genres/`, {
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+    });
+    if (!res.ok) throw new Error('Failed to fetch genres');
+    return res.json();
+  },
+
+  async createAdminGenre(data: {
+    name: string;
+    name_ne?: string;
+    category: string;
+    description?: string;
+    is_active?: boolean;
+  }): Promise<Genre> {
+    const res = await apiFetch(`${API_BASE}/admin/genres/`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) {
+      let message = 'Failed to create genre';
+      try {
+        const payload = await res.json();
+        if (payload?.error) message = payload.error;
+        else if (payload && typeof payload === 'object') {
+          message = Object.entries(payload)
+            .map(([field, errors]) => `${field}: ${Array.isArray(errors) ? errors.join(' ') : errors}`)
+            .join(' · ');
+        }
+      } catch {
+        // keep generic message
+      }
+      throw new Error(message);
+    }
+    return res.json();
+  },
+
+  async updateAdminGenre(id: number, data: Record<string, unknown>): Promise<Genre> {
+    const res = await apiFetch(`${API_BASE}/admin/genres/${id}/`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) throw new Error('Failed to update genre');
+    return res.json();
+  },
+
+  async deleteAdminGenre(id: number, reassignTo?: number): Promise<{ message: string }> {
+    const query = reassignTo ? `?reassign_to=${reassignTo}` : '';
+    const res = await apiFetch(`${API_BASE}/admin/genres/${id}/${query}`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+    });
+    if (!res.ok) {
+      let message = 'Failed to delete genre';
+      try {
+        const data = await res.json();
+        if (data?.error) message = data.error;
+      } catch {
+        // keep generic message
+      }
+      throw new Error(message);
+    }
+    return res.json();
+  },
+
+  async updateAdminArtist(id: number, data: Record<string, unknown>): Promise<Artist> {
+    const res = await apiFetch(`${API_BASE}/admin/artists/${id}/`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) throw new Error('Failed to update artist');
+    return res.json();
+  },
+
+  async deleteAdminArtist(id: number, reassignTo?: number): Promise<{ message: string }> {
+    const query = reassignTo ? `?reassign_to=${reassignTo}` : '';
+    const res = await apiFetch(`${API_BASE}/admin/artists/${id}/${query}`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+    });
+    if (!res.ok) {
+      let message = 'Failed to delete artist';
+      try {
+        const data = await res.json();
+        if (data?.error) message = data.error;
+      } catch {
+        // keep generic message
+      }
+      throw new Error(message);
+    }
     return res.json();
   },
 
@@ -346,6 +505,159 @@ export const api = {
       body: JSON.stringify(data),
     });
     if (!res.ok) throw new Error('Failed to update station');
+    return res.json();
+  },
+
+  async createAdminStation(data: any): Promise<Station> {
+    const res = await apiFetch(`${API_BASE}/admin/stations/`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) {
+      let message = 'Failed to create station';
+      try {
+        const payload = await res.json();
+        if (payload?.error) message = payload.error;
+      } catch { /* keep generic */ }
+      throw new Error(message);
+    }
+    return res.json();
+  },
+
+  async deleteAdminStation(id: number): Promise<{ message: string; station_links_removed: number }> {
+    const res = await apiFetch(`${API_BASE}/admin/stations/${id}/`, {
+      method: 'DELETE',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+    });
+    if (!res.ok) throw new Error('Failed to delete station');
+    return res.json();
+  },
+
+  // ---- Genre categories (dynamic registry) ----
+
+  async getAdminGenreCategories(): Promise<GenreCategory[]> {
+    const res = await fetch(`${API_BASE}/admin/genre-categories/`, {
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+    });
+    if (!res.ok) throw new Error('Failed to fetch genre categories');
+    return res.json();
+  },
+
+  async createAdminGenreCategory(data: {
+    name: string;
+    name_ne?: string;
+    description?: string;
+    display_order?: number;
+    is_active?: boolean;
+  }): Promise<GenreCategory> {
+    const res = await apiFetch(`${API_BASE}/admin/genre-categories/`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) {
+      let message = 'Failed to create category';
+      try {
+        const payload = await res.json();
+        if (payload?.error) message = payload.error;
+      } catch { /* keep generic */ }
+      throw new Error(message);
+    }
+    return res.json();
+  },
+
+  async updateAdminGenreCategory(id: number, data: Partial<GenreCategory>): Promise<GenreCategory> {
+    const res = await apiFetch(`${API_BASE}/admin/genre-categories/${id}/`, {
+      method: 'PATCH',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) {
+      let message = 'Failed to update category';
+      try {
+        const payload = await res.json();
+        if (payload?.error) message = payload.error;
+      } catch { /* keep generic */ }
+      throw new Error(message);
+    }
+    return res.json();
+  },
+
+  async deleteAdminGenreCategory(id: number, reassignTo?: string): Promise<{ message: string; genres_moved: number; available_targets?: string[] }> {
+    const query = reassignTo ? `?reassign_to=${encodeURIComponent(reassignTo)}` : '';
+    const res = await apiFetch(`${API_BASE}/admin/genre-categories/${id}/${query}`, {
+      method: 'DELETE',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+    });
+    if (!res.ok) {
+      let message = 'Failed to delete category';
+      try {
+        const payload = await res.json();
+        if (payload?.error) message = payload.error;
+      } catch { /* keep generic */ }
+      throw new Error(message);
+    }
+    return res.json();
+  },
+
+  async reorderAdminGenreCategories(order: { id: number; display_order: number }[]): Promise<{ message: string }> {
+    const res = await apiFetch(`${API_BASE}/admin/genre-categories/`, {
+      method: 'PUT',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ order }),
+    });
+    if (!res.ok) throw new Error('Failed to reorder categories');
+    return res.json();
+  },
+
+  // ---- Station song queue ----
+
+  async getStationQueue(stationId: number): Promise<{ station_id: number; station_title: string; count: number; queue: StationQueueItem[] }> {
+    const res = await fetch(`${API_BASE}/admin/stations/${stationId}/queue/`, {
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+    });
+    if (!res.ok) throw new Error('Failed to fetch station queue');
+    return res.json();
+  },
+
+  async addToStationQueue(stationId: number, songIds: number[]): Promise<{ message: string; added: number[]; skipped: number[] }> {
+    const res = await apiFetch(`${API_BASE}/admin/stations/${stationId}/queue/`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ song_ids: songIds }),
+    });
+    if (!res.ok) throw new Error('Failed to add songs to station');
+    return res.json();
+  },
+
+  async reorderStationQueue(stationId: number, order: number[]): Promise<{ message: string }> {
+    const res = await apiFetch(`${API_BASE}/admin/stations/${stationId}/queue/`, {
+      method: 'PATCH',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ order }),
+    });
+    if (!res.ok) throw new Error('Failed to reorder station queue');
+    return res.json();
+  },
+
+  async removeFromStationQueue(stationId: number, songId: number): Promise<{ message: string }> {
+    const res = await apiFetch(`${API_BASE}/admin/stations/${stationId}/queue/?song=${songId}`, {
+      method: 'DELETE',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+    });
+    if (!res.ok) throw new Error('Failed to remove song from station');
     return res.json();
   },
 

@@ -44,23 +44,108 @@ class Artist(models.Model):
         return f"{self.display_name} ({self.display_name_ne})" if self.display_name_ne else self.display_name
 
 
-class GenreCategory(models.TextChoices):
-    CLASSICAL_TRADITIONAL = 'classical_traditional', 'Classical & Traditional'
-    FOLK = 'folk', 'Folk & Lok Dohori'
-    POPULAR = 'popular', 'Popular & Contemporary'
-    REGIONAL = 'regional', 'Regional & Indigenous'
-    SPECIAL = 'special', 'Festive & Seasonal'
+class GenreCategory(models.Model):
+    """Dynamic genre category registry (fully editable from the admin portal).
+
+    Songs' primary genres point at a category slug, so categories can be
+    created, renamed, reordered and deleted at runtime without touching code.
+    """
+
+    slug = models.SlugField(max_length=50, unique=True)
+    name = models.CharField(max_length=100, unique=True)
+    name_ne = models.CharField(max_length=100, blank=True)
+    description = models.TextField(blank=True)
+    display_order = models.PositiveIntegerField(default=0, db_index=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['display_order', 'name']
+        verbose_name_plural = 'Genre categories'
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.name)
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.name
+
+
+# The categories that ship with the platform. They are seeded into the
+# GenreCategory table (see migration 0003) and can be edited afterwards.
+DEFAULT_GENRE_CATEGORIES = [
+    (
+        'classical_traditional',
+        'Classical & Traditional',
+        'शास्त्रीय तथा परम्परागत',
+        'Classical raagas, bhajans, and orchestral heritage.',
+        1,
+    ),
+    (
+        'folk',
+        'Folk & Lok Dohori',
+        'लोक तथा दोहोरी',
+        'Folk melodies and conversational lok dohori duets.',
+        2,
+    ),
+    (
+        'popular',
+        'Popular & Contemporary',
+        'लोकप्रिय तथा समकालीन',
+        'Adhunik, pop, rock, hip-hop and Nepali film songs.',
+        3,
+    ),
+    (
+        'regional',
+        'Regional & Indigenous',
+        'क्षेत्रीय तथा आदिवासी',
+        'Tamang Selo, Newa heritage and other regional traditions.',
+        4,
+    ),
+    (
+        'special',
+        'Festive & Seasonal',
+        'चाडपर्व र मौसमी',
+        'Dashain, Tihar and other seasonal celebrations.',
+        5,
+    ),
+]
+
+
+def category_slug(name):
+    """Normalise a category name/slug to the canonical slug form."""
+    return slugify(name or '').replace('-', '_')
+
+
+def ensure_default_genre_categories():
+    """Create the shipped categories if the registry is empty.
+
+    Keeps older installs and fresh test databases working before the admin
+    has configured anything, and makes category validation consistent.
+    """
+    if GenreCategory.objects.exists():
+        return GenreCategory.objects.order_by('display_order', 'name')
+    created = []
+    for slug, name, name_ne, description, order in DEFAULT_GENRE_CATEGORIES:
+        created.append(GenreCategory.objects.create(
+            slug=slug,
+            name=name,
+            name_ne=name_ne,
+            description=description,
+            display_order=order,
+            is_active=True,
+        ))
+    return GenreCategory.objects.filter(pk__in=[c.pk for c in created]).order_by('display_order', 'name')
 
 
 class Genre(models.Model):
     name = models.CharField(max_length=100, unique=True)
     name_ne = models.CharField(max_length=100, blank=True)
     slug = models.SlugField(max_length=120, unique=True)
-    category = models.CharField(
-        max_length=30,
-        choices=GenreCategory.choices,
-        default=GenreCategory.POPULAR
-    )
+    # Free-form slug validated against the GenreCategory registry, so new
+    # categories can be introduced from the admin portal at any time.
+    category = models.CharField(max_length=50, default='popular', db_index=True)
     description = models.TextField(blank=True)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
