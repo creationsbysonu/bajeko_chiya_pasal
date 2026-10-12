@@ -115,7 +115,7 @@ export const SongCard: React.FC<SongCardProps> = ({
           <button
             onClick={handlePlayClick}
             className={`absolute inset-0 flex items-center justify-center transition-all duration-300 ${
-              isPlaying ? 'opacity-100 bg-black/40' : 'opacity-0 group-hover:opacity-100 bg-black/30'
+              isPlaying ? 'opacity-100 bg-black/40' : 'opacity-100 md:opacity-0 md:group-hover:opacity-100 bg-black/30'
             }`}
             aria-label={isPlaying ? 'Pause song' : 'Play song'}
           >

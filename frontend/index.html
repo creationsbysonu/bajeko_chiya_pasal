@@ -2,15 +2,26 @@
 <html lang="ne" class="dark">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+    <!-- viewport-fit=cover enables env(safe-area-inset-*) so the notch / home
+         indicator never overlaps the player on modern phones -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover" />
     <meta name="text-scale" content="scale" />
     <meta name="theme-color" content="#171614" />
+    <meta name="color-scheme" content="dark" />
+
+    <!-- Add-to-home-screen / standalone PWA hints (iOS + Android) -->
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Purano Dhun" />
+    <meta name="format-detection" content="telephone=no" />
     <meta name="description" content="पुरानो धुन (Purano Dhun) - नेपाली संगीत र पुराना सम्झना। Original Nepali music discovery and nostalgic browser-based radio stations covering classical, folk, dohori, rock, film songs, and festive tunes." />
     <meta name="keywords" content="Nepali music, Purano Dhun, Nepali radio, Narayan Gopal, Tara Devi, Lok Dohori, Chiya Pasal, Nepathya, 1974 AD, नेपाली संगीत, पुरानो धुन" />
     <meta property="og:title" content="Purano Dhun | पुरानो धुन — Nepali Music Radio & Nostalgia" />
     <meta property="og:description" content="नेपाली संगीत, पुराना सम्झना। Timeless Nepali melodies across vintage radio stations, tea shops, bus journeys, and mountain acoustic vibes." />
     <meta property="og:type" content="music.radio_station" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
     <link rel="manifest" href="/manifest.webmanifest" />
 
     <!-- Google Fonts for Nepali and English Editorial Vintage Typography -->

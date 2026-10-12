@@ -40,7 +40,7 @@ export const Navigation: React.FC<NavigationProps> = ({
           : 'bg-black border-b border-white/5'
       }`}
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-[env(safe-area-inset-top)]">
         <div className="flex items-center justify-between h-14">
 
           {/* Wordmark */}
@@ -126,14 +126,16 @@ export const Navigation: React.FC<NavigationProps> = ({
           <div className="flex md:hidden items-center gap-2">
             <button
               onClick={toggleLocale}
-              className="text-[11px] text-neutral-400 hover:text-white px-2 py-1 transition-colors"
+              className="text-xs text-neutral-400 hover:text-white px-3 py-2 rounded transition-colors"
+              aria-label={locale === 'ne' ? 'Switch to English' : 'नेपालीमा भर्नुहोस्'}
             >
               {locale === 'ne' ? 'EN' : 'NE'}
             </button>
             <button
               onClick={() => setMobileOpen(!mobileOpen)}
-              className="p-1.5 text-neutral-400 hover:text-white transition-colors"
+              className="p-2.5 -mr-1 text-neutral-400 hover:text-white transition-colors"
               aria-label="Toggle menu"
+              aria-expanded={mobileOpen}
             >
               {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>

@@ -28,6 +28,7 @@ An original, production-oriented Nepali music discovery and radio platform inspi
 
 - **Audio Engine & Player Integration**:
   - **Strict Copyright Compliance**: Powered exclusively through the official YouTube IFrame Player API. No audio extraction, media redistribution, or downloading.
+  - **Mobile-First & Background Playback**: responsive layout with iPhone notch/home-indicator safe areas, thumb-friendly touch targets, and 16px form fields (no iOS focus zoom). Audio keeps playing when you lock the phone or switch apps — the player re-syncs on `visibilitychange`/`pageshow`, and the **Media Session API** puts artwork, title/artist, and play/pause/next/previous/seek controls on the Android/iOS lock screen, notification shade, and Bluetooth headsets.
   - Persistent bottom playback bar with scrubbable seek bar, volume control, mute, shuffle, and 3-way repeat mode (off, one, all).
   - Expandable cinematic player modal.
   - Queue drawer showing Up Next tracks and recently played history.

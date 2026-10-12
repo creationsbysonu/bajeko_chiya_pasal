@@ -34,7 +34,7 @@ export const RadioTuner: React.FC<RadioTunerProps> = ({ stations }) => {
       <div className="relative rounded-3xl overflow-hidden border border-white/10 bg-black shadow-2xl group">
         
         {/* Photographic Background with Atmospheric Gradient */}
-        <div className="relative aspect-[16/9] sm:aspect-[21/9] w-full overflow-hidden">
+        <div className="relative aspect-[4/3] sm:aspect-[16/9] lg:aspect-[21/9] w-full overflow-hidden">
           <img
             src={coverUrl}
             alt={activeStation.title}
@@ -46,10 +46,10 @@ export const RadioTuner: React.FC<RadioTunerProps> = ({ stations }) => {
         </div>
 
         {/* Floating Soundscape Information & Controls */}
-        <div className="absolute inset-0 p-6 sm:p-10 flex flex-col justify-between z-10">
+        <div className="absolute inset-0 p-5 sm:p-8 lg:p-10 flex flex-col justify-between z-10">
           
           {/* Top Bar: Ambient pill & Live Status */}
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-black/60 backdrop-blur-md border border-white/10 text-xs text-white">
               <span className={`w-2 h-2 rounded-full ${isPlaying ? 'bg-red-500 shadow-glow-red animate-pulse' : 'bg-neutral-600'}`} />
               <span className="font-mono text-[10px] tracking-widest uppercase text-neutral-500 font-bold">

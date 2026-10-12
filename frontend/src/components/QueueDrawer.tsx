@@ -19,8 +19,8 @@ export const QueueDrawer: React.FC = () => {
   if (!isQueueOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end bg-black/80 backdrop-blur-md animate-in fade-in">
-      <div className="w-full max-w-md bg-black border-l border-white/10 h-full flex flex-col shadow-2xl">
+    <div className="fixed inset-0 z-[70] flex justify-end bg-black/80 backdrop-blur-md animate-in fade-in">
+      <div className="w-full max-w-md bg-black border-l border-white/10 h-full flex flex-col shadow-2xl pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
         
         {/* Drawer Header */}
         <div className="p-5 border-b border-white/10 flex items-center justify-between bg-black">
@@ -37,7 +37,7 @@ export const QueueDrawer: React.FC = () => {
           </div>
           <button
             onClick={() => setIsQueueOpen(false)}
-            className="p-1.5 rounded-full text-white/60 hover:text-white hover:bg-white/10 border border-white/10 transition-colors"
+            className="p-2.5 rounded-full text-white/60 hover:text-white hover:bg-white/10 border border-white/10 transition-colors"
             aria-label="Close queue"
           >
             <X className="w-4 h-4" />

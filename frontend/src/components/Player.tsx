@@ -64,7 +64,7 @@ export const Player: React.FC = () => {
       <div
         className={
           isExpanded && currentSong
-            ? 'fixed z-50 left-1/2 -translate-x-1/2 top-20 md:top-24 w-[90vw] max-w-4xl aspect-video max-h-[55vh] rounded-2xl overflow-hidden border border-white/10 bg-black shadow-2xl transition-all duration-300 pointer-events-auto'
+            ? 'fixed z-[60] left-1/2 -translate-x-1/2 top-[calc(env(safe-area-inset-top)+5rem)] md:top-24 w-[90vw] max-w-4xl aspect-video max-h-[55vh] rounded-2xl overflow-hidden border border-white/10 bg-black shadow-2xl transition-all duration-300 pointer-events-auto'
             : 'fixed bottom-2 right-2 w-[240px] h-[135px] opacity-0 pointer-events-none -z-50 transition-all duration-300'
         }
       >
@@ -73,7 +73,7 @@ export const Player: React.FC = () => {
 
       {/* Expanded Cinematic View Modal */}
       {isExpanded && currentSong && (
-        <div className="fixed inset-0 z-50 bg-ink-950/95 backdrop-blur-xl flex flex-col justify-between p-4 md:p-8 animate-in fade-in">
+        <div className="fixed inset-0 z-50 bg-ink-950/95 backdrop-blur-xl flex flex-col justify-between overflow-y-auto px-4 pt-[calc(1rem+env(safe-area-inset-top))] pb-[calc(1rem+env(safe-area-inset-bottom))] md:px-8 md:pt-8 md:pb-8 animate-in fade-in">
           
           {/* Header */}
           <div className="flex items-center justify-between max-w-5xl mx-auto w-full">
@@ -191,14 +191,14 @@ export const Player: React.FC = () => {
 
       {/* Persistent Bottom Audio Player Bar */}
       <div
-        className={`fixed bottom-0 left-0 right-0 z-40 bg-black/98 backdrop-blur-md border-t border-white/8 shadow-2xl transition-transform duration-300 ${
+        className={`fixed bottom-0 left-0 right-0 z-40 bg-black/98 backdrop-blur-md border-t border-white/8 shadow-2xl pb-[env(safe-area-inset-bottom)] transition-transform duration-300 ${
           currentSong ? 'translate-y-0' : 'translate-y-full pointer-events-none'
         }`}
       >
 
         {/* Playback Error Banner if present */}
         {errorMessage && (
-          <div className="bg-red-950/90 text-white border-b border-red-500/40 px-4 py-2 text-xs flex items-center justify-between">
+          <div className="bg-red-950/90 text-white border-b border-red-500/40 px-3 sm:px-4 py-2 text-xs flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
             <div className="flex items-center gap-2">
               <AlertCircle className="w-4 h-4 flex-shrink-0" />
               <span>{errorMessage}</span>
@@ -214,13 +214,15 @@ export const Player: React.FC = () => {
           </div>
         )}
 
-        {/* Progress scrub bar */}
-        <div className="w-full h-0.5 bg-white/5 relative group cursor-pointer">
-          <div
-            className="h-full bg-red-600 transition-all duration-200 relative"
-            style={{ width: `${progressPercent}%` }}
-          >
-            <div className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-red-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
+        {/* Progress scrub bar — 16px tall hit area so it is easy to drag on touch screens */}
+        <div className="relative w-full h-4 flex items-center group cursor-pointer">
+          <div className="w-full h-0.5 bg-white/5 relative">
+            <div
+              className="h-full bg-red-600 transition-all duration-200 relative"
+              style={{ width: `${progressPercent}%` }}
+            >
+              <div className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-red-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
+            </div>
           </div>
           <input
             type="range"
@@ -230,13 +232,13 @@ export const Player: React.FC = () => {
             onChange={handleSeekChange}
             onMouseUp={handleSeekCommit}
             onTouchEnd={handleSeekCommit}
-            className="absolute inset-0 w-full opacity-0 cursor-pointer"
+            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
             aria-label="Seek bar"
           />
         </div>
 
         {/* Main Player Row */}
-        <div className="max-w-7xl mx-auto px-4 py-3.5 flex items-center justify-between gap-4">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 py-3 sm:py-3.5 flex items-center justify-between gap-2 sm:gap-4">
           
           {/* Left: Track Information */}
           <div className="flex items-center gap-3.5 min-w-0 flex-1 sm:max-w-xs">
@@ -277,7 +279,7 @@ export const Player: React.FC = () => {
 
           {/* Center: Playback Controls */}
           <div className="flex flex-col items-center gap-1">
-            <div className="flex items-center gap-3.5 sm:gap-4">
+            <div className="flex items-center gap-2.5 sm:gap-4">
               
               {/* Shuffle */}
               <button
@@ -304,7 +306,7 @@ export const Player: React.FC = () => {
               {/* Play / Pause button */}
               <button
                 onClick={togglePlayPause}
-                className="p-3.5 rounded-full bg-red-600 hover:bg-red-500 text-white shadow-glow-red border border-red-500/50 transition-all duration-300 ease-out hover:scale-105 active:scale-95"
+                className="p-3 sm:p-3.5 rounded-full bg-red-600 hover:bg-red-500 text-white shadow-glow-red border border-red-500/50 transition-all duration-300 ease-out hover:scale-105 active:scale-95"
                 title={status === 'playing' ? t.player.pause : t.player.play}
                 aria-label={status === 'playing' ? t.player.pause : t.player.play}
               >
@@ -372,7 +374,7 @@ export const Player: React.FC = () => {
             {/* Queue Drawer toggle */}
             <button
               onClick={() => setIsQueueOpen(true)}
-              className="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-neutral-300 border border-white/10 relative"
+              className="p-2.5 rounded-lg bg-white/5 hover:bg-white/10 text-neutral-300 border border-white/10 relative"
               title={t.player.queue}
               aria-label={t.player.queue}
             >
@@ -387,7 +389,7 @@ export const Player: React.FC = () => {
             {/* Expand / Minimize toggle */}
             <button
               onClick={() => setIsExpanded(true)}
-              className="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-neutral-300 border border-white/10 hidden sm:block"
+              className="p-2.5 rounded-lg bg-white/5 hover:bg-white/10 text-neutral-300 border border-white/10"
               title="Expand player"
               aria-label="Expand player"
             >

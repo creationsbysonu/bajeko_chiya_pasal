@@ -62,11 +62,11 @@ export const TakedownModal: React.FC<TakedownModalProps> = ({
   const labelClass = 'block text-[10px] font-mono text-neutral-500 uppercase tracking-widest mb-1';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-      <div className="w-full max-w-lg bg-black border border-white/10 rounded-2xl p-6 md:p-8 shadow-2xl relative">
+    <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+      <div className="w-full max-w-lg bg-black border border-white/10 rounded-2xl p-6 md:p-8 shadow-2xl relative max-h-[85vh] overflow-y-auto">
         <button
           onClick={resetAndClose}
-          className="absolute top-4 right-4 p-1.5 rounded-lg text-neutral-500 hover:text-white hover:bg-white/5 transition-colors"
+          className="absolute top-4 right-4 p-2 -m-1 rounded-lg text-neutral-500 hover:text-white hover:bg-white/5 transition-colors"
           aria-label="Close modal"
         >
           <X className="w-4 h-4" />

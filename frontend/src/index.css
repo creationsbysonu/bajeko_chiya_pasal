@@ -108,6 +108,49 @@ button, a {
   box-shadow: 0 0 10px #DC2626;
 }
 
+/* ------------------------------ Mobile / touch ------------------------------ */
+
+/* Stop iOS from inflating text when rotating */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  /* Prevent pull-to-refresh from killing playback mid-song */
+  overscroll-behavior-y: contain;
+}
+
+/* Comfortable tapping: no grey flash, no double-tap zoom delay */
+body {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button,
+a,
+[role='button'],
+select,
+label {
+  touch-action: manipulation;
+}
+
+/* Sliders own their gesture so dragging never scrolls the page underneath */
+input[type='range'] {
+  touch-action: none;
+}
+
+/* iOS auto-zooms any focused field smaller than 16px — keep mobile form
+   controls at 16px so the layout never jumps while typing. */
+@media (max-width: 640px) {
+  input:not([type='range']),
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* Bottom player bar must never sit under the iPhone home indicator */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
 /* Reduced Motion Support */
 @media (prefers-reduced-motion: reduce) {
   *,

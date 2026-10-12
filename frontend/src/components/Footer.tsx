@@ -20,7 +20,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenTakedown, onOpenAdmin }) =
   ];
 
   return (
-    <footer className="bg-black border-t border-white/8 pt-14 pb-28 text-neutral-400">
+    <footer className="bg-black border-t border-white/8 pt-14 pb-[calc(7rem+env(safe-area-inset-bottom))] text-neutral-400">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
         {/* 3-col layout */}

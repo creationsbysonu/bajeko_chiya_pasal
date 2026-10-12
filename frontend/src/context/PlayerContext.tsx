@@ -102,6 +102,23 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const isApiReadyRef = useRef<boolean>(false);
   const containerId = 'purano-dhun-yt-iframe-slot';
 
+  // Listener intent + background-safe state. `wantsPlaybackRef` survives screen
+  // locks and tab switches so we know whether audio should still be running when
+  // the page is backgrounded, unlocked, or restored from the back/forward cache.
+  const wantsPlaybackRef = useRef<boolean>(false);
+  const hiddenAtRef = useRef<number>(0);
+  const actionsRef = useRef<{
+    togglePlayPause: () => void;
+    nextTrack: () => void;
+    prevTrack: () => void;
+    seekTo: (seconds: number) => void;
+  }>({
+    togglePlayPause: () => undefined,
+    nextTrack: () => undefined,
+    prevTrack: () => undefined,
+    seekTo: () => undefined,
+  });
+
   // Load YouTube IFrame Player API script safely once
   useEffect(() => {
     if (window.YT && window.YT.Player) {
@@ -270,13 +287,25 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
               const state = evt.data;
               if (state === window.YT.PlayerState.PLAYING) {
                 setStatus('playing');
+                wantsPlaybackRef.current = true;
                 consecutiveErrorsRef.current = 0;
                 api.logPlaybackEvent({ event_type: 'start', song: currentSong.id, station: currentStation?.id });
               } else if (state === window.YT.PlayerState.PAUSED) {
                 setStatus('paused');
+                // A pause observed while the page is visible is almost always the
+                // listener's own action (our bar, the embed controls, or a
+                // lock-screen press routed to us) — honour it. A pause right after
+                // the screen goes off is usually the mobile browser throttling the
+                // embed, so keep the intent and resume once it is back in the
+                // foreground or while it retries in the background.
+                const hiddenForMs = hiddenAtRef.current > 0 ? Date.now() - hiddenAtRef.current : 0;
+                if (document.visibilityState === 'visible' || hiddenForMs > 6000) {
+                  wantsPlaybackRef.current = false;
+                }
               } else if (state === window.YT.PlayerState.BUFFERING) {
                 setStatus('buffering');
               } else if (state === window.YT.PlayerState.ENDED) {
+                wantsPlaybackRef.current = false;
                 setStatus('ended');
                 api.logPlaybackEvent({ event_type: 'complete', song: currentSong.id, station: currentStation?.id });
                 nextTrack();
@@ -324,6 +353,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const playSong = (song: Song, station?: Station, newQueue?: Song[]) => {
     consecutiveErrorsRef.current = 0;
+    wantsPlaybackRef.current = true;
     setCurrentSong(song);
     if (station) setCurrentStation(station);
     if (newQueue) {
@@ -347,6 +377,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       const songToPlay = startSong || stationSongs[0];
       const remainingQueue = stationSongs.filter((s) => s.id !== songToPlay.id);
 
+      wantsPlaybackRef.current = true;
       setCurrentSong(songToPlay);
       setQueue(remainingQueue);
     } catch {
@@ -358,9 +389,11 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (!ytPlayerRef.current) return;
     try {
       if (status === 'playing') {
+        wantsPlaybackRef.current = false;
         ytPlayerRef.current.pauseVideo();
         setStatus('paused');
       } else {
+        wantsPlaybackRef.current = true;
         ytPlayerRef.current.playVideo();
         setStatus('playing');
       }
@@ -423,6 +456,187 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const clearError = () => {
     setErrorMessage(null);
   };
+
+  // Keep actionsRef fresh so the one-time Media Session listeners below always
+  // call the latest closures.
+  useEffect(() => {
+    actionsRef.current = { togglePlayPause, nextTrack, prevTrack, seekTo };
+  });
+
+  // ---------------------------------------------------------------------------
+  // Background / lock-screen playback (mobile)
+  // ---------------------------------------------------------------------------
+  // Mobile browsers occasionally pause an embedded player right after the page
+  // is hidden or the screen locks. As long as the listener still wants audio,
+  // re-issue a play command whenever the page is hidden, shown, restored from
+  // the back/forward cache, or refocused (a harmless no-op when playback never
+  // stopped) so audio keeps playing with the phone locked.
+  useEffect(() => {
+    const resumeIfWanted = () => {
+      if (!wantsPlaybackRef.current || !ytPlayerRef.current) return;
+      try {
+        ytPlayerRef.current.playVideo();
+      } catch {
+        // player still initialising — a later event will catch up
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        hiddenAtRef.current = Date.now();
+        resumeIfWanted();
+        // Retry shortly after: some mobile UAs pause the embed a beat after the
+        // screen goes off (background timers are throttled but still fire).
+        window.setTimeout(resumeIfWanted, 400);
+        window.setTimeout(resumeIfWanted, 2500);
+      } else {
+        hiddenAtRef.current = 0;
+        resumeIfWanted();
+      }
+    };
+
+    const handleResume = () => {
+      hiddenAtRef.current = 0;
+      resumeIfWanted();
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('pageshow', handleResume);
+    window.addEventListener('focus', handleResume);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('pageshow', handleResume);
+      window.removeEventListener('focus', handleResume);
+    };
+  }, []);
+
+  // Media Session API: artwork + transport controls on Android/iOS lock screens,
+  // notification shades, Bluetooth headsets, Android Auto and wearables.
+  useEffect(() => {
+    const ms = typeof navigator !== 'undefined' ? navigator.mediaSession : undefined;
+    if (!ms) return;
+
+    const setHandler = (action: MediaSessionAction, handler: MediaSessionActionHandler | null) => {
+      try {
+        ms.setActionHandler(action, handler);
+      } catch {
+        // action not supported by this browser
+      }
+    };
+
+    setHandler('play', () => {
+      wantsPlaybackRef.current = true;
+      try {
+        ytPlayerRef.current?.playVideo();
+        setStatus('playing');
+      } catch {
+        // ignore
+      }
+    });
+    setHandler('pause', () => {
+      wantsPlaybackRef.current = false;
+      try {
+        ytPlayerRef.current?.pauseVideo();
+        setStatus('paused');
+      } catch {
+        // ignore
+      }
+    });
+    setHandler('stop', () => {
+      wantsPlaybackRef.current = false;
+      try {
+        ytPlayerRef.current?.pauseVideo();
+      } catch {
+        // ignore
+      }
+    });
+    setHandler('previoustrack', () => actionsRef.current.prevTrack());
+    setHandler('nexttrack', () => actionsRef.current.nextTrack());
+    setHandler('seekbackward', (details) => {
+      const offset = details.seekOffset || 10;
+      try {
+        const player = ytPlayerRef.current;
+        if (player) player.seekTo(Math.max(0, player.getCurrentTime() - offset), true);
+      } catch {
+        // ignore
+      }
+    });
+    setHandler('seekforward', (details) => {
+      const offset = details.seekOffset || 10;
+      try {
+        const player = ytPlayerRef.current;
+        if (player) player.seekTo(Math.min(player.getDuration() || Number.MAX_SAFE_INTEGER, player.getCurrentTime() + offset), true);
+      } catch {
+        // ignore
+      }
+    });
+    setHandler('seekto', (details) => {
+      if (typeof details.seekTime !== 'number') return;
+      try {
+        ytPlayerRef.current?.seekTo(details.seekTime, true);
+      } catch {
+        // ignore
+      }
+    });
+
+    return () => {
+      const actions: MediaSessionAction[] = [
+        'play', 'pause', 'stop', 'previoustrack', 'nexttrack',
+        'seekbackward', 'seekforward', 'seekto',
+      ];
+      actions.forEach((action) => setHandler(action, null));
+    };
+  }, []);
+
+  // Publish now-playing metadata + playback state for lock screens.
+  useEffect(() => {
+    const ms = typeof navigator !== 'undefined' ? navigator.mediaSession : undefined;
+    if (!ms) return;
+
+    if (!currentSong) {
+      ms.metadata = null;
+      ms.playbackState = 'none';
+      return;
+    }
+
+    const thumb = `https://img.youtube.com/vi/${currentSong.provider_video_id}/hqdefault.jpg`;
+    try {
+      if (typeof MediaMetadata !== 'undefined') {
+        ms.metadata = new MediaMetadata({
+          title: currentSong.title_ne || currentSong.title,
+          artist: currentSong.artist_name_ne || currentSong.artist_name,
+          album: currentStation ? currentStation.title_ne || currentStation.title : 'Purano Dhun',
+          artwork: [
+            { src: currentSong.artwork_url || thumb, sizes: '480x360', type: 'image/jpeg' },
+            { src: thumb, sizes: '480x360', type: 'image/jpeg' },
+            { src: `https://img.youtube.com/vi/${currentSong.provider_video_id}/maxresdefault.jpg`, sizes: '1280x720', type: 'image/jpeg' },
+          ],
+        });
+      }
+    } catch {
+      // MediaMetadata unsupported — lock screen falls back to the page title
+    }
+
+    ms.playbackState = status === 'playing' ? 'playing' : status === 'unstarted' ? 'none' : 'paused';
+  }, [currentSong, currentStation, status]);
+
+  // Keep the lock-screen seek bar in sync (best effort; some UAs throw on
+  // invalid values, so every call is guarded).
+  useEffect(() => {
+    const ms = typeof navigator !== 'undefined' ? navigator.mediaSession : undefined;
+    if (!ms || typeof ms.setPositionState !== 'function') return;
+    if (!currentSong || !Number.isFinite(duration) || duration <= 0) return;
+    try {
+      ms.setPositionState({
+        duration,
+        position: Math.min(Math.max(currentTime, 0), duration),
+        playbackRate: 1,
+      });
+    } catch {
+      // invalid values for this user agent — ignore
+    }
+  }, [currentSong, currentTime, duration]);
 
   // Keyboard navigation shortcuts
   useEffect(() => {
