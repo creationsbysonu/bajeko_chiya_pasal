@@ -238,10 +238,10 @@ export const Player: React.FC = () => {
         </div>
 
         {/* Main Player Row */}
-        <div className="max-w-7xl mx-auto px-3 sm:px-4 py-3 sm:py-3.5 flex items-center justify-between gap-2 sm:gap-4">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 py-3 sm:py-3.5 grid grid-cols-1 sm:grid-cols-3 items-center gap-2 sm:gap-4">
           
           {/* Left: Track Information */}
-          <div className="flex items-center gap-3.5 min-w-0 flex-1 sm:max-w-xs">
+          <div className="flex items-center gap-3.5 min-w-0 sm:justify-start justify-center sm:order-1 order-2">
             <div className="w-12 h-12 rounded-xl border border-white/10 flex-shrink-0 relative overflow-hidden bg-black shadow-md">
               {currentSong ? (
                 <img
@@ -278,7 +278,7 @@ export const Player: React.FC = () => {
           </div>
 
           {/* Center: Playback Controls */}
-          <div className="flex flex-col items-center gap-1">
+          <div className="flex flex-col items-center gap-1 sm:order-2 order-1">
             <div className="flex items-center gap-2.5 sm:gap-4">
               
               {/* Shuffle */}
@@ -349,7 +349,7 @@ export const Player: React.FC = () => {
           </div>
 
           {/* Right: Volume, Queue Drawer, and Expand */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 sm:justify-end justify-center sm:order-3 order-3">
             
             {/* Volume slider */}
             <div className="hidden lg:flex items-center gap-2">
