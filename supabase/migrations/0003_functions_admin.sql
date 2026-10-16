@@ -951,28 +951,36 @@ $$;
 
 create or replace function public.admin_genres()
 returns jsonb
-language sql
+language plpgsql
 stable
 security definer
 set search_path = public, pg_temp
 as $$
-    select coalesce(jsonb_agg(payload order by category, name), '[]'::jsonb)
-    from (
-        select
-            g.category,
-            g.name,
-            jsonb_build_object(
-                'id', g.id,
-                'name', g.name,
-                'name_ne', g.name_ne,
-                'slug', g.slug,
-                'category', g.category,
-                'description', g.description,
-                'is_active', g.is_active,
-                'songs_count', (select count(*) from public.songs s where s.primary_genre_id = g.id)
-            ) as payload
-        from public.genres g
-    ) t;
+begin
+    if not public.is_admin() then
+        raise exception 'Admin access required';
+    end if;
+
+    return (
+        select coalesce(jsonb_agg(payload order by category, name), '[]'::jsonb)
+        from (
+            select
+                g.category,
+                g.name,
+                jsonb_build_object(
+                    'id', g.id,
+                    'name', g.name,
+                    'name_ne', g.name_ne,
+                    'slug', g.slug,
+                    'category', g.category,
+                    'description', g.description,
+                    'is_active', g.is_active,
+                    'songs_count', (select count(*) from public.songs s where s.primary_genre_id = g.id)
+                ) as payload
+            from public.genres g
+        ) t
+    );
+end;
 $$;
 
 create or replace function public.admin_genre_create(p_data jsonb)
@@ -1159,34 +1167,42 @@ create or replace function public.admin_artists(
     p_verification text default ''
 )
 returns jsonb
-language sql
+language plpgsql
 stable
 security definer
 set search_path = public, pg_temp
 as $$
-    select coalesce(jsonb_agg(payload order by display_name), '[]'::jsonb)
-    from (
-        select
-            a.display_name,
-            jsonb_build_object(
-                'id', a.id,
-                'display_name', a.display_name,
-                'display_name_ne', a.display_name_ne,
-                'biography', a.biography,
-                'biography_ne', a.biography_ne,
-                'profile_image', a.profile_image,
-                'verification_status', a.verification_status,
-                'songs_count', (select count(*) from public.songs s where s.artist_id = a.id),
-                'created_at', a.created_at
-            ) as payload
-        from public.artists a
-        where (
-            coalesce(p_search, '') = ''
-            or a.display_name ilike '%' || p_search || '%'
-            or a.display_name_ne ilike '%' || p_search || '%'
-        )
-        and (coalesce(p_verification, '') = '' or a.verification_status = p_verification)
-    ) t;
+begin
+    if not public.is_admin() then
+        raise exception 'Admin access required';
+    end if;
+
+    return (
+        select coalesce(jsonb_agg(payload order by display_name), '[]'::jsonb)
+        from (
+            select
+                a.display_name,
+                jsonb_build_object(
+                    'id', a.id,
+                    'display_name', a.display_name,
+                    'display_name_ne', a.display_name_ne,
+                    'biography', a.biography,
+                    'biography_ne', a.biography_ne,
+                    'profile_image', a.profile_image,
+                    'verification_status', a.verification_status,
+                    'songs_count', (select count(*) from public.songs s where s.artist_id = a.id),
+                    'created_at', a.created_at
+                ) as payload
+            from public.artists a
+            where (
+                coalesce(p_search, '') = ''
+                or a.display_name ilike '%' || p_search || '%'
+                or a.display_name_ne ilike '%' || p_search || '%'
+            )
+            and (coalesce(p_verification, '') = '' or a.verification_status = p_verification)
+        ) t
+    );
+end;
 $$;
 
 create or replace function public.admin_artist_create(p_data jsonb)
@@ -1317,27 +1333,35 @@ $$;
 
 create or replace function public.admin_stations()
 returns jsonb
-language sql
+language plpgsql
 stable
 security definer
 set search_path = public, pg_temp
 as $$
-    select coalesce(jsonb_agg(payload order by display_order, title), '[]'::jsonb)
-    from (
-        select
-            st.display_order,
-            st.title,
-            jsonb_build_object(
-                'id', st.id, 'slug', st.slug, 'title', st.title, 'title_ne', st.title_ne,
-                'tagline', st.tagline, 'tagline_ne', st.tagline_ne,
-                'description', st.description, 'description_ne', st.description_ne,
-                'cover_image', st.cover_image, 'theme_color', st.theme_color,
-                'ambient_type', st.ambient_type, 'is_featured', st.is_featured,
-                'is_active', st.is_active, 'display_order', st.display_order,
-                'songs_count', (select count(*) from public.station_songs ss where ss.station_id = st.id)
-            ) as payload
-        from public.stations st
-    ) t;
+begin
+    if not public.is_admin() then
+        raise exception 'Admin access required';
+    end if;
+
+    return (
+        select coalesce(jsonb_agg(payload order by display_order, title), '[]'::jsonb)
+        from (
+            select
+                st.display_order,
+                st.title,
+                jsonb_build_object(
+                    'id', st.id, 'slug', st.slug, 'title', st.title, 'title_ne', st.title_ne,
+                    'tagline', st.tagline, 'tagline_ne', st.tagline_ne,
+                    'description', st.description, 'description_ne', st.description_ne,
+                    'cover_image', st.cover_image, 'theme_color', st.theme_color,
+                    'ambient_type', st.ambient_type, 'is_featured', st.is_featured,
+                    'is_active', st.is_active, 'display_order', st.display_order,
+                    'songs_count', (select count(*) from public.station_songs ss where ss.station_id = st.id)
+                ) as payload
+            from public.stations st
+        ) t
+    );
+end;
 $$;
 
 create or replace function public.admin_station_create(p_data jsonb)
@@ -1952,47 +1976,55 @@ create or replace function public.admin_takedowns(
     p_search text default ''
 )
 returns jsonb
-language sql
+language plpgsql
 stable
 security definer
 set search_path = public, pg_temp
 as $$
-    select jsonb_build_object(
-        'count', count(*)::bigint,
-        'results', coalesce(jsonb_agg(payload order by created_at desc), '[]'::jsonb),
-        'available_statuses', '["pending", "under_review", "content_unpublished", "resolved_kept", "rejected"]'::jsonb
-    )
-    from (
-        select
-            tr.created_at as created_at,
-            jsonb_build_object(
-                'id', tr.id,
-                'song', tr.song_id,
-                'song_title', s.title,
-                'artist_name', a.display_name,
-                'claimant_name', tr.claimant_name,
-                'claimant_email', tr.claimant_email,
-                'reason', tr.reason,
-                'details', tr.details,
-                'status', tr.status,
-                'resolution_notes', tr.resolution_notes,
-                'created_at', tr.created_at,
-                'resolved_at', tr.resolved_at
-            ) as payload
-        from public.takedown_requests tr
-        join public.songs s on s.id = tr.song_id
-        left join public.artists a on a.id = s.artist_id
-        where (coalesce(p_status, '') = '' or tr.status = p_status)
-          and (coalesce(p_reason, '') = '' or tr.reason = p_reason)
-          and (
-              coalesce(p_search, '') = '' or
-              s.title ilike '%' || p_search || '%' or
-              s.title_ne ilike '%' || p_search || '%' or
-              a.display_name ilike '%' || p_search || '%' or
-              tr.claimant_name ilike '%' || p_search || '%' or
-              tr.claimant_email ilike '%' || p_search || '%'
-          )
-    ) t;
+begin
+    if not public.is_admin() then
+        raise exception 'Admin access required';
+    end if;
+
+    return (
+        select jsonb_build_object(
+            'count', count(*)::bigint,
+            'results', coalesce(jsonb_agg(payload order by created_at desc), '[]'::jsonb),
+            'available_statuses', '["pending", "under_review", "content_unpublished", "resolved_kept", "rejected"]'::jsonb
+        )
+        from (
+            select
+                tr.created_at as created_at,
+                jsonb_build_object(
+                    'id', tr.id,
+                    'song', tr.song_id,
+                    'song_title', s.title,
+                    'artist_name', a.display_name,
+                    'claimant_name', tr.claimant_name,
+                    'claimant_email', tr.claimant_email,
+                    'reason', tr.reason,
+                    'details', tr.details,
+                    'status', tr.status,
+                    'resolution_notes', tr.resolution_notes,
+                    'created_at', tr.created_at,
+                    'resolved_at', tr.resolved_at
+                ) as payload
+            from public.takedown_requests tr
+            join public.songs s on s.id = tr.song_id
+            left join public.artists a on a.id = s.artist_id
+            where (coalesce(p_status, '') = '' or tr.status = p_status)
+              and (coalesce(p_reason, '') = '' or tr.reason = p_reason)
+              and (
+                  coalesce(p_search, '') = '' or
+                  s.title ilike '%' || p_search || '%' or
+                  s.title_ne ilike '%' || p_search || '%' or
+                  a.display_name ilike '%' || p_search || '%' or
+                  tr.claimant_name ilike '%' || p_search || '%' or
+                  tr.claimant_email ilike '%' || p_search || '%'
+              )
+        ) t
+    );
+end;
 $$;
 
 create or replace function public.admin_takedown_action(

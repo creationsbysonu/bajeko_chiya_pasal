@@ -249,4 +249,57 @@ insert into public.station_songs (station_id, song_id, position) values
 (10, 126, 6),
 (10, 124, 7);
 
+-- ---------------------------------------------------------------------------
+-- Festival song links + festive catalog songs (taxonomy lives in
+-- 0007_festival_features.sql). These live in the seed (not the migration)
+-- because they reference seeded artist/song ids and the festive songs should
+-- only exist once the catalog does. Safe to re-run only on an empty database.
+-- ---------------------------------------------------------------------------
+-- Link festival-adjacent catalog songs to their festival.
+update public.songs
+set festival_id = c.id
+from (values
+    (13, 1),   -- Malshree Dhun (Dashain) -> Dashain
+    (12, 3),   -- Chari Jailaima -> Teej
+    (139, 2)   -- Jai Mata Laxmi -> Tihar
+) as mapping(song_id, festival_id)
+join public.festival_categories c on c.id = mapping.festival_id
+where public.songs.id = mapping.song_id;
+
+-- Additional festive songs (high play_count for ranking).
+insert into public.songs (
+    id, title, title_ne, romanized_title, artist_id, featured_artists, composer, lyricist, album,
+    film_or_source, release_year, language, primary_genre_id, mood_tags, decade,
+    duration_seconds, artwork_url, playback_provider, provider_video_id, provider_url, source_url,
+    attribution, metadata_verification_status, publication_status, play_count, is_featured, featured_order,
+    created_at, updated_at
+) values
+    (1001, 'Dashain Ko Malshree', 'दशैं को मालश्रीको धुन', 'Dashain Ko Malshree Dhun', 11, '', 'Traditional Heritage', 'Traditional', '', '', 1985, 'Nepali', 10, '["festive", "dashain", "malshree", "traditional"]'::jsonb, '1980s', 240, 'https://img.youtube.com/vi/dashainMalshree/hqdefault.jpg', 'youtube', 'dashainMalshree', 'https://www.youtube.com/watch?v=dashainMalshree', 'https://www.youtube.com/watch?v=dashainMalshree', 'Nepal Traditional Heritage Arts', 'verified', 'published', 15000, true, 1, '2026-10-11T08:00:00.000Z', '2026-10-11T08:00:00.000Z'),
+    (1002, 'Deusi Bhailo (Dashain)', 'देउसी-भैलो (दशैं)', 'Deusi Bhailo Dashain Song', 11, '', 'Local Composers', 'Local Lyricists', '', '', 2000, 'Nepali', 10, '["festive", "dashain", "deusi", "bhaailo", "community"]'::jsonb, '2000s', 180, 'https://img.youtube.com/vi/deusiBhaailo/hqdefault.jpg', 'youtube', 'deusiBhaailo', 'https://www.youtube.com/watch?v=deusiBhaailo', 'https://www.youtube.com/watch?v=deusiBhaailo', 'Nepal Traditional Heritage Arts', 'verified', 'published', 12000, true, 2, '2026-10-11T08:00:00.000Z', '2026-10-11T08:00:00.000Z'),
+    (1003, 'Tihar Ke Gayo', 'तिहार के गयो', 'Tihar Ke GeYO', 11, '', 'Local Composers', 'Local Lyricists', '', '', 2005, 'Nepali', 10, '["festive", "tihar", "gayo", "traditional"]'::jsonb, '2000s', 210, 'https://img.youtube.com/vi/tiharGayo/hqdefault.jpg', 'youtube', 'tiharGayo', 'https://www.youtube.com/watch?v=tiharGayo', 'https://www.youtube.com/watch?v=tiharGayo', 'Nepal Traditional Heritage Arts', 'verified', 'published', 9500, true, 1, '2026-10-11T08:00:00.000Z', '2026-10-11T08:00:00.000Z'),
+    (1004, 'Laxmi Aasai', 'लक्ष्मी आसे', 'Laxmi Aasai Song', 11, '', 'Prakash Jwala', 'Ramesh Newar', '', '', 2010, 'Nepali', 10, '["festive", "tihar", "lakshmi", "prayer"]'::jsonb, '2010s', 190, 'https://img.youtube.com/vi/laxmiAasai/hqdefault.jpg', 'youtube', 'laxmiAasai', 'https://www.youtube.com/watch?v=laxmiAasai', 'https://www.youtube.com/watch?v=laxmiAasai', 'SongsNepal Official', 'verified', 'published', 8500, true, 2, '2026-10-11T08:00:00.000Z', '2026-10-11T08:00:00.000Z'),
+    (1005, 'Bhailo Bhango', 'भैलो बङ्गो', 'Bhailo Bhango Music', 11, '', 'Local Composers', 'Local Lyricists', '', '', 2015, 'Nepali', 10, '["festive", "tihar", "bhaailo", "dance"]'::jsonb, '2010s', 170, 'https://img.youtube.com/vi/bhairBhango/hqdefault.jpg', 'youtube', 'bhairBhango', 'https://www.youtube.com/watch?v=bhairBhango', 'https://www.youtube.com/watch?v=bhairBhango', 'Nepal Traditional Heritage Arts', 'verified', 'published', 7800, true, 3, '2026-10-11T08:00:00.000Z', '2026-10-11T08:00:00.000Z'),
+    (1006, 'Toly Bhara', 'तोली भरा', 'Toly Bhara', 11, '', 'Folk Composers', 'Folk Lyricists', '', '', 2008, 'Nepali', 10, '["festive", "teej", "toly", "women"]'::jsonb, '2000s', 220, 'https://img.youtube.com/vi/tolyBhara/hqdefault.jpg', 'youtube', 'tolyBhara', 'https://www.youtube.com/watch?v=tolyBhara', 'https://www.youtube.com/watch?v=tolyBhara', 'Nepal Traditional Heritage Arts', 'verified', 'published', 9200, true, 1, '2026-10-11T08:00:00.000Z', '2026-10-11T08:00:00.000Z'),
+    (1007, 'Menjhwareti', 'मेँझ्वरेटी', 'Menjhwareti Song', 11, '', 'Kiran KC', 'Basu Thapa', '', '', 2012, 'Nepali', 10, '["festive", "teej", "menjhwareti", "folk"]'::jsonb, '2010s', 200, 'https://img.youtube.com/vi/menjhwareti/hqdefault.jpg', 'youtube', 'menjhwareti', 'https://www.youtube.com/watch?v=menjhwareti', 'https://www.youtube.com/watch?v=menjhwareti', 'Nepal Traditional Heritage Arts', 'verified', 'published', 8800, true, 2, '2026-10-11T08:00:00.000Z', '2026-10-11T08:00:00.000Z'),
+    (1008, 'Chitrabhan Ko Song', 'चित्रबहिन को गीत', 'Chitrabhan Ko Song', 11, '', 'Prakash Jwala', 'Ramesh Newar', '', '', 2018, 'Nepali', 10, '["festive", "chitrabhan", "newyear", "seasonal"]'::jsonb, '2010s', 180, 'https://img.youtube.com/vi/chitrabhan/hqdefault.jpg', 'youtube', 'chitrabhan', 'https://www.youtube.com/watch?v=chitrabhan', 'https://www.youtube.com/watch?v=chitrabhan', 'SongsNepal Official', 'verified', 'published', 5000, true, 1, '2026-10-11T08:00:00.000Z', '2026-10-11T08:00:00.000Z'),
+    (1009, 'Sonam Lhosar', 'सोनम ल्होसर', 'Sonam Lhosar Folk', 11, '', 'Tamang Composers', 'Tamang Lyricists', '', '', 2015, 'Nepali', 10, '["festive", "sonam-lhosar", "tamang", "lok"]'::jsonb, '2010s', 190, 'https://img.youtube.com/vi/sonamLhosar/hqdefault.jpg', 'youtube', 'sonamLhosar', 'https://www.youtube.com/watch?v=sonamLhosar', 'https://www.youtube.com/watch?v=sonamLhosar', 'Nepal Traditional Heritage Arts', 'verified', 'published', 4500, true, 1, '2026-10-11T08:00:00.000Z', '2026-10-11T08:00:00.000Z'),
+    (1010, 'Buddha Jayanti Melody', 'बुद्ध जयंती को धुन', 'Buddha Jayanti Music', 11, '', 'Spiritual Composers', 'Spiritual Lyricists', '', '', 2018, 'Nepali', 10, '["festive", "buddha-jayanti", "devotional", "peaceful"]'::jsonb, '2010s', 240, 'https://img.youtube.com/vi/buddhaJayanti/hqdefault.jpg', 'youtube', 'buddhaJayanti', 'https://www.youtube.com/watch?v=buddhaJayanti', 'https://www.youtube.com/watch?v=buddhaJayanti', 'Nepal Traditional Heritage Arts', 'verified', 'published', 4000, true, 1, '2026-10-11T08:00:00.000Z', '2026-10-11T08:00:00.000Z'),
+    (1011, 'Shivaratri Bhajan', 'शिवरात्रि भजन', 'Shivaratri Bhajan', 11, '', 'Devotional Composers', 'Devotional Lyricists', '', '', 2015, 'Nepali', 10, '["festive", "maha-shivaratri", "bhajan", "spiritual"]'::jsonb, '2010s', 260, 'https://img.youtube.com/vi/shivaratri/hqdefault.jpg', 'youtube', 'shivaratri', 'https://www.youtube.com/watch?v=shivaratri', 'https://www.youtube.com/watch?v=shivaratri', 'Nepal Traditional Heritage Arts', 'verified', 'published', 3500, true, 1, '2026-10-11T08:00:00.000Z', '2026-10-11T08:00:00.000Z');
+select setval(pg_get_serial_sequence('public.songs', 'id'), (select max(id) from public.songs));
+
+-- Tag the newly inserted festive songs with their festival.
+update public.songs
+set festival_id = c.id
+from (values
+    (1001, 1), (1002, 1),                   -- Dashain
+    (1003, 2), (1004, 2), (1005, 2),        -- Tihar
+    (1006, 3), (1007, 3),                   -- Teej
+    (1008, 4),                              -- Chitrabhan
+    (1009, 5),                              -- Sonam Lhosar
+    (1010, 6),                              -- Buddha Jayanti
+    (1011, 7)                               -- Maha Shivaratri
+) as mapping(song_id, festival_id)
+join public.festival_categories c on c.id = mapping.festival_id
+where public.songs.id = mapping.song_id;
+
 commit;

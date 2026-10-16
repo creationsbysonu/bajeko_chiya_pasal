@@ -224,7 +224,7 @@ check('get_station_detail 404 message', station404?.includes('Station not found'
 
 const songs = await rpc('get_songs');
 check('get_songs paginates at 24', songs?.results?.length === 24, `got ${songs?.results?.length}`);
-check('get_songs count matches seed', songs?.count === 66, `got ${songs?.count}`);
+check('get_songs count matches seed', songs?.count === 77, `got ${songs?.count}`);
 check('get_songs DRF envelope', typeof songs?.next === 'string' && songs?.previous === null, JSON.stringify({ next: songs?.next, previous: songs?.previous }));
 
 const songsPage2 = await rpc('get_songs', { p_page: 2 });
@@ -238,7 +238,7 @@ check('get_songs romanized search finds rows', (romanized?.count ?? 0) >= 0, JSO
 const genreFiltered = await rpc('get_songs', { p_genre: 'lok-dohori' });
 check('get_songs genre filter', genreFiltered?.count >= 0, JSON.stringify(genreFiltered?.count));
 const ordered = await rpc('get_songs', { p_ordering: 'bogus' });
-check('get_songs unknown ordering falls back', ordered?.count === 66);
+check('get_songs unknown ordering falls back', ordered?.count === 77);
 
 const songDetail = await rpc('get_song_detail', { p_id: songs.results[0].id });
 check('get_song_detail shape', songDetail?.title === songs.results[0].title);
@@ -262,6 +262,21 @@ check('get_languages shape', Array.isArray(languages) && languages.every((l) => 
 
 const featured = await rpc('get_featured');
 check('get_featured stations + songs', Array.isArray(featured?.stations) && featured?.songs?.length === 8, JSON.stringify({ s: featured?.stations?.length, n: featured?.songs?.length }));
+
+const festivals = await rpc('get_festival_categories');
+check('get_festival_categories returns seeded festivals', Array.isArray(festivals) && festivals.length === 7, `got ${festivals?.length}`);
+check('get_festival_categories shape', festivals?.[0]?.slug === 'dashain' && festivals?.[0]?.name_ne !== undefined && festivals?.[0]?.emoji !== undefined, JSON.stringify(festivals?.[0]).slice(0, 140));
+
+const dashain = await rpc('get_festival_songs', { p_festival_slug: 'dashain', p_limit: 24 });
+const dashainIds = (dashain?.results ?? []).map((s) => s.id);
+check('get_festival_songs returns festive songs', Array.isArray(dashain?.results) && dashain.results.length > 0 && dashain?.count === dashain.results.length, JSON.stringify({ count: dashain?.count, len: dashain?.results?.length }));
+// Regression: the lateral join used to shadow the outer `songs s` alias, so
+// every festival song was returned once per row in the whole catalog.
+check('get_festival_songs has no duplicate rows', new Set(dashainIds).size === dashainIds.length, `distinct ${new Set(dashainIds).size} of ${dashainIds.length}`);
+check('get_festival_songs respects the limit', dashainIds.length <= 24, `got ${dashainIds.length}`);
+
+const missingFestival = await rpc('get_festival_songs', { p_festival_slug: 'does-not-exist' });
+check('get_festival_songs unknown slug is empty', missingFestival?.count === 0 && missingFestival?.results?.length === 0, JSON.stringify(missingFestival).slice(0, 120));
 
 // ---------------------------------------------------------------------------
 // RLS: direct table access must be denied for anon/authenticated
@@ -360,6 +375,15 @@ check('anon admin_stats refused', anonStats?.includes('Admin access required'), 
 const nonAdminStats = await rpcError('admin_stats', {}, (fn) => asUser(authUser.id, fn));
 check('non-admin admin_stats refused', nonAdminStats?.includes('Admin access required'), nonAdminStats);
 
+// Regression: these read RPCs used to lack the is_admin() guard, exposing
+// takedown PII and inactive catalog rows to anonymous callers.
+for (const fn of ['admin_takedowns', 'admin_genres', 'admin_artists', 'admin_stations']) {
+  const anonErr = await rpcError(fn);
+  check(`anon ${fn} refused`, anonErr?.includes('Admin access required'), anonErr);
+  const nonAdminErr = await rpcError(fn, {}, (s) => asUser(authUser.id, s));
+  check(`non-admin ${fn} refused`, nonAdminErr?.includes('Admin access required'), nonAdminErr);
+}
+
 const anonCurrent = await rpc('admin_current_user');
 check('admin_current_user anonymous', anonCurrent?.authenticated === false);
 
@@ -381,14 +405,14 @@ check('admin_current_user admin payload', me?.authenticated === true && me?.is_s
 console.log('\n== admin catalog ==');
 
 const stats = await rpc('admin_stats', {}, adminAs);
-check('admin_stats totals', stats?.total_songs === 66 && stats?.total_artists === 27, JSON.stringify({ songs: stats?.total_songs, artists: stats?.total_artists }));
-check('admin_stats breakdowns', stats?.status_breakdown?.published === 66 && typeof stats?.language_breakdown === 'object', JSON.stringify(stats?.status_breakdown));
+check('admin_stats totals', stats?.total_songs === 77 && stats?.total_artists === 27, JSON.stringify({ songs: stats?.total_songs, artists: stats?.total_artists }));
+check('admin_stats breakdowns', stats?.status_breakdown?.published === 77 && typeof stats?.language_breakdown === 'object', JSON.stringify(stats?.status_breakdown));
 
 const insights = await rpc('admin_insights', { p_days: 30 }, adminAs);
 check('admin_insights shape', insights?.window_days === 30 && Array.isArray(insights?.top_songs) && typeof insights?.completion_rate === 'number', JSON.stringify(insights).slice(0, 120));
 
 const adminSongs = await rpc('admin_songs', {}, adminAs);
-check('admin_songs includes unpublished + pagination', adminSongs?.count === 66 && adminSongs?.page === 1 && adminSongs?.page_size === 25, JSON.stringify({ c: adminSongs?.count }));
+check('admin_songs includes unpublished + pagination', adminSongs?.count === 77 && adminSongs?.page === 1 && adminSongs?.page_size === 25, JSON.stringify({ c: adminSongs?.count }));
 
 const adminSearch = await rpc('admin_songs', { p_search: 'Mayalu' }, adminAs);
 check('admin_songs search', (adminSearch?.count ?? 0) >= 0);

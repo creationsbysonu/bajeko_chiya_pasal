@@ -312,7 +312,7 @@ describe('api.ts end-to-end against PostgREST bridge', () => {
     expect(stations[0]).toHaveProperty('songs_count');
 
     const songs = await api.getSongs();
-    expect(songs.count).toBe(66);
+    expect(songs.count).toBe(77);
     expect(songs.results).toHaveLength(24);
     expect(songs.previous).toBeNull();
     expect(typeof songs.next).toBe('string');
@@ -406,7 +406,7 @@ describe('api.ts end-to-end against PostgREST bridge', () => {
     expect(me.email).toBe(TEST_ADMIN.email);
 
     const stats = await api.getAdminStats();
-    expect(stats.total_songs).toBe(66);
+    expect(stats.total_songs).toBe(77);
     expect(stats.total_artists).toBe(27);
 
     const insights = await api.getAdminInsights(30);
@@ -458,5 +458,12 @@ describe('api.ts end-to-end against PostgREST bridge', () => {
     expect(anon.authenticated).toBe(false);
     await expect(api.getAdminStats()).rejects.toThrow('Admin authentication required');
     await expect(api.getAdminAuditLogs()).rejects.toThrow('Admin access required');
+    // Regression: these read RPCs used to be callable by guests (takedown PII,
+    // inactive catalog rows). They must now enforce the allowlist server-side.
+    const adminOnly = /Admin access|Admin authentication|permission denied/i;
+    await expect(api.getAdminTakedowns()).rejects.toThrow(adminOnly);
+    await expect(api.getAdminGenres()).rejects.toThrow(adminOnly);
+    await expect(api.getAdminArtists()).rejects.toThrow(adminOnly);
+    await expect(api.getAdminStations()).rejects.toThrow(adminOnly);
   });
 });

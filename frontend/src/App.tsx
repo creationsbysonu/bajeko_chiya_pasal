@@ -21,6 +21,8 @@ function MainApp() {
   const [currentTab, setCurrentTab] = useState('home');
   const [stations, setStations] = useState<Station[]>([]);
   const [featuredSongs, setFeaturedSongs] = useState<Song[]>([]);
+  const [newSongs, setNewSongs] = useState<Song[]>([]);
+  const [trendingSongs, setTrendingSongs] = useState<Song[]>([]);
   const [genres, setGenres] = useState<Genre[]>([]);
   const [categories, setCategories] = useState<GenreCategory[]>([]);
   const [decades, setDecades] = useState<{ decade: string; count: number }[]>([]);
@@ -36,15 +38,19 @@ function MainApp() {
 
   const loadData = async () => {
     try {
-      const [stationsData, featuredData, genresData, decadesData, categoriesData] = await Promise.all([
+      const [stationsData, featuredData, genresData, decadesData, categoriesData, newSongsData, trendingData] = await Promise.all([
         api.getStations(),
         api.getFeatured(),
         api.getGenres(),
         api.getDecades(),
         api.getGenreCategories().catch(() => [] as GenreCategory[]),
+        api.getSongs({ ordering: '-created_at' }).catch(() => ({ count: 0, next: null, previous: null, results: [] as Song[] })),
+        api.getSongs({ ordering: '-play_count' }).catch(() => ({ count: 0, next: null, previous: null, results: [] as Song[] })),
       ]);
       setStations(stationsData);
       setFeaturedSongs(featuredData.songs);
+      setNewSongs(newSongsData.results.slice(0, 8));
+      setTrendingSongs(trendingData.results.slice(0, 8));
       setGenres(genresData);
       setDecades(decadesData);
       setCategories(categoriesData);
@@ -91,6 +97,8 @@ function MainApp() {
           <Home
             stations={stations}
             featuredSongs={featuredSongs}
+            newSongs={newSongs}
+            trendingSongs={trendingSongs}
             genres={genres}
             categories={categories}
             decades={decades}

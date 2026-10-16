@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Hero } from '../components/Hero';
 import { StationCard } from '../components/StationCard';
 import { SongCard } from '../components/SongCard';
+import { NewReleasesHighlight } from '../components/NewReleasesHighlight';
+import { TrendingSongs } from '../components/TrendingSongs';
 import { Reveal } from '../components/motion/Reveal';
 import { Station, Song, Genre, GenreCategory } from '../types';
 import { useI18n } from '../context/I18nContext';
@@ -12,6 +14,8 @@ import { FestiveSection } from '../components/FestiveSection';
 interface HomeProps {
   stations: Station[];
   featuredSongs: Song[];
+  newSongs: Song[];
+  trendingSongs: Song[];
   genres: Genre[];
   categories?: GenreCategory[];
   decades: { decade: string; count: number }[];
@@ -23,6 +27,8 @@ interface HomeProps {
 export const Home: React.FC<HomeProps> = ({
   stations,
   featuredSongs,
+  newSongs,
+  trendingSongs,
   genres,
   categories,
   decades,
@@ -63,6 +69,9 @@ export const Home: React.FC<HomeProps> = ({
 
   return (
     <div className="space-y-16 pb-20">
+      {/* 0. Freshly Uploaded Highlight — sits directly below the navbar */}
+      <NewReleasesHighlight songs={newSongs} onViewAll={onExploreCatalog} />
+
       {/* 1. Hero with Integrated Vintage Radio Tuner */}
       <Hero stations={stations} onExploreCatalog={onExploreCatalog} />
 
@@ -168,6 +177,9 @@ export const Home: React.FC<HomeProps> = ({
             ))}
           </div>
         </section>
+
+        {/* 4.5 Most Trending Songs — ranked chart */}
+        <TrendingSongs songs={trendingSongs} />
 
         {/* 5. Browse by Decade */}
         <section className="mt-10">

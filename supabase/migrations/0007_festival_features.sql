@@ -40,53 +40,41 @@ create index idx_songs_festival_id on public.songs (festival_id);
 -- ---------------------------------------------------------------------------
 -- Existing note: 'special' genre_categories row already describes "Festive & Seasonal".
 -- We add a granular festival-level catalog for the UX section.
-insert into public.festival_categories (slug, name, name_ne, emoji, description, display_order, is_active)
+insert into public.festival_categories (id, slug, name, name_ne, emoji, description, display_order, is_active)
 values
     -- Dashain (the biggest Nepali festival)
-    (1, 'dashain', 'Dashain', 'दशैं',
+    (1, 'dashain', 'Dashain', 'दशैं', '🪁',
      'मालश्रीको धुन, पिङ-चङ्गा, देउसी-भैलोको उल्लास।', 1, true),
 
-    -- Tihar (funds of Laxmi, deusi bhaailo, gangai)
-    (2, 'tihar', 'Tihar', 'तिहार',
-     'लक्ष्मी पूजा, घी डीपो, भैलो बङ्गो, चङ्गा फेरी.', 2, true),
+    -- Tihar (festival of lights, deusi bhailo)
+    (2, 'tihar', 'Tihar', 'तिहार', '🪔',
+     'लक्ष्मी पूजा, दीपमाला, भैलो बङ्गो, देउसी.', 2, true),
 
     -- Teej (women-centric monsoon festival)
-    (3, 'teej', 'Teej', 'त्योहार',
-     'तolybhara, menjhwareti, djhudki, folk rhythms.', 3, true),
+    (3, 'teej', 'Teej', 'तीज', '💐',
+     'तोली भरा, मेँझ्वरेटी, धुमधामका लोक ताल।', 3, true),
 
     -- Chitrabhan (Nepali New Year)
-    (4, 'chitrabhan', 'Chitrabhan', 'चित्रबहिन',
+    (4, 'chitrabhan', 'Chitrabhan', 'चित्रबहिन', '🎉',
      'Nepali New Year melodies and seasonal songs.', 4, true),
 
-    -- Sonam Lhosar (Yakthika New Year)
-    (5, 'sonam-lhosar', 'Sonam Lhosar', 'सोनम ल्हो,षर',
+    -- Sonam Lhosar (Tamang New Year)
+    (5, 'sonam-lhosar', 'Sonam Lhosar', 'सोनम ल्होसर', '🏔️',
      'Tamang New Year, lokal and folk sounds.', 5, true),
 
     -- Buddha Jayanti (Buddhist festival)
-    (6, 'buddha-jayanti', 'Buddha Jayanti', 'बुद्ध जयंती',
+    (6, 'buddha-jayanti', 'Buddha Jayanti', 'बुद्ध जयंती', '☸️',
      'Peaceful melodies, chants, and Buddhist heritage songs.', 6, true),
 
     -- Maha Shivaratri (Hindu holy night)
-    (7, 'maha-shivaratri', 'Maha Shivaratri', 'महा शिवरात्र',
+    (7, 'maha-shivaratri', 'Maha Shivaratri', 'महा शिवरात्रि', '🔱',
      'Devotional and meditative Shiva-related songs.', 7, true);
 
--- Update existing festival-adjacent genres/poems to use the new festival link
--- where there is a clear match. 'dashain-tihar' genre is our umbrella entry.
--- We mark the 'Malshree Dhun (Dashain)' song as a Dashain festive song.
-update public.songs
-set festival_id = c.id
-from (values
-    (13, 1),   -- Malshree Dhun (Dashain) -> Dashain
-    (12, 2),   -- Chari Jailaima (teej) -> Teej  (well-known teej song)
-    (139, 2)   -- Jai Mata Laxmi (tihar) -> Tihar
-) as mapping(song_id, festival_id)
-join public.festival_categories c on c.id = mapping.festival_id
-where public.songs.id = mapping.song_id;
+select setval(pg_get_serial_sequence('public.festival_categories', 'id'), (select max(id) from public.festival_categories));
 
-
--- ---------------------------------------------------------------------------
--- Public RPCs — festival catalog (no auth required, publication filtered)
--- ---------------------------------------------------------------------------
+-- NOTE: the seed-time links between festivals and songs live in seed.sql, not
+-- here: migrations run *before* seed.sql, so referencing seeded song/artist ids
+-- from a migration would violate foreign keys on a fresh database.
 
 create or replace function public.get_festival_categories()
 returns jsonb
@@ -121,26 +109,28 @@ begin
     where s.festival_id = v_festival
       and s.publication_status = 'published';
 
-    select coalesce(jsonb_agg(sp.song order by s.play_count desc nulls last, s.id desc), '[]'::jsonb)
+    select coalesce(jsonb_agg(sp.song order by sp.play_count desc nulls last, sp.id desc), '[]'::jsonb)
     into v_results
-    from public.songs s
-    cross join lateral (
-        select jsonb_build_object(
-            'id', s.id,
-            'title', s.title,
-            'title_ne', s.title_ne,
-            'artist_name', a.display_name,
-            'artist_name_ne', a.display_name_ne,
-            'primary_genre_name', g.name,
-            'primary_genre_category', g.category,
-            'mood_tags', s.mood_tags,
-            'release_year', s.release_year,
-            'duration_seconds', s.duration_seconds,
-            'artwork_url', s.artwork_url,
-            'play_count', s.play_count,
-            'is_featured', s.is_featured,
-            'featured_order', s.featured_order
-        ) as song
+    from (
+        select
+            s.play_count as play_count,
+            s.id as id,
+            jsonb_build_object(
+                'id', s.id,
+                'title', s.title,
+                'title_ne', s.title_ne,
+                'artist_name', a.display_name,
+                'artist_name_ne', a.display_name_ne,
+                'primary_genre_name', g.name,
+                'primary_genre_category', g.category,
+                'mood_tags', s.mood_tags,
+                'release_year', s.release_year,
+                'duration_seconds', s.duration_seconds,
+                'artwork_url', s.artwork_url,
+                'play_count', s.play_count,
+                'is_featured', s.is_featured,
+                'featured_order', s.featured_order
+            ) as song
         from public.songs s
         join public.artists a on a.id = s.artist_id
         left join public.genres g on g.id = s.primary_genre_id
