@@ -661,3 +661,49 @@ html.light .pd-grain::after {
   padding-inline: 1.15rem;
   opacity: 0.4;
 }
+
+/* ==========================================================================
+   DAY / NIGHT "WAVE" TRANSITION
+   --------------------------------------------------------------------------
+   When the View Transitions API is available, the incoming palette is revealed
+   as a liquid ripple that flows outward from the toggle button. ThemeContext
+   stores the button centre in --theme-wave-x / --theme-wave-y; browsers without
+   support (or reduced-motion users) get an instant swap instead.
+   ========================================================================== */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+/* Keep the outgoing palette still beneath the incoming wave. */
+::view-transition-old(root) {
+  z-index: 1;
+}
+
+/* The new palette expands as a soft, rippling disc from the toggle. */
+::view-transition-new(root) {
+  z-index: 2;
+  clip-path: circle(0% at var(--theme-wave-x, 50%) var(--theme-wave-y, 50%));
+  animation: pd-theme-wave 720ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
+  will-change: clip-path;
+}
+
+@keyframes pd-theme-wave {
+  0% {
+    clip-path: circle(0% at var(--theme-wave-x, 50%) var(--theme-wave-y, 50%));
+  }
+  60% {
+    clip-path: circle(72% at var(--theme-wave-x, 50%) var(--theme-wave-y, 50%));
+  }
+  100% {
+    clip-path: circle(160% at var(--theme-wave-x, 50%) var(--theme-wave-y, 50%));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none !important;
+  }
+}
