@@ -3,7 +3,6 @@ import { Hero } from '../components/Hero';
 import { StationCard } from '../components/StationCard';
 import { SongCard } from '../components/SongCard';
 import { NewReleases } from '../components/NewReleases';
-import { TrendingSongs } from '../components/TrendingSongs';
 import { Reveal } from '../components/motion/Reveal';
 import { Station, Song, Genre, GenreCategory } from '../types';
 import { useI18n } from '../context/I18nContext';
@@ -70,7 +69,7 @@ export const Home: React.FC<HomeProps> = ({
   return (
     <div className="space-y-16 pb-20">
       {/* 1. Hero with Integrated Vintage Radio Tuner */}
-      <Hero stations={stations} onExploreCatalog={onExploreCatalog} />
+      <Hero stations={stations} trendingSongs={trendingSongs} onExploreCatalog={onExploreCatalog} />
 
       {/* 2. Grandfather's Tea Shop & Heritage Story Spotlight */}
       <Reveal variant="up" delay={60} className="space-y-16 pb-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -178,8 +177,7 @@ export const Home: React.FC<HomeProps> = ({
           </div>
         </section>
 
-        {/* 4.5 Most Trending Songs — ranked chart */}
-        <TrendingSongs songs={trendingSongs} />
+        {/* 4.5 (removed) Most Trending chart now lives in the hero as Currently Trending */}
 
         {/* 5. Browse by Decade */}
         <section className="mt-10">

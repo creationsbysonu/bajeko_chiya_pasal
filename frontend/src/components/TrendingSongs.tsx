@@ -33,15 +33,15 @@ export const TrendingSongs: React.FC<TrendingSongsProps> = ({ songs }) => {
           <div>
             <div className="flex items-center gap-2 text-xs font-mono text-neutral-500 uppercase tracking-widest mb-1">
               <Flame className="w-3.5 h-3.5 text-red-500" />
-              <span>MOST TRENDING</span>
+              <span>CURRENTLY TRENDING</span>
             </div>
             <h2 className="font-serif text-3xl font-black text-white drop-shadow-sm">
-              {locale === 'ne' ? 'सर्वाधिक लोकप्रिय धुनहरू' : 'Most Trending Songs'}
+              {locale === 'ne' ? 'हाल लोकप्रिय धुनहरू' : 'Currently Trending'}
             </h2>
             <p className="text-xs text-neutral-500 font-nepali mt-1">
               {locale === 'ne'
-                ? 'पुरानो धुनमा सबैभन्दा धेरै सुनिएका गीतहरू'
-                : 'Ranked by total plays across the Purano Dhun archive'}
+                ? 'अहिले पुरानो धुनमा सबैभन्दा धेरै सुनिएका गीतहरू'
+                : 'What the Purano Dhun community is playing right now'}
             </p>
           </div>
           <TrendingUp className="hidden sm:block w-8 h-8 text-red-500/40 flex-shrink-0" />
