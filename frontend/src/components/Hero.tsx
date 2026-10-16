@@ -33,7 +33,7 @@ export const Hero: React.FC<HeroProps> = ({ stations, onExploreCatalog }) => {
   return (
     <div>
       <section
-        className={"relative pt-8 pb-14 overflow-hidden bg-black border-b border-white/5 pd-dark-zone"}
+        className="relative pt-8 pb-14 overflow-hidden bg-black border-b border-white/5"
       >
         {/* Subtle red ambient glow — parallaxed */}
         <div
