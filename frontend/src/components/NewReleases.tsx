@@ -22,7 +22,7 @@ export const NewReleases: React.FC<NewReleasesProps> = ({ songs, onViewAll }) =>
     <section className="mt-10">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <div className="flex items-center gap-2 text-[10px] font-mono text-neutral-500 uppercase tracking-widest mb-1">
+          <div className="flex items-center gap-2 text-xs font-mono text-neutral-500 uppercase tracking-widest mb-1">
             <Sparkles className="w-3.5 h-3.5 text-red-500" />
             <span>{locale === 'ne' ? 'नयाँ अपलोड' : 'NEW RELEASES'}</span>
           </div>

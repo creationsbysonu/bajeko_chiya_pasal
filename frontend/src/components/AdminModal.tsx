@@ -1141,7 +1141,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, onCatal
                       <span className="text-xs font-mono text-neutral-500 uppercase">Songs by category</span>
                       <div className="flex flex-wrap gap-2">
                         {resolveCategories(categories).map((category) => (
-                          <span key={category.slug} className="px-3 py-1 rounded-full bg-black border border-white/10 text-[11px] font-mono text-neutral-300">
+                          <span key={category.slug} className="px-3 py-1 rounded-full bg-black border border-white/10 text-xs font-mono text-neutral-300">
                             {category.label}: <span className="text-red-400 font-bold">{stats.category_breakdown?.[category.slug] ?? 0}</span>
                           </span>
                         ))}
@@ -1151,7 +1151,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, onCatal
                   {stats.status_breakdown && (
                     <div className="flex flex-wrap gap-2 pt-1">
                       {Object.entries(stats.status_breakdown).map(([status, count]) => (
-                        <span key={status} className="px-3 py-1 rounded-full bg-black border border-white/10 text-[11px] font-mono text-neutral-300">
+                        <span key={status} className="px-3 py-1 rounded-full bg-black border border-white/10 text-xs font-mono text-neutral-300">
                           {status.replace('_', ' ')}: <span className="text-red-400 font-bold">{count}</span>
                         </span>
                       ))}
@@ -1169,7 +1169,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, onCatal
                       <button
                         key={days}
                         onClick={() => { setInsightsDays(days); loadInsights(days); }}
-                        className={`px-3 py-1 rounded-full text-[11px] font-semibold border transition-all ${
+                        className={`px-3 py-1 rounded-full text-xs font-semibold border transition-all ${
                           insightsDays === days
                             ? 'bg-red-600 text-white border-red-600 font-bold'
                             : 'bg-black text-neutral-400 hover:text-white border-white/10 hover:border-white/20'
@@ -1305,10 +1305,10 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, onCatal
                       <div className="space-y-2">
                         {sortedFeaturedSongs.map((featured, index, arr) => (
                           <div key={featured.id} className="p-2.5 rounded-xl bg-neutral-900 border border-white/10 flex items-center gap-3">
-                            <span className="text-[11px] font-mono text-neutral-500 w-6 text-center">{index + 1}</span>
+                            <span className="text-xs font-mono text-neutral-500 w-6 text-center">{index + 1}</span>
                             <div className="min-w-0 flex-1">
                               <p className="text-xs font-bold text-white truncate">{featured.title}</p>
-                              <p className="text-[10px] font-mono text-neutral-500 truncate">{featured.artist_name}</p>
+                              <p className="text-xs font-mono text-neutral-500 truncate">{featured.artist_name}</p>
                             </div>
                             <div className="flex items-center gap-1 flex-shrink-0">
                               <button
@@ -1365,7 +1365,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, onCatal
                         setSongPage(1);
                         loadSongs({ status: e.target.value, page: 1 });
                       }}
-                      className="px-3 py-1.5 rounded-full bg-black border border-white/15 text-neutral-300 text-[11px] focus:border-red-500 focus:outline-none"
+                      className="px-3 py-1.5 rounded-full bg-black border border-white/15 text-neutral-300 text-xs focus:border-red-500 focus:outline-none"
                     >
                       <option value="all">All statuses</option>
                       <option value="published">Published</option>
@@ -1380,7 +1380,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, onCatal
                         setSongPage(1);
                         loadSongs({ category: e.target.value, page: 1 });
                       }}
-                      className="px-3 py-1.5 rounded-full bg-black border border-white/15 text-neutral-300 text-[11px] focus:border-red-500 focus:outline-none"
+                      className="px-3 py-1.5 rounded-full bg-black border border-white/15 text-neutral-300 text-xs focus:border-red-500 focus:outline-none"
                     >
                       <option value="all">All categories</option>
                       {resolveCategories(categories).map((category) => (
@@ -1394,7 +1394,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, onCatal
                         setSongPage(1);
                         loadSongs({ language: e.target.value, page: 1 });
                       }}
-                      className="px-3 py-1.5 rounded-full bg-black border border-white/15 text-neutral-300 text-[11px] focus:border-red-500 focus:outline-none"
+                      className="px-3 py-1.5 rounded-full bg-black border border-white/15 text-neutral-300 text-xs focus:border-red-500 focus:outline-none"
                     >
                       <option value="all">All languages</option>
                       {Array.from(new Set([...songs.map((s) => s.language), 'Nepali'])).map((language) => (
@@ -1416,23 +1416,23 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, onCatal
                       <button
                         onClick={toggleSelectAllOnPage}
                         disabled={songs.length === 0}
-                        className="px-3 py-1.5 rounded-full bg-neutral-900 hover:bg-neutral-800 border border-white/10 text-neutral-300 text-[11px] transition-colors disabled:opacity-50"
+                        className="px-3 py-1.5 rounded-full bg-neutral-900 hover:bg-neutral-800 border border-white/10 text-neutral-300 text-xs transition-colors disabled:opacity-50"
                       >
                         {allPageSelected ? 'Deselect page' : 'Select page'}
                       </button>
-                      <span className="text-[11px] font-mono text-neutral-400">
+                      <span className="text-xs font-mono text-neutral-400">
                         {selectedSongIds.size} selected
                       </span>
                       {selectedSongIds.size > 0 && (
                         <button
                           onClick={clearSelection}
-                          className="text-[11px] text-neutral-500 hover:text-white underline"
+                          className="text-xs text-neutral-500 hover:text-white underline"
                         >
                           clear
                         </button>
                       )}
                       <div className="flex-1" />
-                      <span className="text-[10px] font-mono text-neutral-500 uppercase">Bulk actions</span>
+                      <span className="text-xs font-mono text-neutral-500 uppercase">Bulk actions</span>
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
                       <select
@@ -1441,7 +1441,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, onCatal
                           setBulkAction(e.target.value);
                           setBulkValue('');
                         }}
-                        className="px-3 py-1.5 rounded-full bg-neutral-900 border border-white/15 text-white text-[11px] focus:border-red-500 focus:outline-none"
+                        className="px-3 py-1.5 rounded-full bg-neutral-900 border border-white/15 text-white text-xs focus:border-red-500 focus:outline-none"
                       >
                         <option value="none">Choose action…</option>
                         <option value="set_status">Set publication status…</option>
@@ -1457,7 +1457,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, onCatal
                         <option value="delete">Permanent delete…</option>
                       </select>
                       {bulkAction === 'set_status' && (
-                        <select value={bulkValue} onChange={(e) => setBulkValue(e.target.value)} className="px-3 py-1.5 rounded-full bg-neutral-900 border border-white/15 text-white text-[11px]">
+                        <select value={bulkValue} onChange={(e) => setBulkValue(e.target.value)} className="px-3 py-1.5 rounded-full bg-neutral-900 border border-white/15 text-white text-xs">
                           <option value="">Pick status…</option>
                           <option value="published">Published</option>
                           <option value="draft">Draft</option>
@@ -1466,7 +1466,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, onCatal
                         </select>
                       )}
                       {bulkAction === 'set_verification' && (
-                        <select value={bulkValue} onChange={(e) => setBulkValue(e.target.value)} className="px-3 py-1.5 rounded-full bg-neutral-900 border border-white/15 text-white text-[11px]">
+                        <select value={bulkValue} onChange={(e) => setBulkValue(e.target.value)} className="px-3 py-1.5 rounded-full bg-neutral-900 border border-white/15 text-white text-xs">
                           <option value="">Pick verification…</option>
                           <option value="verified">Verified</option>
                           <option value="community_submitted">Community submitted</option>
@@ -1474,7 +1474,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, onCatal
                         </select>
                       )}
                       {bulkAction === 'move_genre' && (
-                        <select value={bulkValue} onChange={(e) => setBulkValue(e.target.value)} className="px-3 py-1.5 rounded-full bg-neutral-900 border border-white/15 text-white text-[11px]">
+                        <select value={bulkValue} onChange={(e) => setBulkValue(e.target.value)} className="px-3 py-1.5 rounded-full bg-neutral-900 border border-white/15 text-white text-xs">
                           <option value="">Pick destination genre…</option>
                           {genres.map((genre) => (
                             <option key={genre.id} value={genre.id}>
@@ -1484,7 +1484,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, onCatal
                         </select>
                       )}
                       {bulkAction === 'assign_artist' && (
-                        <select value={bulkValue} onChange={(e) => setBulkValue(e.target.value)} className="px-3 py-1.5 rounded-full bg-neutral-900 border border-white/15 text-white text-[11px]">
+                        <select value={bulkValue} onChange={(e) => setBulkValue(e.target.value)} className="px-3 py-1.5 rounded-full bg-neutral-900 border border-white/15 text-white text-xs">
                           <option value="">Pick artist…</option>
                           {artists.map((artist) => (
                             <option key={artist.id} value={artist.id}>{artist.display_name}</option>
@@ -1492,7 +1492,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, onCatal
                         </select>
                       )}
                       {(bulkAction === 'add_to_station' || bulkAction === 'remove_from_station') && (
-                        <select value={bulkValue} onChange={(e) => setBulkValue(e.target.value)} className="px-3 py-1.5 rounded-full bg-neutral-900 border border-white/15 text-white text-[11px]">
+                        <select value={bulkValue} onChange={(e) => setBulkValue(e.target.value)} className="px-3 py-1.5 rounded-full bg-neutral-900 border border-white/15 text-white text-xs">
                           <option value="">Pick station…</option>
                           {stations.map((station) => (
                             <option key={station.id} value={station.id}>{station.title}</option>
@@ -1505,11 +1505,11 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, onCatal
                           value={bulkValue}
                           onChange={(e) => setBulkValue(e.target.value)}
                           placeholder="e.g. Nepali, Hindi, Maithili"
-                          className="px-3 py-1.5 rounded-full bg-neutral-900 border border-white/15 text-white text-[11px] w-52"
+                          className="px-3 py-1.5 rounded-full bg-neutral-900 border border-white/15 text-white text-xs w-52"
                         />
                       )}
                       {bulkAction === 'set_decade' && (
-                        <select value={bulkValue} onChange={(e) => setBulkValue(e.target.value)} className="px-3 py-1.5 rounded-full bg-neutral-900 border border-white/15 text-white text-[11px]">
+                        <select value={bulkValue} onChange={(e) => setBulkValue(e.target.value)} className="px-3 py-1.5 rounded-full bg-neutral-900 border border-white/15 text-white text-xs">
                           <option value="">Pick decade…</option>
                           {['1940s', '1950s', '1960s', '1970s', '1980s', '1990s', '2000s', '2010s', '2020s'].map((decade) => (
                             <option key={decade} value={decade}>{decade}</option>
@@ -1519,13 +1519,13 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, onCatal
                       <button
                         onClick={applyBulkAction}
                         disabled={bulkBusy || selectedSongIds.size === 0 || bulkAction === 'none'}
-                        className="px-4 py-1.5 rounded-full bg-red-600 hover:bg-red-500 disabled:opacity-50 text-white text-[11px] font-bold transition-all"
+                        className="px-4 py-1.5 rounded-full bg-red-600 hover:bg-red-500 disabled:opacity-50 text-white text-xs font-bold transition-all"
                       >
                         {bulkBusy ? 'Working…' : 'Apply'}
                       </button>
                     </div>
                     {bulkMessage && (
-                      <p className="text-[11px] font-mono text-red-300">{bulkMessage}</p>
+                      <p className="text-xs font-mono text-red-300">{bulkMessage}</p>
                     )}
                   </div>
 
@@ -1561,7 +1561,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, onCatal
                         <div className="flex items-center gap-2 flex-shrink-0">
                           <button
                             onClick={() => handleTogglePublication(song)}
-                            className={`px-3 py-1 rounded-full text-[11px] font-semibold border transition-all ${
+                            className={`px-3 py-1 rounded-full text-xs font-semibold border transition-all ${
                               song.publication_status === 'published'
                                 ? 'bg-red-600/20 text-red-400 border-red-500/40'
                                 : 'bg-neutral-900 text-neutral-400 border-white/10'
@@ -1611,7 +1611,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, onCatal
 
                   {/* Pagination */}
                   <div className="flex items-center justify-between pt-1">
-                    <span className="text-[11px] font-mono text-neutral-500">
+                    <span className="text-xs font-mono text-neutral-500">
                       {songCount} song{songCount === 1 ? '' : 's'} · page {songPage} of {Math.max(1, Math.ceil(songCount / CATALOG_PAGE_SIZE))}
                     </span>
                     <div className="flex items-center gap-2">
@@ -1622,7 +1622,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, onCatal
                           loadSongs({ page: next });
                         }}
                         disabled={songPage <= 1}
-                        className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-neutral-900 hover:bg-neutral-800 disabled:opacity-40 border border-white/10 text-neutral-300 text-[11px] transition-colors"
+                        className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-neutral-900 hover:bg-neutral-800 disabled:opacity-40 border border-white/10 text-neutral-300 text-xs transition-colors"
                       >
                         <ChevronLeft className="w-3.5 h-3.5" /> Prev
                       </button>
@@ -1633,7 +1633,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, onCatal
                           loadSongs({ page: next });
                         }}
                         disabled={songPage >= Math.ceil(songCount / CATALOG_PAGE_SIZE)}
-                        className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-neutral-900 hover:bg-neutral-800 disabled:opacity-40 border border-white/10 text-neutral-300 text-[11px] transition-colors"
+                        className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-neutral-900 hover:bg-neutral-800 disabled:opacity-40 border border-white/10 text-neutral-300 text-xs transition-colors"
                       >
                         Next <ChevronRight className="w-3.5 h-3.5" />
                       </button>
@@ -1723,7 +1723,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, onCatal
                           <option key={genre.id} value={genre.id}>{genre.name}</option>
                         ))}
                       </select>
-                      <p className="text-[10px] text-neutral-500 mt-1">Hold ⌘/Ctrl to pick more than one.</p>
+                      <p className="text-xs text-neutral-500 mt-1">Hold ⌘/Ctrl to pick more than one.</p>
                     </div>
                     <div>
                       <label className="block text-xs font-mono text-neutral-400 uppercase mb-1">Romanized title</label>
@@ -1948,13 +1948,13 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, onCatal
                       )}
                       {queueItems.map((item, index) => (
                         <div key={item.song_id} className="p-2.5 rounded-xl bg-black border border-white/10 flex items-center gap-3">
-                          <span className="text-[11px] font-mono text-neutral-500 w-6 text-center">{index + 1}</span>
+                          <span className="text-xs font-mono text-neutral-500 w-6 text-center">{index + 1}</span>
                           {item.artwork_url && (
                             <img src={item.artwork_url} alt={item.title} className="w-9 h-9 rounded-lg object-cover flex-shrink-0" />
                           )}
                           <div className="min-w-0 flex-1">
                             <p className="text-xs font-bold text-white truncate">{item.title}</p>
-                            <p className="text-[10px] font-mono text-neutral-500 truncate">{item.artist_name} · {item.publication_status}</p>
+                            <p className="text-xs font-mono text-neutral-500 truncate">{item.artist_name} · {item.publication_status}</p>
                           </div>
                           <div className="flex items-center gap-1 flex-shrink-0">
                             <button
@@ -1985,7 +1985,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, onCatal
                         </div>
                       ))}
                     </div>
-                    <p className="text-[10px] text-neutral-500 font-mono">
+                    <p className="text-xs text-neutral-500 font-mono">
                       The song picker shows the current catalog page. Use the Catalog tab's "add to station" bulk action to queue many songs at once.
                     </p>
                   </div>
@@ -2196,7 +2196,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, onCatal
                       if (categoryGenres.length === 0) return null;
                       return (
                         <div key={category.slug}>
-                          <h5 className="text-[10px] font-mono text-neutral-500 uppercase mb-2">
+                          <h5 className="text-xs font-mono text-neutral-500 uppercase mb-2">
                             {category.label}
                           </h5>
                           <div className="space-y-2">
@@ -2206,7 +2206,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, onCatal
                                   <p className="text-xs font-bold text-white truncate">
                                     {genre.name} <span className="text-neutral-500 font-normal">({genre.name_ne || '—'})</span>
                                   </p>
-                                  <p className="text-[10px] font-mono text-neutral-500">
+                                  <p className="text-xs font-mono text-neutral-500">
                                     ID: {genre.id} · slug: {genre.slug} · {genre.songs_count ?? 0} song(s) · {genre.is_active ? 'active' : 'hidden'}
                                   </p>
                                 </div>
@@ -2215,7 +2215,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, onCatal
                                     value={genre.category}
                                     onChange={(e) => handleGenreCategoryChange(genre, e.target.value)}
                                     disabled={taxonomyBusy}
-                                    className="px-2 py-1 rounded-full bg-neutral-900 border border-white/15 text-neutral-300 text-[10px] focus:border-red-500 focus:outline-none"
+                                    className="px-2 py-1 rounded-full bg-neutral-900 border border-white/15 text-neutral-300 text-xs focus:border-red-500 focus:outline-none"
                                     title="Move genre to another category"
                                   >
                                     {resolveCategories(categories).map((option) => (
@@ -2225,7 +2225,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, onCatal
                                   <button
                                     onClick={() => handleGenreToggleActive(genre)}
                                     disabled={taxonomyBusy}
-                                    className={`px-2 py-1 rounded-full text-[10px] font-semibold border transition-all disabled:opacity-50 ${
+                                    className={`px-2 py-1 rounded-full text-xs font-semibold border transition-all disabled:opacity-50 ${
                                       genre.is_active
                                         ? 'bg-red-600/20 text-red-400 border-red-500/40'
                                         : 'bg-neutral-900 text-neutral-400 border-white/10'
@@ -2358,7 +2358,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, onCatal
                           <div key={category.slug} className="p-2.5 rounded-xl bg-neutral-900 border border-white/10 flex items-center justify-between gap-2">
                             <div className="min-w-0">
                               <p className="text-xs font-bold text-white truncate">{category.name}</p>
-                              <p className="text-[10px] font-mono text-neutral-500">
+                              <p className="text-xs font-mono text-neutral-500">
                                 slug: {category.slug} · {category.genres_count} genre(s) · {category.songs_count} song(s) · {category.is_active ? 'active' : 'hidden'}
                               </p>
                             </div>
@@ -2382,7 +2382,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, onCatal
                               <button
                                 onClick={() => handleToggleCategoryActive(category)}
                                 disabled={taxonomyBusy}
-                                className={`px-2 py-1 rounded-full text-[10px] font-semibold border disabled:opacity-50 ${
+                                className={`px-2 py-1 rounded-full text-xs font-semibold border disabled:opacity-50 ${
                                   category.is_active ? 'bg-red-600/20 text-red-400 border-red-500/40' : 'bg-neutral-800 text-neutral-400 border-white/10'
                                 }`}
                               >
@@ -2414,7 +2414,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, onCatal
                         value={artistSearch}
                         onChange={(e) => setArtistSearch(e.target.value)}
                         placeholder="Filter artists..."
-                        className="px-3 py-1.5 rounded-full bg-black border border-white/15 text-white text-[11px] focus:border-red-500 focus:outline-none w-52"
+                        className="px-3 py-1.5 rounded-full bg-black border border-white/15 text-white text-xs focus:border-red-500 focus:outline-none w-52"
                       />
                     </div>
                     <div className="space-y-2 max-h-[28vh] overflow-y-auto pr-1">
@@ -2424,7 +2424,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, onCatal
                           <div key={artist.id} className="p-3 rounded-2xl bg-black border border-white/10 flex items-center justify-between gap-3">
                             <div className="min-w-0">
                               <p className="text-xs font-bold text-white truncate">{artist.display_name}</p>
-                              <p className="text-[10px] font-mono text-neutral-500">
+                              <p className="text-xs font-mono text-neutral-500">
                                 ID: {artist.id} · {artist.songs_count ?? 0} song(s) · {artist.verification_status}
                               </p>
                             </div>
@@ -2641,8 +2641,8 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, onCatal
                               />
                               <div className="min-w-0">
                                 <h5 className="font-serif text-xs font-bold text-white truncate">{st.title}</h5>
-                                <p className="text-[11px] text-neutral-400 truncate">{st.tagline}</p>
-                                <p className="text-[10px] font-mono text-neutral-500">{st.songs_count ?? 0} song(s) · order {st.display_order}</p>
+                                <p className="text-xs text-neutral-400 truncate">{st.tagline}</p>
+                                <p className="text-xs font-mono text-neutral-500">{st.songs_count ?? 0} song(s) · order {st.display_order}</p>
                               </div>
                             </div>
                             <div className="flex items-center gap-1 flex-shrink-0">
@@ -2682,7 +2682,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, onCatal
                     <select
                       value={ticketStatusFilter}
                       onChange={(e) => { setTicketStatusFilter(e.target.value); loadTakedowns({ status: e.target.value }); }}
-                      className="px-3 py-1.5 rounded-full bg-black border border-white/15 text-neutral-300 text-[11px] focus:border-red-500 focus:outline-none"
+                      className="px-3 py-1.5 rounded-full bg-black border border-white/15 text-neutral-300 text-xs focus:border-red-500 focus:outline-none"
                     >
                       <option value="all">All statuses</option>
                       {(takedownStatuses.length ? takedownStatuses : ['pending', 'under_review', 'content_unpublished', 'resolved_kept', 'rejected']).map((status) => (
@@ -2698,7 +2698,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, onCatal
                         onBlur={() => loadTakedowns({ search: ticketSearch })}
                         onKeyDown={(e) => { if (e.key === 'Enter') loadTakedowns({ search: ticketSearch }); }}
                         placeholder="Search song, reporter, email..."
-                        className="pl-8 pr-3 py-1.5 rounded-full bg-black border border-white/15 text-white text-[11px] focus:border-red-500 focus:outline-none w-56"
+                        className="pl-8 pr-3 py-1.5 rounded-full bg-black border border-white/15 text-white text-xs focus:border-red-500 focus:outline-none w-56"
                       />
                     </div>
                     <button onClick={() => loadTakedowns()} className="p-1.5 rounded-full text-neutral-400 hover:text-white hover:bg-white/5 transition-colors" title="Refresh tickets">
@@ -2716,7 +2716,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, onCatal
                             <span className="text-xs font-mono text-red-500 font-bold">
                               TICKET #{ticket.id} • {ticket.reason.toUpperCase()}
                             </span>
-                            <span className={`text-[11px] px-2.5 py-0.5 rounded-full font-mono ${
+                            <span className={`text-xs px-2.5 py-0.5 rounded-full font-mono ${
                               ticket.status === 'pending' ? 'bg-red-600/20 text-red-400 border border-red-500/40' : 'bg-neutral-800 text-neutral-300'
                             }`}>
                               {ticket.status}
@@ -2728,18 +2728,18 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, onCatal
                           <p className="text-xs text-neutral-300 bg-neutral-900 p-2.5 rounded-xl border border-white/5">
                             {ticket.details}
                           </p>
-                          <div className="text-[11px] text-neutral-400 font-mono">
+                          <div className="text-xs text-neutral-400 font-mono">
                             Reporter: {ticket.claimant_name} ({ticket.claimant_email}) · {new Date(ticket.created_at).toLocaleString()}
                           </div>
                           {ticket.resolution_notes && (
-                            <div className="text-[11px] text-neutral-400 font-mono">Resolution: {ticket.resolution_notes}</div>
+                            <div className="text-xs text-neutral-400 font-mono">Resolution: {ticket.resolution_notes}</div>
                           )}
                           <input
                             type="text"
                             value={ticketNotes[ticket.id] ?? ''}
                             onChange={(e) => setTicketNotes((prev) => ({ ...prev, [ticket.id]: e.target.value }))}
                             placeholder="Optional resolution note..."
-                            className="w-full px-3 py-1.5 rounded-full bg-neutral-900 border border-white/15 text-white text-[11px] focus:border-red-500 focus:outline-none"
+                            className="w-full px-3 py-1.5 rounded-full bg-neutral-900 border border-white/15 text-white text-xs focus:border-red-500 focus:outline-none"
                           />
                           {ticket.status === 'pending' || ticket.status === 'under_review' ? (
                             <div className="flex flex-wrap items-center gap-2 pt-1">
@@ -2845,7 +2845,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, onCatal
                         minLength={10}
                         required
                       />
-                      <p className="text-[10px] text-neutral-500 mt-1.5 font-mono leading-relaxed">
+                      <p className="text-xs text-neutral-500 mt-1.5 font-mono leading-relaxed">
                         Min 10 characters · not similar to your username or email · not a common password · not all numbers
                       </p>
                     </div>
@@ -2881,7 +2881,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, onCatal
                         <span className="text-red-500 font-bold">[{log.action}]</span>{' '}
                         <span className="text-neutral-300">by {log.actor_username} on {log.target_model}#{log.target_id}</span>
                       </div>
-                      <span className="text-neutral-500 text-[10px]">
+                      <span className="text-neutral-500 text-xs">
                         {new Date(log.timestamp).toLocaleString()}
                       </span>
                     </div>

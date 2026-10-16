@@ -61,7 +61,7 @@ export const Navigation: React.FC<NavigationProps> = ({
                 <span className="block text-sm font-bold text-white tracking-wide group-hover:text-red-400 transition-colors duration-200">
                   PURANO DHUN
                 </span>
-                <span className="block text-[10px] font-nepali text-neutral-500 group-hover:text-neutral-400 transition-colors duration-200">
+                <span className="block text-xs font-nepali text-neutral-500 group-hover:text-neutral-400 transition-colors duration-200">
                   पुरानो धुन
                 </span>
               </span>
@@ -95,7 +95,7 @@ export const Navigation: React.FC<NavigationProps> = ({
           <div className="hidden md:flex items-center gap-1">
             {/* Live indicator */}
             {currentStation && (
-              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded text-[10px] font-mono mr-2">
+              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-mono mr-2">
                 <span
                   className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
                     status === 'playing'
@@ -126,7 +126,7 @@ export const Navigation: React.FC<NavigationProps> = ({
             <button
               onClick={toggleLocale}
               title={locale === 'ne' ? 'Switch to English' : 'नेपालीमा हेर्नुहोस्'}
-              className="px-2.5 py-1 text-[11px] font-medium text-neutral-400 hover:text-white transition-colors duration-200 rounded hover:bg-white/5"
+              className="px-2.5 py-1 text-xs font-medium text-neutral-400 hover:text-white transition-colors duration-200 rounded hover:bg-white/5"
             >
               {locale === 'ne' ? 'EN' : 'NE'}
             </button>

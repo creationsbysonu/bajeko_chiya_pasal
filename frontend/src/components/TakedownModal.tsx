@@ -59,7 +59,7 @@ export const TakedownModal: React.FC<TakedownModalProps> = ({
 
   const inputClass =
     'w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-sm focus:border-red-500 focus:outline-none transition-colors duration-150 placeholder:text-neutral-600';
-  const labelClass = 'block text-[10px] font-mono text-neutral-500 uppercase tracking-widest mb-1';
+  const labelClass = 'block text-xs font-mono text-neutral-500 uppercase tracking-widest mb-1';
 
   return (
     <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md pd-veil">
@@ -78,7 +78,7 @@ export const TakedownModal: React.FC<TakedownModalProps> = ({
           </div>
           <div>
             <h3 className="text-base font-semibold text-white">{t.takedown.title}</h3>
-            <p className="text-[10px] text-neutral-500 font-mono tracking-wider">
+            <p className="text-xs text-neutral-500 font-mono tracking-wider">
               CONTENT GOVERNANCE & REMOVAL
             </p>
           </div>

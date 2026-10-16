@@ -34,12 +34,12 @@ const FestivalCard: React.FC<FestivalCardProps> = ({ festival, isActive, count, 
           {locale === 'ne' ? festival.name_ne : festival.name}
         </span>
       </div>
-      <p className="text-[11px] leading-relaxed text-white/40 font-nepali font-medium line-clamp-2">
+      <p className="text-xs leading-relaxed text-white/40 font-nepali font-medium line-clamp-2">
         {locale === 'ne' ? festival.description : festival.description}
       </p>
       <div className="flex items-center gap-2 mt-1">
         <Music className="w-3.5 h-3.5 text-red-500/70 group-hover:text-red-500/90 transition-colors" />
-        <span className="text-[10px] font-mono text-white/40 tabular-nums">
+        <span className="text-xs font-mono text-white/40 tabular-nums">
           {count} tune{count !== 1 ? 's' : ''}
         </span>
       </div>
@@ -83,10 +83,10 @@ const FestivalRow: React.FC<FestivalRowProps> = ({ songs, festivalName, festival
                   {song.title_ne || song.title}
                 </span>
               </div>
-              <p className="text-[9px] text-white/30 font-mono font-bold leading-tight">
+              <p className="text-[11px] text-white/30 font-mono font-bold leading-tight">
                 {song.artist_name}
               </p>
-              <p className="text-[9px] text-white/20 font-mono font-bold mt-0.5">
+              <p className="text-[11px] text-white/20 font-mono font-bold mt-0.5">
                 {song.primary_genre_name ? `${song.primary_genre_name} · ${song.release_year ?? ''}` : 'Featured'}
               </p>
             </div>
@@ -114,10 +114,10 @@ const FestivalNewListItem: React.FC<FestivalNewListItemProps> = ({ song }) => {
           {song.title_ne || song.title}
         </span>
       </div>
-      <p className="text-[9px] text-white/30 font-mono font-bold leading-tight">
+      <p className="text-[11px] text-white/30 font-mono font-bold leading-tight">
         {song.artist_name}
       </p>
-      <p className="text-[9px] text-white/20 font-mono font-bold mt-0.5">
+      <p className="text-[11px] text-white/20 font-mono font-bold mt-0.5">
         {song.primary_genre_name ? `${song.primary_genre_name} · ${song.release_year ?? ''}` : 'Featured'}
       </p>
     </div>
@@ -182,7 +182,7 @@ export const FestiveSection: React.FC = () => {
     <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
       {/* Section header + intro */}
       <Reveal variant="up" className="text-center mb-12">
-        <div className="inline-flex items-center gap-2 text-[10px] font-mono text-white/30 uppercase tracking-[0.3em] mb-2">
+        <div className="inline-flex items-center gap-2 text-xs font-mono text-white/30 uppercase tracking-[0.3em] mb-2">
           <span>🎉</span>
           <span>{t.festival.title}</span>
         </div>

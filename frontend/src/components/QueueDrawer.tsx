@@ -50,7 +50,7 @@ export const QueueDrawer: React.FC = () => {
           {/* Active Now Playing Track */}
           {currentSong && (
             <div>
-              <div className="flex items-center gap-2 text-[10px] font-mono text-neutral-500 uppercase tracking-widest mb-2">
+              <div className="flex items-center gap-2 text-xs font-mono text-neutral-500 uppercase tracking-widest mb-2">
                 <Sparkles className="w-3.5 h-3.5 text-red-500" />
                 <span>{t.player.nowPlaying}</span>
               </div>
@@ -70,7 +70,7 @@ export const QueueDrawer: React.FC = () => {
                     {locale === 'ne' ? currentSong.artist_name_ne || currentSong.artist_name : currentSong.artist_name}
                   </p>
                   {currentStation && (
-                    <span className="inline-block mt-0.5 text-[10px] text-white/50 font-mono truncate">
+                    <span className="inline-block mt-0.5 text-xs text-white/50 font-mono truncate">
                       Station: {currentStation.title}
                     </span>
                   )}
@@ -83,7 +83,7 @@ export const QueueDrawer: React.FC = () => {
           {/* Up Next in Queue */}
           <div>
             <div className="flex items-center justify-between mb-2">
-              <span className="text-[10px] font-mono text-neutral-500 uppercase tracking-wider">
+              <span className="text-xs font-mono text-neutral-500 uppercase tracking-wider">
                 Up Next ({queue.length})
               </span>
             </div>
@@ -115,7 +115,7 @@ export const QueueDrawer: React.FC = () => {
                         <h5 className="text-xs font-medium text-white group-hover:text-red-400 transition-colors duration-150 truncate">
                           {locale === 'ne' ? song.title_ne || song.title : song.title}
                         </h5>
-                        <p className="text-[11px] text-white/60 font-nepali truncate">
+                        <p className="text-xs text-white/60 font-nepali truncate">
                           {locale === 'ne' ? song.artist_name_ne || song.artist_name : song.artist_name}
                         </p>
                       </div>
@@ -153,7 +153,7 @@ export const QueueDrawer: React.FC = () => {
                         <h5 className="text-xs text-white/60 group-hover:text-neutral-300 truncate">
                           {locale === 'ne' ? song.title_ne || song.title : song.title}
                         </h5>
-                        <p className="text-[10px] text-white/40 truncate">
+                        <p className="text-xs text-white/40 truncate">
                           {song.artist_name}
                         </p>
                       </div>

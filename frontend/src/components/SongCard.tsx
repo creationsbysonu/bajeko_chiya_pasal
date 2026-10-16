@@ -61,7 +61,7 @@ export const SongCard: React.FC<SongCardProps> = ({
       className={`group relative rounded-2xl bg-black/60 backdrop-blur-md border overflow-hidden transition-all duration-300 ease-out flex flex-col justify-between hover:-translate-y-1 ${
         isCurrent
           ? 'border-red-500 shadow-glow-red ring-1 ring-red-500 bg-black/80'
-          : 'border-white/10 hover:border-white/20 hover:bg-white/[0.02] pd-dark-zone'
+          : 'border-white/10 hover:border-white/20 hover:bg-white/[0.02]'
       }`}
     >
       <div>
@@ -86,13 +86,13 @@ export const SongCard: React.FC<SongCardProps> = ({
           {/* Top Left: Badges */}
           <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5 z-10">
             {song.metadata_verification_status === 'verified' && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-black/70 text-red-400 border border-red-500/40 text-[9px] font-bold font-mono backdrop-blur-md">
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-black/70 text-red-400 border border-red-500/40 text-[11px] font-bold font-mono backdrop-blur-md">
                 <ShieldCheck className="w-3 h-3 text-red-400" />
                 <span>Verified</span>
               </span>
             )}
             {song.primary_genre_name && (
-              <span className="px-2.5 py-0.5 rounded-full bg-black/70 text-neutral-400 border border-white/10 text-[9px] font-nepali font-semibold backdrop-blur-md">
+              <span className="px-2.5 py-0.5 rounded-full bg-black/70 text-neutral-400 border border-white/10 text-[11px] font-nepali font-semibold backdrop-blur-md">
                 {locale === 'ne' && song.primary_genre_name_ne ? song.primary_genre_name_ne : song.primary_genre_name}
               </span>
             )}
@@ -134,7 +134,7 @@ export const SongCard: React.FC<SongCardProps> = ({
           <h4 className="text-sm font-semibold text-white group-hover:text-red-400 transition-colors duration-150 line-clamp-1">
             {locale === 'ne' ? song.title_ne || song.title : song.title}
           </h4>
-          <p className="text-[11px] text-neutral-500 font-nepali line-clamp-1 mt-0.5">
+          <p className="text-xs text-neutral-500 font-nepali line-clamp-1 mt-0.5">
             {locale === 'ne' ? song.title : song.title_ne}
           </p>
 
@@ -143,12 +143,12 @@ export const SongCard: React.FC<SongCardProps> = ({
           </p>
 
           {song.featured_artists && (
-            <p className="text-[10px] text-neutral-500 font-nepali truncate mt-0.5" title={`ft. ${song.featured_artists}`}>
+            <p className="text-xs text-neutral-500 font-nepali truncate mt-0.5" title={`ft. ${song.featured_artists}`}>
               ft. {song.featured_artists}
             </p>
           )}
 
-          <div className="flex items-center gap-2.5 text-[10px] text-white/50 font-mono mt-3">
+          <div className="flex items-center gap-2.5 text-xs text-white/50 font-mono mt-3">
             {song.release_year && (
               <span className="flex items-center gap-1">
                 <Calendar className="w-2.5 h-2.5 text-neutral-500" />
@@ -171,7 +171,7 @@ export const SongCard: React.FC<SongCardProps> = ({
 
       {/* 3. Card Footer */}
       <div className="px-4 pb-3.5 pt-2 border-t border-white/5 flex items-center justify-between">
-        <span className="text-[9px] text-white/40 truncate max-w-[130px] font-mono" title={song.attribution}>
+        <span className="text-[11px] text-white/40 truncate max-w-[130px] font-mono" title={song.attribution}>
           {song.attribution || 'Official Public Audio'}
         </span>
 

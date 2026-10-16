@@ -31,7 +31,7 @@ export const TrendingSongs: React.FC<TrendingSongsProps> = ({ songs }) => {
       <Reveal variant="up">
         <div className="flex items-end justify-between gap-4 mb-8">
           <div>
-            <div className="flex items-center gap-2 text-[10px] font-mono text-neutral-500 uppercase tracking-widest mb-1">
+            <div className="flex items-center gap-2 text-xs font-mono text-neutral-500 uppercase tracking-widest mb-1">
               <Flame className="w-3.5 h-3.5 text-red-500" />
               <span>MOST TRENDING</span>
             </div>
@@ -106,7 +106,7 @@ export const TrendingSongs: React.FC<TrendingSongsProps> = ({ songs }) => {
                   <h4 className="text-sm font-semibold text-white truncate group-hover:text-red-400 transition-colors duration-150">
                     {locale === 'ne' ? song.title_ne || song.title : song.title}
                   </h4>
-                  <p className="text-[11px] text-neutral-500 font-nepali truncate mt-0.5">
+                  <p className="text-xs text-neutral-500 font-nepali truncate mt-0.5">
                     {locale === 'ne' ? song.artist_name_ne || song.artist_name : song.artist_name}
                   </p>
                 </div>
@@ -116,7 +116,7 @@ export const TrendingSongs: React.FC<TrendingSongsProps> = ({ songs }) => {
                   <p className="text-xs font-mono font-bold text-red-400 tabular-nums">
                     {formatCount(song.play_count)}
                   </p>
-                  <p className="text-[9px] font-mono text-neutral-600 uppercase tracking-wider mt-0.5">
+                  <p className="text-[11px] font-mono text-neutral-600 uppercase tracking-wider mt-0.5">
                     {locale === 'ne' ? 'प्ले' : 'plays'}
                   </p>
                 </div>

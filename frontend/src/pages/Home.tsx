@@ -91,7 +91,7 @@ export const Home: React.FC<HomeProps> = ({
 
             <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
               <div className="max-w-2xl space-y-3">
-                <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-red-600 text-white text-[11px] font-bold font-nepali tracking-wider">
+                <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-red-600 text-white text-xs font-bold font-nepali tracking-wider">
                   <span>बजेको चिया पसल • परम्परागत सम्झना</span>
                 </div>
                 <h2 className="font-serif text-2xl md:text-3xl font-black text-white drop-shadow-sm">
@@ -128,13 +128,13 @@ export const Home: React.FC<HomeProps> = ({
         <section className="mt-10">
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
             <div>
-              <div className="flex items-center gap-2 text-[10px] font-mono text-neutral-500 uppercase tracking-widest mb-1">
+              <div className="flex items-center gap-2 text-xs font-mono text-neutral-500 uppercase tracking-widest mb-1">
                 <span>{t.stations.heading}</span>
               </div>
               <h2 className="font-serif text-2xl font-black text-white drop-shadow-sm">{t.stations.heading}</h2>
               <p className="text-xs text-neutral-500 font-nepali mt-1">{t.stations.subheading}</p>
             </div>
-            <span className="text-[11px] font-mono text-neutral-600">{stations.length} stations</span>
+            <span className="text-xs font-mono text-neutral-600">{stations.length} stations</span>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
@@ -151,7 +151,7 @@ export const Home: React.FC<HomeProps> = ({
         <section className="mt-10">
           <div className="flex items-center justify-between mb-8">
             <div>
-              <div className="flex items-center gap-2 text-[10px] font-mono text-neutral-500 uppercase tracking-widest mb-1">
+              <div className="flex items-center gap-2 text-xs font-mono text-neutral-500 uppercase tracking-widest mb-1">
                 <span>FEATURED SONGS</span>
               </div>
               <h2 className="font-serif text-3xl font-black text-white drop-shadow-sm">
@@ -184,7 +184,7 @@ export const Home: React.FC<HomeProps> = ({
         {/* 5. Browse by Decade */}
         <section className="mt-10">
           <div className="mb-6">
-            <div className="flex items-center gap-2 text-[10px] font-mono text-neutral-500 uppercase tracking-widest mb-1">
+            <div className="flex items-center gap-2 text-xs font-mono text-neutral-500 uppercase tracking-widest mb-1">
               <span>EXPLORE BY ERA</span>
             </div>
             <h2 className="font-serif text-2xl font-black text-white drop-shadow-sm">
@@ -200,7 +200,7 @@ export const Home: React.FC<HomeProps> = ({
                 className="pd-lift p-4 rounded-2xl bg-black/60 hover:bg-red-600 text-center transition-all duration-300 ease-out hover:scale-105 active:scale-95 border border-white/10 hover:border-red-500/50 shadow-md group"
               >
                 <span className="font-serif text-lg font-bold block text-white group-hover:text-white">{d.decade}</span>
-                <span className="text-[11px] font-mono text-neutral-500 group-hover:text-white/70 transition-colors">{d.count} songs</span>
+                <span className="text-xs font-mono text-neutral-500 group-hover:text-white/70 transition-colors">{d.count} songs</span>
               </button>
             ))}
           </div>
@@ -209,7 +209,7 @@ export const Home: React.FC<HomeProps> = ({
         {/* 6. Browse by Genre Taxonomy */}
         <section className="mt-10">
           <div className="mb-6">
-            <div className="flex items-center gap-2 text-[10px] font-mono text-neutral-500 uppercase tracking-widest mb-1">
+            <div className="flex items-center gap-2 text-xs font-mono text-neutral-500 uppercase tracking-widest mb-1">
               <span>BROWSE GENRES</span>
             </div>
             <h2 className="font-serif text-2xl font-black text-white drop-shadow-sm">
@@ -221,8 +221,8 @@ export const Home: React.FC<HomeProps> = ({
             {genreGroups.map((group) => (
               <div key={group.category} className="space-y-3">
                 <div className="flex items-center justify-between gap-3">
-                  <h3 className="text-[11px] font-mono font-bold uppercase tracking-[0.3em] text-neutral-500">{group.label}</h3>
-                  <span className="text-[10px] font-mono text-neutral-600">{group.genres.length} genres</span>
+                  <h3 className="text-xs font-mono font-bold uppercase tracking-[0.3em] text-neutral-500">{group.label}</h3>
+                  <span className="text-xs font-mono text-neutral-600">{group.genres.length} genres</span>
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
                   {group.genres.map((g) => (
@@ -234,7 +234,7 @@ export const Home: React.FC<HomeProps> = ({
                       <h4 className="font-serif text-xs font-bold text-white truncate group-hover:text-red-400 transition-colors">
                         {locale === 'ne' ? g.name_ne || g.name : g.name}
                       </h4>
-                      <p className="text-[10px] text-red-400 font-mono mt-0.5 font-bold">
+                      <p className="text-xs text-red-400 font-mono mt-0.5 font-bold">
                         {group.label.toUpperCase()}
                       </p>
                     </button>
@@ -248,7 +248,7 @@ export const Home: React.FC<HomeProps> = ({
         {/* 6. FAQ Accordion */}
         <section className="mt-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
           <div className="text-center mb-8">
-            <div className="flex items-center justify-center gap-2 text-[10px] font-mono text-neutral-500 uppercase tracking-widest mb-1">
+            <div className="flex items-center justify-center gap-2 text-xs font-mono text-neutral-500 uppercase tracking-widest mb-1">
               <span>FAQ</span>
             </div>
             <h2 className="font-serif text-2xl font-black text-cream-100">

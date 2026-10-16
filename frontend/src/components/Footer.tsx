@@ -36,14 +36,14 @@ export const Footer: React.FC<FooterProps> = ({ onOpenTakedown, onOpenAdmin }) =
             <p className="text-xs leading-relaxed font-nepali">
               {t.footer.aboutText}
             </p>
-            <div className="text-[11px] text-red-600 font-mono font-bold tracking-widest">
+            <div className="text-xs text-red-600 font-mono font-bold tracking-widest">
               Kathmandu • 2026
             </div>
           </div>
 
           {/* Stations */}
           <div>
-            <h4 className="text-[10px] font-bold text-white uppercase tracking-widest mb-4">
+            <h4 className="text-xs font-bold text-white uppercase tracking-widest mb-4">
               Themed Worlds
             </h4>
             <ul className="space-y-2">
@@ -58,7 +58,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenTakedown, onOpenAdmin }) =
           {/* Links & Developer */}
           <div className="space-y-6">
             <div>
-              <h4 className="text-[10px] font-bold text-white uppercase tracking-widest mb-4">
+              <h4 className="text-xs font-bold text-white uppercase tracking-widest mb-4">
                 Policies
               </h4>
               <ul className="space-y-2 text-xs">
@@ -88,7 +88,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenTakedown, onOpenAdmin }) =
 
             {/* Developer credit */}
             <div>
-              <h4 className="text-[10px] font-bold text-white uppercase tracking-widest mb-3">
+              <h4 className="text-xs font-bold text-white uppercase tracking-widest mb-3">
                 Developer
               </h4>
               <a
@@ -104,7 +104,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenTakedown, onOpenAdmin }) =
                 href="https://guptasonu.com.np"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-0.5 inline-block text-[11px] text-neutral-600 hover:text-red-400 transition-colors"
+                className="mt-0.5 inline-block text-xs text-neutral-600 hover:text-red-400 transition-colors"
               >
                 guptasonu.com.np
               </a>
@@ -114,7 +114,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenTakedown, onOpenAdmin }) =
 
         {/* Disclaimer */}
         <div className="border-t border-white/5 pt-6">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px] text-neutral-600">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-neutral-600">
             <span>© 2026 Purano Dhun (पुरानो धुन). All rights reserved.</span>
             <span className="flex items-center gap-1">
               Built with
@@ -122,7 +122,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenTakedown, onOpenAdmin }) =
               for Nepali musical heritage.
             </span>
           </div>
-          <p className="text-[11px] text-neutral-700 mt-3 leading-relaxed text-center font-nepali">
+          <p className="text-xs text-neutral-700 mt-3 leading-relaxed text-center font-nepali">
             {t.footer.rightsDisclaimer}
           </p>
         </div>

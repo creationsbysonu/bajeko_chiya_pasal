@@ -48,7 +48,7 @@ export const Hero: React.FC<HeroProps> = ({ stations, onExploreCatalog }) => {
 
             {/* Live Badge */}
             <Reveal variant="fade" delay={80} className="mb-6">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-white/60 text-[11px] font-medium backdrop-blur-sm">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-white/60 text-xs font-medium backdrop-blur-sm">
                 <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
                 <span className="font-nepali">{t.hero.badge}</span>
                 <span className="text-white/20">•</span>
@@ -110,7 +110,7 @@ export const Hero: React.FC<HeroProps> = ({ stations, onExploreCatalog }) => {
                   <span
                     className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${status === 'playing' ? 'bg-red-500 animate-pulse' : 'bg-neutral-600'}`}
                   />
-                  <span className="font-mono text-red-500 text-[10px] font-bold uppercase">
+                  <span className="font-mono text-red-500 text-xs font-bold uppercase">
                     {status === 'playing' ? 'On Air' : 'Tuned'}
                   </span>
                   <span className="text-neutral-400">—</span>

@@ -40,7 +40,7 @@ export const StationCard: React.FC<StationCardProps> = ({ station }) => {
 
   return (
     <div
-      className={`group relative rounded-2xl bg-black/60 backdrop-blur-md border transition-all duration-300 ease-out overflow-hidden flex flex-col justify-between hover:-translate-y-1 pd-dark-zone ${
+      className={`group relative rounded-2xl bg-black/60 backdrop-blur-md border transition-all duration-300 ease-out overflow-hidden flex flex-col justify-between hover:-translate-y-1 ${
         isCurrent
           ? 'border-red-500 shadow-glow-red ring-1 ring-red-500'
           : 'border-white/10 hover:border-white/20'
@@ -58,7 +58,7 @@ export const StationCard: React.FC<StationCardProps> = ({ station }) => {
 
         {/* Ambient Badge */}
         <div className="absolute top-2.5 left-2.5 z-10">
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/70 backdrop-blur-md text-[10px] font-mono text-neutral-400 border border-white/10 font-bold">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/70 backdrop-blur-md text-xs font-mono text-neutral-400 border border-white/10 font-bold">
             <AmbientIcon className="w-3 h-3 text-red-500" />
             <span>{station.ambient_type.replace('_', ' ').toUpperCase()}</span>
           </span>
@@ -66,7 +66,7 @@ export const StationCard: React.FC<StationCardProps> = ({ station }) => {
 
         {/* Track count badge */}
         {station.songs_count !== undefined && (
-          <div className="absolute top-2.5 right-2.5 text-[10px] font-mono text-white/80 bg-black/70 backdrop-blur-md px-2.5 py-0.5 rounded-full border border-white/10 z-10">
+          <div className="absolute top-2.5 right-2.5 text-xs font-mono text-white/80 bg-black/70 backdrop-blur-md px-2.5 py-0.5 rounded-full border border-white/10 z-10">
             {station.songs_count} tracks
           </div>
         )}
@@ -106,7 +106,7 @@ export const StationCard: React.FC<StationCardProps> = ({ station }) => {
 
         {/* Action Button Footer */}
         <div className="pt-3 border-t border-white/10 flex items-center justify-between">
-          <div className="flex items-center gap-1.5 text-[10px] text-white/50 font-mono">
+          <div className="flex items-center gap-1.5 text-xs text-white/50 font-mono">
             <Sparkles className="w-3 h-3 text-red-500" />
             <span>CONTINUOUS</span>
           </div>

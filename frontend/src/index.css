@@ -427,6 +427,18 @@ html.light .pd-dark-zone .bg-black\/30 {
   background-color: #000000;
 }
 
+/* Same element carries both `pd-dark-zone` and a translucent black panel.
+   The generic `html.light .bg-black/NN` flip above would turn it white and
+   wipe out the (intentionally white) copy, so keep these surfaces dark too. */
+html.light .pd-dark-zone.bg-black\/98 { background-color: rgba(0, 0, 0, 0.98); }
+html.light .pd-dark-zone.bg-black\/90 { background-color: rgba(0, 0, 0, 0.9); }
+html.light .pd-dark-zone.bg-black\/80 { background-color: rgba(0, 0, 0, 0.8); }
+html.light .pd-dark-zone.bg-black\/70 { background-color: rgba(0, 0, 0, 0.7); }
+html.light .pd-dark-zone.bg-black\/60 { background-color: rgba(0, 0, 0, 0.6); }
+html.light .pd-dark-zone.bg-black\/50 { background-color: rgba(0, 0, 0, 0.5); }
+html.light .pd-dark-zone.bg-black\/40 { background-color: rgba(0, 0, 0, 0.4); }
+html.light .pd-dark-zone.bg-black\/30 { background-color: rgba(0, 0, 0, 0.3); }
+
 /* Light-mode flips for every black-opacity panel used outside dark zones. */
 html.light .bg-black\/90 {
   background-color: rgba(255, 255, 255, 0.92);

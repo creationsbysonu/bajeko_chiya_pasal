@@ -13,7 +13,7 @@ export const RadioWorldsPage: React.FC<RadioWorldsPageProps> = ({ stations }) =>
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
       <div className="mb-8">
-        <div className="flex items-center gap-2 text-[10px] font-mono text-neutral-500 uppercase tracking-widest mb-1">
+        <div className="flex items-center gap-2 text-xs font-mono text-neutral-500 uppercase tracking-widest mb-1">
           <span>THEMED RADIO WORLDS</span>
         </div>
         <h1 className="font-serif text-3xl sm:text-4xl font-bold text-white mb-2">

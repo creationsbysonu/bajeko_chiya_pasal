@@ -151,7 +151,7 @@ export const Catalog: React.FC<CatalogProps> = ({ initialGenre, initialDecade, i
           
           {/* Genre Filter */}
           <div>
-            <label className="block text-[10px] font-mono text-neutral-500 uppercase mb-1 tracking-widest">
+            <label className="block text-xs font-mono text-neutral-500 uppercase mb-1 tracking-widest">
               Genre (विधा)
             </label>
             <select
@@ -174,7 +174,7 @@ export const Catalog: React.FC<CatalogProps> = ({ initialGenre, initialDecade, i
 
           {/* Decade Filter */}
           <div>
-            <label className="block text-[10px] font-mono text-neutral-500 uppercase mb-1 tracking-widest">
+            <label className="block text-xs font-mono text-neutral-500 uppercase mb-1 tracking-widest">
               Decade (दशक)
             </label>
             <select
@@ -195,7 +195,7 @@ export const Catalog: React.FC<CatalogProps> = ({ initialGenre, initialDecade, i
 
           {/* Language Filter */}
           <div>
-            <label className="block text-[10px] font-mono text-neutral-500 uppercase mb-1 tracking-widest">
+            <label className="block text-xs font-mono text-neutral-500 uppercase mb-1 tracking-widest">
               Language (भाषा)
             </label>
             <select
@@ -214,7 +214,7 @@ export const Catalog: React.FC<CatalogProps> = ({ initialGenre, initialDecade, i
 
           {/* Verification Status */}
           <div>
-            <label className="block text-[10px] font-mono text-neutral-500 uppercase mb-1 tracking-widest">
+            <label className="block text-xs font-mono text-neutral-500 uppercase mb-1 tracking-widest">
               Verification (प्रमाणन)
             </label>
             <select
@@ -230,7 +230,7 @@ export const Catalog: React.FC<CatalogProps> = ({ initialGenre, initialDecade, i
 
           {/* Sorting */}
           <div>
-            <label className="block text-[10px] font-mono text-neutral-500 uppercase mb-1 tracking-widest">
+            <label className="block text-xs font-mono text-neutral-500 uppercase mb-1 tracking-widest">
               Sort By (क्रम)
             </label>
             <select

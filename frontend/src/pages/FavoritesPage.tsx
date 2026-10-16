@@ -47,7 +47,7 @@ export const FavoritesPage: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 pb-6 border-b border-white/8">
         <div>
-          <div className="flex items-center gap-2 text-[10px] font-mono text-neutral-500 uppercase tracking-widest mb-1">
+          <div className="flex items-center gap-2 text-xs font-mono text-neutral-500 uppercase tracking-widest mb-1">
             <Heart className="w-3.5 h-3.5 fill-red-600 text-red-600" />
             <span>SAVED COLLECTION</span>
           </div>

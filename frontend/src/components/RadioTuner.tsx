@@ -52,17 +52,17 @@ export const RadioTuner: React.FC<RadioTunerProps> = ({ stations }) => {
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-black/60 backdrop-blur-md border border-white/10 text-xs text-white">
               <span className={`w-2 h-2 rounded-full ${isPlaying ? 'bg-red-500 shadow-glow-red animate-pulse' : 'bg-neutral-600'}`} />
-              <span className="font-mono text-[10px] tracking-widest uppercase text-neutral-500 font-bold">
+              <span className="font-mono text-xs tracking-widest uppercase text-neutral-500 font-bold">
                 {activeStation.ambient_type.replace('_', ' ').toUpperCase()}
               </span>
               <span className="text-white/30">•</span>
-              <span className="text-[11px] font-mono text-white/80">
+              <span className="text-xs font-mono text-white/80">
                 CH-{(activeStation.display_order + 1).toString().padStart(2, '0')}
               </span>
             </div>
 
             {isPlaying && (
-              <div className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-red-950/80 backdrop-blur-md border border-red-500/40 text-[10px] font-mono tracking-widest text-red-300 font-bold">
+              <div className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-red-950/80 backdrop-blur-md border border-red-500/40 text-xs font-mono tracking-widest text-red-300 font-bold">
                 <span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-ping mr-1" />
                 NOW STREAMING
               </div>
@@ -116,9 +116,9 @@ export const RadioTuner: React.FC<RadioTunerProps> = ({ stations }) => {
       </div>
 
       {/* 2. Visual Soundscape Selector Thumbnails */}
-      <div className="pd-dark-zone">
+      <div>
         <div className="flex items-center justify-between mb-3 px-1">
-          <p className="text-[10px] uppercase tracking-widest font-mono text-neutral-500 flex items-center gap-2">
+          <p className="text-xs uppercase tracking-widest font-mono text-neutral-500 flex items-center gap-2">
             <Sparkles className="w-3.5 h-3.5 text-red-500" />
             <span>ATMOSPHERIC SOUNDSCAPES • सांगीतिक परिवेश</span>
           </p>
@@ -160,13 +160,13 @@ export const RadioTuner: React.FC<RadioTunerProps> = ({ stations }) => {
 
                 {/* Thumbnail Metadata */}
                 <div className="p-3 bg-black/90 pd-dark-zone">
-                  <div className="text-[10px] font-mono text-neutral-500 uppercase mb-0.5">
+                  <div className="text-xs font-mono text-neutral-500 uppercase mb-0.5">
                     CH-{(st.display_order + 1).toString().padStart(2, '0')}
                   </div>
                   <h4 className="text-xs font-semibold text-white truncate group-hover:text-red-400 transition-colors duration-150">
                     {locale === 'ne' ? st.title_ne || st.title : st.title}
                   </h4>
-                  <p className="text-[10px] text-white/60 truncate mt-0.5 font-nepali">
+                  <p className="text-xs text-white/60 truncate mt-0.5 font-nepali">
                     {locale === 'ne' ? st.tagline_ne || st.tagline : st.tagline}
                   </p>
                 </div>

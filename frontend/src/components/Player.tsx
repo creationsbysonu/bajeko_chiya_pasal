@@ -83,7 +83,7 @@ export const Player: React.FC = () => {
                 <span className="text-xs uppercase font-mono tracking-wider text-neutral-400">
                   {t.player.station}: {locale === 'ne' ? currentStation?.title_ne || currentStation?.title : currentStation?.title}
                 </span>
-                <p className="text-[11px] text-cream-400/60 font-nepali">
+                <p className="text-xs text-cream-400/60 font-nepali">
                   {currentStation?.tagline}
                 </p>
               </div>
@@ -207,7 +207,7 @@ export const Player: React.FC = () => {
               <button onClick={nextTrack} className="underline hover:text-white font-semibold">
                 Skip to next
               </button>
-              <button onClick={clearError} className="px-2 py-0.5 bg-black/50 rounded text-[11px]">
+              <button onClick={clearError} className="px-2 py-0.5 bg-black/50 rounded text-xs">
                 Dismiss
               </button>
             </div>
@@ -270,7 +270,7 @@ export const Player: React.FC = () => {
                   : ''}
               </p>
               {currentStation && (
-                <span className="text-[10px] text-cream-300/80 font-medium truncate block">
+                <span className="text-xs text-cream-300/80 font-medium truncate block">
                   {locale === 'ne' ? currentStation.title_ne : currentStation.title}
                 </span>
               )}
@@ -341,7 +341,7 @@ export const Player: React.FC = () => {
             </div>
 
             {/* Timers */}
-            <div className="hidden md:flex items-center gap-2 text-[11px] font-mono text-cream-400 font-medium">
+            <div className="hidden md:flex items-center gap-2 text-xs font-mono text-cream-400 font-medium">
               <span className="text-white">{formatTime(currentTime)}</span>
               <span>/</span>
               <span>{formatTime(duration)}</span>
@@ -380,7 +380,7 @@ export const Player: React.FC = () => {
             >
               <ListMusic className="w-4 h-4" />
               {queue.length > 0 && (
-                <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-600 text-white font-mono text-[9px] font-bold rounded-full flex items-center justify-center">
+                <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-600 text-white font-mono text-[11px] font-bold rounded-full flex items-center justify-center">
                   {queue.length}
                 </span>
               )}
