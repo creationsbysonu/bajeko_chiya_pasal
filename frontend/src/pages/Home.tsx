@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Hero } from '../components/Hero';
 import { StationCard } from '../components/StationCard';
 import { SongCard } from '../components/SongCard';
-import { NewReleasesHighlight } from '../components/NewReleasesHighlight';
 import { NewReleases } from '../components/NewReleases';
 import { TrendingSongs } from '../components/TrendingSongs';
 import { Reveal } from '../components/motion/Reveal';
@@ -70,9 +69,6 @@ export const Home: React.FC<HomeProps> = ({
 
   return (
     <div className="space-y-16 pb-20">
-      {/* 0. Freshly Uploaded Highlight — sits directly below the navbar */}
-      <NewReleasesHighlight songs={newSongs} onViewAll={onExploreCatalog} />
-
       {/* 1. Hero with Integrated Vintage Radio Tuner */}
       <Hero stations={stations} onExploreCatalog={onExploreCatalog} />
 

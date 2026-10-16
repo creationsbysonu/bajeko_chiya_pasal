@@ -10,8 +10,7 @@ interface NewReleasesProps {
 }
 
 /**
- * Full-width "New Releases" grid section. Complements the slim top rail
- * (NewReleasesHighlight) with a standard catalog grid, sitting below the Hero
+ * Full-width "New Releases" grid section, sitting below the Hero
  * ("Purano Dhun, Timeless Memories").
  */
 export const NewReleases: React.FC<NewReleasesProps> = ({ songs, onViewAll }) => {
