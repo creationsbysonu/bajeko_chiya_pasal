@@ -3,6 +3,7 @@ import { Hero } from '../components/Hero';
 import { StationCard } from '../components/StationCard';
 import { SongCard } from '../components/SongCard';
 import { NewReleasesHighlight } from '../components/NewReleasesHighlight';
+import { NewReleases } from '../components/NewReleases';
 import { TrendingSongs } from '../components/TrendingSongs';
 import { Reveal } from '../components/motion/Reveal';
 import { Station, Song, Genre, GenreCategory } from '../types';
@@ -77,6 +78,9 @@ export const Home: React.FC<HomeProps> = ({
 
       {/* 2. Grandfather's Tea Shop & Heritage Story Spotlight */}
       <Reveal variant="up" delay={60} className="space-y-16 pb-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* 1.5. New Releases — full grid, directly below the Hero */}
+        <NewReleases songs={newSongs} onViewAll={onExploreCatalog} />
+
         <section>
           <div className="relative rounded-3xl overflow-hidden border border-white/10 bg-black shadow-2xl p-6 md:p-10 pd-dark-zone">
             {/* Soothing photographic backdrop */}
