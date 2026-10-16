@@ -1,109 +1,86 @@
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import {
   Artist, Genre, GenreCategory, Song, Station, FavoriteItem,
   AdminStats, AdminInsights, TakedownTicket, TakedownListResponse, StationQueueItem, AuditLogItem, AuthUser
 } from '../types';
 
-// On Render the SPA is a static site on its own subdomain, so the API base
-// is injected at build time (VITE_API_BASE). Locally it falls back to the
-// same-origin "/api" dev-server proxy.
-const API_BASE: string = import.meta.env.VITE_API_BASE || '/api';
-const CSRF_COOKIE_NAME = 'csrftoken';
+// Supabase is both the database and the backend: every read/write goes through
+// SECURITY DEFINER RPCs (see supabase/migrations) that reproduce the response
+// shapes of the old Django REST API, so this module keeps the exact same
+// interface the rest of the app consumes.
+const SUPABASE_URL: string = import.meta.env.VITE_SUPABASE_URL || 'http://127.0.0.1:54321';
+const SUPABASE_ANON_KEY: string = import.meta.env.VITE_SUPABASE_ANON_KEY || 'local-anon-key';
 
-let csrfTokenPromise: Promise<string | null> | null = null;
+export const supabase: SupabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: true,
+  },
+});
 
-function getCookie(name: string): string | null {
-  if (typeof document === 'undefined') {
-    return null;
-  }
+// Listener identity: anonymous Supabase Auth sessions replace the old
+// X-Session-Key header. Favorites and playback telemetry bind to auth.uid().
+let sessionPromise: Promise<void> | null = null;
 
-  const cookieValue = document.cookie
-    .split('; ')
-    .find((cookie) => cookie.startsWith(`${name}=`));
+export async function ensureListenerSession(): Promise<void> {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (session) return;
 
-  if (!cookieValue) {
-    return null;
-  }
-
-  return decodeURIComponent(cookieValue.split('=').slice(1).join('='));
-}
-
-async function ensureCsrfToken(): Promise<string | null> {
-  if (typeof document === 'undefined') {
-    return null;
-  }
-
-  const existing = getCookie(CSRF_COOKIE_NAME);
-  if (existing) {
-    return existing;
-  }
-
-  if (!csrfTokenPromise) {
-    csrfTokenPromise = fetch(`${API_BASE}/auth/csrf/`, {
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-    })
-      .then(async (res) => {
-        if (!res.ok) {
-          return null;
-        }
-
-        const data = await res.json();
-        return data.csrf_token ?? null;
-      })
-      .catch(() => null)
+  if (!sessionPromise) {
+    sessionPromise = supabase.auth
+      .signInAnonymously()
+      .then(() => undefined)
+      .catch(() => undefined) // anonymous sign-ins may be disabled; catalog still works
       .finally(() => {
-        csrfTokenPromise = null;
+        sessionPromise = null;
       });
   }
-
-  return csrfTokenPromise;
+  return sessionPromise;
 }
 
-async function apiFetch(path: string, options: RequestInit = {}): Promise<Response> {
-  const headers = new Headers(options.headers ?? {});
-  const method = (options.method ?? 'GET').toUpperCase();
+// Supabase `raise exception` messages arrive on PostgrestError.message; pass
+// them through so the admin UI keeps showing the exact server-side wording.
+function rpcError(error: { message?: string } | null): Error {
+  return new Error(error?.message || 'Request failed');
+}
 
-  if (method !== 'GET' && method !== 'HEAD' && method !== 'OPTIONS') {
-    const csrfToken = await ensureCsrfToken();
-    if (csrfToken) {
-      headers.set('X-CSRFToken', csrfToken);
+async function rpc<T>(
+  fn: string,
+  args: Record<string, unknown> = {},
+  opts: { listener?: boolean } = {},
+): Promise<T> {
+  if (opts.listener) {
+    await ensureListenerSession();
+  }
+  const { data, error } = await supabase.rpc(fn, args);
+  if (error) throw rpcError(error);
+  return data as T;
+}
+
+// Drop undefined/empty args so RPC parameters keep their declared defaults.
+function args(map: Record<string, unknown>): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  Object.entries(map).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== '' && value !== 'all') {
+      out[key] = value;
     }
-  }
-
-  return fetch(path, {
-    ...options,
-    credentials: 'include',
-    headers,
   });
+  return out;
 }
-
-// Generate or retrieve persistent guest session key
-export function getGuestSessionKey(): string {
-  let key = localStorage.getItem('purano_dhun_guest_session');
-  if (!key) {
-    key = 'guest_' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36);
-    localStorage.setItem('purano_dhun_guest_session', key);
-  }
-  return key;
-}
-
-const defaultHeaders = () => ({
-  'Content-Type': 'application/json',
-  'X-Session-Key': getGuestSessionKey(),
-});
 
 export const api = {
   // Stations
   async getStations(): Promise<Station[]> {
-    const res = await fetch(`${API_BASE}/stations/`, { headers: defaultHeaders() });
-    if (!res.ok) throw new Error('Failed to fetch stations');
-    return res.json();
+    return rpc<Station[]>('get_stations', args({}));
   },
 
   async getStationDetail(slug: string): Promise<Station> {
-    const res = await fetch(`${API_BASE}/stations/${slug}/`, { headers: defaultHeaders() });
-    if (!res.ok) throw new Error(`Failed to fetch station: ${slug}`);
-    return res.json();
+    try {
+      return await rpc<Station>('get_station_detail', { p_slug: slug });
+    } catch {
+      throw new Error(`Failed to fetch station: ${slug}`);
+    }
   },
 
   // Songs Catalog & Search
@@ -116,86 +93,101 @@ export const api = {
     ordering?: string;
     page?: number;
   } = {}): Promise<{ count: number; next: string | null; previous: string | null; results: Song[] }> {
-    const query = new URLSearchParams();
-    if (params.search) query.set('search', params.search);
-    if (params.genre) query.set('genre', params.genre);
-    if (params.decade) query.set('decade', params.decade);
-    if (params.language) query.set('language', params.language);
-    if (params.verification) query.set('verification', params.verification);
-    if (params.ordering) query.set('ordering', params.ordering);
-    if (params.page) query.set('page', params.page.toString());
-
-    const res = await fetch(`${API_BASE}/songs/?${query.toString()}`, { headers: defaultHeaders() });
-    if (!res.ok) throw new Error('Failed to fetch catalog songs');
-    return res.json();
+    try {
+      return await rpc('get_songs', args({
+        p_search: params.search,
+        p_genre: params.genre,
+        p_decade: params.decade,
+        p_language: params.language,
+        p_verification: params.verification,
+        p_ordering: params.ordering,
+        p_page: params.page,
+      }));
+    } catch {
+      throw new Error('Failed to fetch catalog songs');
+    }
   },
 
   async getSongDetail(id: number): Promise<Song> {
-    const res = await fetch(`${API_BASE}/songs/${id}/`, { headers: defaultHeaders() });
-    if (!res.ok) throw new Error('Failed to fetch song details');
-    return res.json();
+    try {
+      return await rpc<Song>('get_song_detail', { p_id: id });
+    } catch {
+      throw new Error('Failed to fetch song details');
+    }
   },
 
   // Metadata taxonomies
   async getGenres(): Promise<Genre[]> {
-    const res = await fetch(`${API_BASE}/genres/`, { headers: defaultHeaders() });
-    if (!res.ok) throw new Error('Failed to fetch genres');
-    return res.json();
+    try {
+      return await rpc<Genre[]>('get_genres');
+    } catch {
+      throw new Error('Failed to fetch genres');
+    }
   },
 
   async getGenreCategories(): Promise<GenreCategory[]> {
-    const res = await fetch(`${API_BASE}/genre-categories/`, { headers: defaultHeaders() });
-    if (!res.ok) throw new Error('Failed to fetch genre categories');
-    return res.json();
+    try {
+      return await rpc<GenreCategory[]>('get_genre_categories');
+    } catch {
+      throw new Error('Failed to fetch genre categories');
+    }
   },
 
   async getArtists(): Promise<Artist[]> {
-    const res = await fetch(`${API_BASE}/artists/`, { headers: defaultHeaders() });
-    if (!res.ok) throw new Error('Failed to fetch artists');
-    return res.json();
+    try {
+      return await rpc<Artist[]>('get_artists', args({ p_search: undefined }));
+    } catch {
+      throw new Error('Failed to fetch artists');
+    }
   },
 
   async getDecades(): Promise<{ decade: string; count: number }[]> {
-    const res = await fetch(`${API_BASE}/decades/`, { headers: defaultHeaders() });
-    if (!res.ok) throw new Error('Failed to fetch decades');
-    return res.json();
+    try {
+      return await rpc('get_decades');
+    } catch {
+      throw new Error('Failed to fetch decades');
+    }
   },
 
   async getLanguages(): Promise<{ language: string; count: number }[]> {
-    const res = await fetch(`${API_BASE}/languages/`, { headers: defaultHeaders() });
-    if (!res.ok) throw new Error('Failed to fetch languages');
-    return res.json();
+    try {
+      return await rpc('get_languages');
+    } catch {
+      throw new Error('Failed to fetch languages');
+    }
   },
 
   async getFeatured(): Promise<{ stations: Station[]; songs: Song[] }> {
-    const res = await fetch(`${API_BASE}/featured/`, { headers: defaultHeaders() });
-    if (!res.ok) throw new Error('Failed to fetch featured content');
-    return res.json();
+    try {
+      return await rpc('get_featured');
+    } catch {
+      throw new Error('Failed to fetch featured content');
+    }
   },
 
   // Favorites
   async getFavorites(): Promise<FavoriteItem[]> {
-    const res = await fetch(`${API_BASE}/favorites/`, { headers: defaultHeaders() });
-    if (!res.ok) return [];
-    return res.json();
+    try {
+      return await rpc<FavoriteItem[]>('get_favorites', args({}), { listener: true });
+    } catch {
+      return [];
+    }
   },
 
   async addFavorite(songId: number): Promise<FavoriteItem> {
-    const res = await apiFetch(`${API_BASE}/favorites/`, {
-      method: 'POST',
-      headers: defaultHeaders(),
-      body: JSON.stringify({ song_id: songId, session_key: getGuestSessionKey() }),
-    });
-    if (!res.ok) throw new Error('Failed to save favorite');
-    return res.json();
+    try {
+      return await rpc<FavoriteItem>('add_favorite', { p_song_id: songId }, { listener: true });
+    } catch {
+      throw new Error('Failed to save favorite');
+    }
   },
 
   async removeFavorite(songId: number): Promise<void> {
-    const res = await apiFetch(`${API_BASE}/favorites/?song_id=${songId}`, {
-      method: 'DELETE',
-      headers: defaultHeaders(),
-    });
-    if (!res.ok) throw new Error('Failed to remove favorite');
+    try {
+      await rpc('remove_favorite', { p_song_id: songId }, { listener: true });
+    } catch {
+      throw new Error('Failed to remove favorite');
+    }
   },
 
   // Playback Event Logging
@@ -206,14 +198,12 @@ export const api = {
     error_message?: string;
   }): Promise<void> {
     try {
-      await apiFetch(`${API_BASE}/playback-events/`, {
-        method: 'POST',
-        headers: defaultHeaders(),
-        body: JSON.stringify({
-          ...event,
-          session_id: getGuestSessionKey(),
-        }),
-      });
+      await rpc('log_playback_event', args({
+        p_event_type: event.event_type,
+        p_song_id: event.song,
+        p_station_id: event.station,
+        p_error_message: event.error_message,
+      }), { listener: true });
     } catch {
       // Non-blocking telemetry
     }
@@ -227,65 +217,66 @@ export const api = {
     reason: string;
     details: string;
   }): Promise<{ message: string; ticket_id: number }> {
-    const res = await apiFetch(`${API_BASE}/takedown-request/`, {
-      method: 'POST',
-      headers: defaultHeaders(),
-      body: JSON.stringify(data),
-    });
-    if (!res.ok) throw new Error('Failed to submit notice');
-    return res.json();
+    try {
+      return await rpc('submit_takedown', {
+        p_song: data.song,
+        p_claimant_name: data.claimant_name,
+        p_claimant_email: data.claimant_email,
+        p_reason: data.reason,
+        p_details: data.details,
+      });
+    } catch {
+      throw new Error('Failed to submit notice');
+    }
   },
 
   // Admin APIs
   async getAdminStats(): Promise<AdminStats> {
-    const res = await fetch(`${API_BASE}/admin/stats/`, {
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-    });
-    if (!res.ok) throw new Error('Admin authentication required');
-    return res.json();
+    try {
+      return await rpc<AdminStats>('admin_stats');
+    } catch {
+      throw new Error('Admin authentication required');
+    }
   },
 
   async getAdminInsights(days = 30): Promise<AdminInsights> {
-    const res = await fetch(`${API_BASE}/admin/insights/?days=${days}`, {
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-    });
-    if (!res.ok) throw new Error('Failed to load insights');
-    return res.json();
+    try {
+      return await rpc<AdminInsights>('admin_insights', { p_days: days });
+    } catch {
+      throw new Error('Failed to load insights');
+    }
   },
 
   async getAdminTakedowns(params: { status?: string; reason?: string; search?: string } = {}): Promise<TakedownListResponse> {
-    const query = new URLSearchParams();
-    Object.entries(params).forEach(([key, value]) => {
-      if (value) query.append(key, value);
-    });
-    const res = await fetch(`${API_BASE}/admin/takedowns/?${query.toString()}`, {
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-    });
-    if (!res.ok) throw new Error('Admin access required');
-    return res.json();
+    try {
+      return await rpc<TakedownListResponse>('admin_takedowns', args({
+        p_status: params.status,
+        p_reason: params.reason,
+        p_search: params.search,
+      }));
+    } catch {
+      throw new Error('Admin access required');
+    }
   },
 
   async handleTakedownAction(id: number, status: string, notes: string): Promise<TakedownTicket> {
-    const res = await apiFetch(`${API_BASE}/admin/takedowns/${id}/action/`, {
-      method: 'POST',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status, resolution_notes: notes }),
-    });
-    if (!res.ok) throw new Error('Failed to apply moderation action');
-    return res.json();
+    try {
+      return await rpc<TakedownTicket>('admin_takedown_action', {
+        p_id: id,
+        p_status: status,
+        p_resolution_notes: notes,
+      });
+    } catch (error) {
+      throw new Error(error instanceof Error ? error.message : 'Failed to apply moderation action');
+    }
   },
 
   async getAdminAuditLogs(): Promise<AuditLogItem[]> {
-    const res = await fetch(`${API_BASE}/admin/audit-logs/`, {
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-    });
-    if (!res.ok) throw new Error('Admin access required');
-    return res.json();
+    try {
+      return await rpc<AuditLogItem[]>('admin_audit_logs');
+    } catch {
+      throw new Error('Admin access required');
+    }
   },
 
   async getAdminSongs(params: {
@@ -301,18 +292,23 @@ export const api = {
     page?: number;
     page_size?: number;
   } = {}): Promise<{ count: number; page: number; page_size: number; results: Song[] }> {
-    const query = new URLSearchParams();
-    Object.entries(params).forEach(([key, value]) => {
-      if (value !== undefined && value !== null && value !== '' && value !== 'all') {
-        query.append(key, String(value));
-      }
-    });
-    const res = await fetch(`${API_BASE}/admin/songs/?${query.toString()}`, {
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-    });
-    if (!res.ok) throw new Error('Failed to fetch admin songs');
-    return res.json();
+    try {
+      return await rpc('admin_songs', args({
+        p_search: params.search,
+        p_status: params.status,
+        p_genre: params.genre,
+        p_category: params.category,
+        p_artist: params.artist,
+        p_language: params.language,
+        p_decade: params.decade,
+        p_verification: params.verification,
+        p_ordering: params.ordering,
+        p_page: params.page,
+        p_page_size: params.page_size,
+      }));
+    } catch (error) {
+      throw new Error(error instanceof Error ? error.message : 'Failed to fetch admin songs');
+    }
   },
 
   // Bulk song operations: delete, move genre/category, set status/language/decade,
@@ -330,32 +326,20 @@ export const api = {
     target_category?: string;
     mapping?: Record<string, number>;
   }): Promise<{ affected: number; preview?: boolean; [key: string]: unknown }> {
-    const res = await apiFetch(`${API_BASE}/admin/songs/bulk/`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
-    if (!res.ok) {
-      let message = 'Bulk action failed';
-      try {
-        const data = await res.json();
-        if (data?.error) message = data.error;
-      } catch {
-        // keep generic message
-      }
-      throw new Error(message);
+    try {
+      return await rpc('admin_songs_bulk', { p_payload: payload });
+    } catch (error) {
+      throw new Error(error instanceof Error ? error.message : 'Bulk action failed');
     }
-    return res.json();
   },
 
   // Genre management
   async getAdminGenres(): Promise<Genre[]> {
-    const res = await fetch(`${API_BASE}/admin/genres/`, {
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-    });
-    if (!res.ok) throw new Error('Failed to fetch genres');
-    return res.json();
+    try {
+      return await rpc<Genre[]>('admin_genres');
+    } catch (error) {
+      throw new Error(error instanceof Error ? error.message : 'Failed to fetch genres');
+    }
   },
 
   async createAdminGenre(data: {
@@ -365,195 +349,125 @@ export const api = {
     description?: string;
     is_active?: boolean;
   }): Promise<Genre> {
-    const res = await apiFetch(`${API_BASE}/admin/genres/`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-    if (!res.ok) {
-      let message = 'Failed to create genre';
-      try {
-        const payload = await res.json();
-        if (payload?.error) message = payload.error;
-        else if (payload && typeof payload === 'object') {
-          message = Object.entries(payload)
-            .map(([field, errors]) => `${field}: ${Array.isArray(errors) ? errors.join(' ') : errors}`)
-            .join(' · ');
-        }
-      } catch {
-        // keep generic message
-      }
-      throw new Error(message);
+    try {
+      return await rpc<Genre>('admin_genre_create', { p_data: data });
+    } catch (error) {
+      throw new Error(error instanceof Error ? error.message : 'Failed to create genre');
     }
-    return res.json();
   },
 
   async updateAdminGenre(id: number, data: Record<string, unknown>): Promise<Genre> {
-    const res = await apiFetch(`${API_BASE}/admin/genres/${id}/`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-    if (!res.ok) throw new Error('Failed to update genre');
-    return res.json();
+    try {
+      return await rpc<Genre>('admin_genre_update', { p_id: id, p_data: data });
+    } catch (error) {
+      throw new Error(error instanceof Error ? error.message : 'Failed to update genre');
+    }
   },
 
   async deleteAdminGenre(id: number, reassignTo?: number): Promise<{ message: string }> {
-    const query = reassignTo ? `?reassign_to=${reassignTo}` : '';
-    const res = await apiFetch(`${API_BASE}/admin/genres/${id}/${query}`, {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-    });
-    if (!res.ok) {
-      let message = 'Failed to delete genre';
-      try {
-        const data = await res.json();
-        if (data?.error) message = data.error;
-      } catch {
-        // keep generic message
-      }
-      throw new Error(message);
+    try {
+      return await rpc('admin_genre_delete', { p_id: id, p_reassign_to: reassignTo ?? null });
+    } catch (error) {
+      throw new Error(error instanceof Error ? error.message : 'Failed to delete genre');
     }
-    return res.json();
   },
 
   async updateAdminArtist(id: number, data: Record<string, unknown>): Promise<Artist> {
-    const res = await apiFetch(`${API_BASE}/admin/artists/${id}/`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-    if (!res.ok) throw new Error('Failed to update artist');
-    return res.json();
+    try {
+      return await rpc<Artist>('admin_artist_update', { p_id: id, p_data: data });
+    } catch (error) {
+      throw new Error(error instanceof Error ? error.message : 'Failed to update artist');
+    }
   },
 
   async deleteAdminArtist(id: number, reassignTo?: number): Promise<{ message: string }> {
-    const query = reassignTo ? `?reassign_to=${reassignTo}` : '';
-    const res = await apiFetch(`${API_BASE}/admin/artists/${id}/${query}`, {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-    });
-    if (!res.ok) {
-      let message = 'Failed to delete artist';
-      try {
-        const data = await res.json();
-        if (data?.error) message = data.error;
-      } catch {
-        // keep generic message
-      }
-      throw new Error(message);
+    try {
+      return await rpc('admin_artist_delete', { p_id: id, p_reassign_to: reassignTo ?? null });
+    } catch (error) {
+      throw new Error(error instanceof Error ? error.message : 'Failed to delete artist');
     }
-    return res.json();
   },
 
-  async createAdminSong(data: any): Promise<Song> {
-    const res = await apiFetch(`${API_BASE}/admin/songs/`, {
-      method: 'POST',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-    if (!res.ok) throw new Error('Failed to create song');
-    return res.json();
+  async createAdminSong(data: Record<string, unknown>): Promise<Song> {
+    try {
+      return await rpc<Song>('admin_song_create', { p_data: data });
+    } catch (error) {
+      throw new Error(error instanceof Error ? error.message : 'Failed to create song');
+    }
   },
 
-  async updateAdminSong(id: number, data: any): Promise<Song> {
-    const res = await apiFetch(`${API_BASE}/admin/songs/${id}/`, {
-      method: 'PATCH',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-    if (!res.ok) throw new Error('Failed to update song');
-    return res.json();
+  async updateAdminSong(id: number, data: Record<string, unknown>): Promise<Song> {
+    try {
+      return await rpc<Song>('admin_song_update', { p_id: id, p_data: data });
+    } catch (error) {
+      throw new Error(error instanceof Error ? error.message : 'Failed to update song');
+    }
   },
 
   async deleteAdminSong(id: number): Promise<void> {
-    const res = await apiFetch(`${API_BASE}/admin/songs/${id}/`, {
-      method: 'DELETE',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-    });
-    if (!res.ok) throw new Error('Failed to unpublish song');
+    try {
+      await rpc('admin_song_unpublish', { p_id: id });
+    } catch (error) {
+      throw new Error(error instanceof Error ? error.message : 'Failed to unpublish song');
+    }
   },
 
   async getAdminArtists(): Promise<Artist[]> {
-    const res = await fetch(`${API_BASE}/admin/artists/`, {
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-    });
-    if (!res.ok) throw new Error('Failed to fetch artists');
-    return res.json();
+    try {
+      return await rpc<Artist[]>('admin_artists');
+    } catch (error) {
+      throw new Error(error instanceof Error ? error.message : 'Failed to fetch artists');
+    }
   },
 
-  async createAdminArtist(data: any): Promise<Artist> {
-    const res = await apiFetch(`${API_BASE}/admin/artists/`, {
-      method: 'POST',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-    if (!res.ok) throw new Error('Failed to create artist');
-    return res.json();
+  async createAdminArtist(data: Record<string, unknown>): Promise<Artist> {
+    try {
+      return await rpc<Artist>('admin_artist_create', { p_data: data });
+    } catch (error) {
+      throw new Error(error instanceof Error ? error.message : 'Failed to create artist');
+    }
   },
 
   async getAdminStations(): Promise<Station[]> {
-    const res = await fetch(`${API_BASE}/admin/stations/`, {
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-    });
-    if (!res.ok) throw new Error('Failed to fetch stations');
-    return res.json();
-  },
-
-  async updateAdminStation(id: number, data: any): Promise<Station> {
-    const res = await apiFetch(`${API_BASE}/admin/stations/${id}/`, {
-      method: 'PATCH',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-    if (!res.ok) throw new Error('Failed to update station');
-    return res.json();
-  },
-
-  async createAdminStation(data: any): Promise<Station> {
-    const res = await apiFetch(`${API_BASE}/admin/stations/`, {
-      method: 'POST',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-    if (!res.ok) {
-      let message = 'Failed to create station';
-      try {
-        const payload = await res.json();
-        if (payload?.error) message = payload.error;
-      } catch { /* keep generic */ }
-      throw new Error(message);
+    try {
+      return await rpc<Station[]>('admin_stations');
+    } catch (error) {
+      throw new Error(error instanceof Error ? error.message : 'Failed to fetch stations');
     }
-    return res.json();
+  },
+
+  async updateAdminStation(id: number, data: Record<string, unknown>): Promise<Station> {
+    try {
+      return await rpc<Station>('admin_station_update', { p_id: id, p_data: data });
+    } catch (error) {
+      throw new Error(error instanceof Error ? error.message : 'Failed to update station');
+    }
+  },
+
+  async createAdminStation(data: Record<string, unknown>): Promise<Station> {
+    try {
+      return await rpc<Station>('admin_station_create', { p_data: data });
+    } catch (error) {
+      throw new Error(error instanceof Error ? error.message : 'Failed to create station');
+    }
   },
 
   async deleteAdminStation(id: number): Promise<{ message: string; station_links_removed: number }> {
-    const res = await apiFetch(`${API_BASE}/admin/stations/${id}/`, {
-      method: 'DELETE',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-    });
-    if (!res.ok) throw new Error('Failed to delete station');
-    return res.json();
+    try {
+      return await rpc('admin_station_delete', { p_id: id });
+    } catch (error) {
+      throw new Error(error instanceof Error ? error.message : 'Failed to delete station');
+    }
   },
 
   // ---- Genre categories (dynamic registry) ----
 
   async getAdminGenreCategories(): Promise<GenreCategory[]> {
-    const res = await fetch(`${API_BASE}/admin/genre-categories/`, {
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-    });
-    if (!res.ok) throw new Error('Failed to fetch genre categories');
-    return res.json();
+    try {
+      return await rpc<GenreCategory[]>('admin_genre_categories');
+    } catch (error) {
+      throw new Error(error instanceof Error ? error.message : 'Failed to fetch genre categories');
+    }
   },
 
   async createAdminGenreCategory(data: {
@@ -563,168 +477,101 @@ export const api = {
     display_order?: number;
     is_active?: boolean;
   }): Promise<GenreCategory> {
-    const res = await apiFetch(`${API_BASE}/admin/genre-categories/`, {
-      method: 'POST',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-    if (!res.ok) {
-      let message = 'Failed to create category';
-      try {
-        const payload = await res.json();
-        if (payload?.error) message = payload.error;
-      } catch { /* keep generic */ }
-      throw new Error(message);
+    try {
+      return await rpc<GenreCategory>('admin_genre_category_create', { p_data: data });
+    } catch (error) {
+      throw new Error(error instanceof Error ? error.message : 'Failed to create category');
     }
-    return res.json();
   },
 
   async updateAdminGenreCategory(id: number, data: Partial<GenreCategory>): Promise<GenreCategory> {
-    const res = await apiFetch(`${API_BASE}/admin/genre-categories/${id}/`, {
-      method: 'PATCH',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-    if (!res.ok) {
-      let message = 'Failed to update category';
-      try {
-        const payload = await res.json();
-        if (payload?.error) message = payload.error;
-      } catch { /* keep generic */ }
-      throw new Error(message);
+    try {
+      return await rpc<GenreCategory>('admin_genre_category_update', { p_id: id, p_data: data });
+    } catch (error) {
+      throw new Error(error instanceof Error ? error.message : 'Failed to update category');
     }
-    return res.json();
   },
 
   async deleteAdminGenreCategory(id: number, reassignTo?: string): Promise<{ message: string; genres_moved: number; available_targets?: string[] }> {
-    const query = reassignTo ? `?reassign_to=${encodeURIComponent(reassignTo)}` : '';
-    const res = await apiFetch(`${API_BASE}/admin/genre-categories/${id}/${query}`, {
-      method: 'DELETE',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-    });
-    if (!res.ok) {
-      let message = 'Failed to delete category';
-      try {
-        const payload = await res.json();
-        if (payload?.error) message = payload.error;
-      } catch { /* keep generic */ }
-      throw new Error(message);
+    try {
+      return await rpc('admin_genre_category_delete', args({
+        p_id: id,
+        p_reassign_to: reassignTo,
+      }));
+    } catch (error) {
+      throw new Error(error instanceof Error ? error.message : 'Failed to delete category');
     }
-    return res.json();
   },
 
   async reorderAdminGenreCategories(order: { id: number; display_order: number }[]): Promise<{ message: string }> {
-    const res = await apiFetch(`${API_BASE}/admin/genre-categories/`, {
-      method: 'PUT',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ order }),
-    });
-    if (!res.ok) throw new Error('Failed to reorder categories');
-    return res.json();
+    try {
+      return await rpc('admin_genre_categories_reorder', { p_order: order });
+    } catch (error) {
+      throw new Error(error instanceof Error ? error.message : 'Failed to reorder categories');
+    }
   },
 
   // ---- Station song queue ----
 
   async getStationQueue(stationId: number): Promise<{ station_id: number; station_title: string; count: number; queue: StationQueueItem[] }> {
-    const res = await fetch(`${API_BASE}/admin/stations/${stationId}/queue/`, {
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-    });
-    if (!res.ok) throw new Error('Failed to fetch station queue');
-    return res.json();
+    try {
+      return await rpc('admin_station_queue_get', { p_station_id: stationId });
+    } catch (error) {
+      throw new Error(error instanceof Error ? error.message : 'Failed to fetch station queue');
+    }
   },
 
   async addToStationQueue(stationId: number, songIds: number[]): Promise<{ message: string; added: number[]; skipped: number[] }> {
-    const res = await apiFetch(`${API_BASE}/admin/stations/${stationId}/queue/`, {
-      method: 'POST',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ song_ids: songIds }),
-    });
-    if (!res.ok) throw new Error('Failed to add songs to station');
-    return res.json();
+    try {
+      return await rpc('admin_station_queue_add', { p_station_id: stationId, p_song_ids: songIds });
+    } catch (error) {
+      throw new Error(error instanceof Error ? error.message : 'Failed to add songs to station');
+    }
   },
 
   async reorderStationQueue(stationId: number, order: number[]): Promise<{ message: string }> {
-    const res = await apiFetch(`${API_BASE}/admin/stations/${stationId}/queue/`, {
-      method: 'PATCH',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ order }),
-    });
-    if (!res.ok) throw new Error('Failed to reorder station queue');
-    return res.json();
+    try {
+      return await rpc('admin_station_queue_reorder', { p_station_id: stationId, p_order: order });
+    } catch (error) {
+      throw new Error(error instanceof Error ? error.message : 'Failed to reorder station queue');
+    }
   },
 
   async removeFromStationQueue(stationId: number, songId: number): Promise<{ message: string }> {
-    const res = await apiFetch(`${API_BASE}/admin/stations/${stationId}/queue/?song=${songId}`, {
-      method: 'DELETE',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-    });
-    if (!res.ok) throw new Error('Failed to remove song from station');
-    return res.json();
-  },
-
-  // Auth APIs
-  async getCaptcha(): Promise<{ question: string; token: string }> {
-    const res = await fetch(`${API_BASE}/auth/captcha/`, {
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-    });
-    if (!res.ok) throw new Error('Failed to load captcha');
-    return res.json();
-  },
-
-  async login(
-    username: string,
-    password: string,
-    captchaToken: string,
-    captchaAnswer: string,
-  ): Promise<AuthUser> {
-    const res = await apiFetch(`${API_BASE}/auth/login/`, {
-      method: 'POST',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        username,
-        password,
-        captcha_token: captchaToken,
-        captcha_answer: captchaAnswer,
-      }),
-    });
-    if (!res.ok) {
-      let message = 'Invalid credentials';
-      try {
-        const data = await res.json();
-        if (data?.error) message = data.error;
-      } catch {
-        // keep default message
-      }
-      throw new Error(message);
+    try {
+      return await rpc('admin_station_queue_remove', { p_station_id: stationId, p_song_id: songId });
+    } catch (error) {
+      throw new Error(error instanceof Error ? error.message : 'Failed to remove song from station');
     }
-    return res.json();
+  },
+
+  // Auth (Supabase Auth; admins are the public.admins allowlist)
+
+  async login(email: string, password: string): Promise<AuthUser> {
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) {
+      throw new Error(error.message || 'Invalid credentials');
+    }
+
+    const user = await this.getCurrentUser();
+    if (!user.authenticated) {
+      await supabase.auth.signOut();
+      throw new Error('Admin access requires a staff account.');
+    }
+    return user;
   },
 
   async logout(): Promise<void> {
-    await apiFetch(`${API_BASE}/auth/logout/`, {
-      method: 'POST',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-    });
+    await supabase.auth.signOut();
   },
 
   async getCurrentUser(): Promise<AuthUser> {
-    const res = await fetch(`${API_BASE}/auth/user/`, {
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-    });
-    if (!res.ok) return { authenticated: false };
-    return res.json();
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return { authenticated: false };
+
+    const { data, error } = await supabase.rpc('admin_current_user');
+    if (error || !data?.authenticated) return { authenticated: false };
+    return data as AuthUser;
   },
 
   async changeAdminPassword(data: {
@@ -732,26 +579,37 @@ export const api = {
     new_password: string;
     confirm_password: string;
   }): Promise<{ message: string; user: AuthUser }> {
-    const res = await apiFetch(`${API_BASE}/auth/change-password/`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-    if (!res.ok) {
-      let message = 'Failed to change password';
-      try {
-        const payload = await res.json();
-        if (payload?.error) {
-          message = payload.error;
-          if (Array.isArray(payload.details) && payload.details.length > 0) {
-            message += ': ' + payload.details.join(' ');
-          }
-        }
-      } catch {
-        // keep generic message
-      }
-      throw new Error(message);
+    if (data.new_password !== data.confirm_password) {
+      throw new Error('New password confirmation does not match');
     }
-    return res.json();
+    if (data.new_password.length < 10) {
+      throw new Error('Password does not meet security requirements: too short (min 10 characters).');
+    }
+
+    const { data: { session } } = await supabase.auth.getSession();
+    const email = session?.user?.email;
+    if (!email) {
+      throw new Error('Admin authentication required');
+    }
+
+    // Supabase cannot verify the current password during updateUser, so
+    // re-authenticate with it first.
+    const { error: reauthError } = await supabase.auth.signInWithPassword({
+      email,
+      password: data.current_password,
+    });
+    if (reauthError) {
+      throw new Error('Current password is incorrect');
+    }
+
+    const { error } = await supabase.auth.updateUser({ password: data.new_password });
+    if (error) {
+      throw new Error(error.message || 'Failed to change password');
+    }
+
+    return {
+      message: 'Password updated successfully',
+      user: await this.getCurrentUser(),
+    };
   },
 };

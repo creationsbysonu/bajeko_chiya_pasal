@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Lock, LogOut, AlertTriangle, ShieldCheck, FileText, Database, Plus, Search, Radio, Trash2, RefreshCw, ShieldQuestion, FolderTree, ChevronLeft, ChevronRight, Pencil, ArrowUp, ArrowDown, ListMusic, TrendingUp, Star } from 'lucide-react';
+import { X, Lock, LogOut, AlertTriangle, ShieldCheck, FileText, Database, Plus, Search, Radio, Trash2, RefreshCw, FolderTree, ChevronLeft, ChevronRight, Pencil, ArrowUp, ArrowDown, ListMusic, TrendingUp, Star } from 'lucide-react';
 import { api } from '../services/api';
 import { AdminStats, TakedownTicket, AuditLogItem, Song, Station, Artist, AuthUser, Genre, GenreCategory, StationQueueItem, AdminInsights } from '../types';
 import { resolveCategories, categoryLabel } from '../utils/genreTaxonomy';
@@ -20,10 +20,6 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, onCatal
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [captchaQuestion, setCaptchaQuestion] = useState('');
-  const [captchaToken, setCaptchaToken] = useState('');
-  const [captchaAnswer, setCaptchaAnswer] = useState('');
-  const [captchaLoading, setCaptchaLoading] = useState(false);
   const [securityLoading, setSecurityLoading] = useState(false);
   const [securityError, setSecurityError] = useState<string | null>(null);
   const [securitySuccess, setSecuritySuccess] = useState<string | null>(null);
@@ -106,21 +102,6 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, onCatal
   const [insightsBusy, setInsightsBusy] = useState(false);
 
 
-  const loadCaptcha = async () => {
-    setCaptchaLoading(true);
-    try {
-      const data = await api.getCaptcha();
-      setCaptchaQuestion(data.question);
-      setCaptchaToken(data.token);
-      setCaptchaAnswer('');
-    } catch {
-      setCaptchaQuestion('');
-      setCaptchaToken('');
-    } finally {
-      setCaptchaLoading(false);
-    }
-  };
-
   const checkAuth = async () => {
     try {
       const user = await api.getCurrentUser();
@@ -147,7 +128,6 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, onCatal
   useEffect(() => {
     if (isOpen) {
       checkAuth();
-      loadCaptcha();
     }
   }, [isOpen]);
 
@@ -159,19 +139,16 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, onCatal
     setSecuritySuccess(null);
 
     try {
-      const res = await api.login(username, password, captchaToken, captchaAnswer);
+      const res = await api.login(username, password);
       if (res.authenticated && res.is_staff) {
         setCurrentUser(res);
         setIsAuthenticated(true);
         loadAdminData();
       } else {
         setLoginError('Admin access requires a staff account.');
-        loadCaptcha();
       }
     } catch (err) {
       setLoginError(err instanceof Error ? err.message : 'Invalid administrator credentials.');
-      // Captcha is single-use server-side; always fetch a fresh one after a failed attempt
-      loadCaptcha();
     } finally {
       setLoading(false);
     }
@@ -1037,7 +1014,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, onCatal
                     Administrator Authentication
                   </h4>
                   <p className="text-xs text-neutral-400">
-                    Sign in with a Django staff or superuser account.
+                    Sign in with an allow-listed Supabase admin account.
                   </p>
                 </div>
 
@@ -1049,12 +1026,12 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, onCatal
                 )}
 
                 <div>
-                  <label className="block text-xs font-mono text-neutral-300 uppercase mb-1">Username</label>
+                  <label className="block text-xs font-mono text-neutral-300 uppercase mb-1">Email</label>
                   <input
-                    type="text"
+                    type="email"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
-                    placeholder="Enter staff username"
+                    placeholder="admin@example.com"
                     autoComplete="username"
                     className="w-full px-4 py-2.5 rounded-xl bg-black border border-white/15 text-white text-sm focus:border-red-500 focus:outline-none"
                     required
@@ -1074,47 +1051,9 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, onCatal
                   />
                 </div>
 
-                {/* Arithmetic captcha — single-use server-issued challenge */}
-                <div>
-                  <label className="block text-xs font-mono text-neutral-300 uppercase mb-1">
-                    Security Check (Captcha)
-                  </label>
-                  <div className="flex items-stretch gap-2">
-                    <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-black border border-white/15 min-w-[150px] justify-center">
-                      <ShieldQuestion className="w-4 h-4 text-red-500 flex-shrink-0" />
-                      <span className="font-mono text-sm text-white select-none">
-                        {captchaLoading ? '…' : captchaQuestion || '— — = ?'}
-                      </span>
-                    </div>
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      value={captchaAnswer}
-                      onChange={(e) => setCaptchaAnswer(e.target.value)}
-                      placeholder="Answer"
-                      autoComplete="off"
-                      className="w-24 px-3 py-2.5 rounded-xl bg-black border border-white/15 text-white text-sm font-mono text-center focus:border-red-500 focus:outline-none"
-                      required
-                    />
-                    <button
-                      type="button"
-                      onClick={loadCaptcha}
-                      disabled={captchaLoading}
-                      className="px-3 rounded-xl bg-neutral-900 hover:bg-neutral-800 border border-white/10 text-neutral-300 transition-colors disabled:opacity-50"
-                      title="Get a new question"
-                      aria-label="Refresh captcha question"
-                    >
-                      <RefreshCw className={`w-4 h-4 ${captchaLoading ? 'animate-spin' : ''}`} />
-                    </button>
-                  </div>
-                  <p className="text-[10px] text-neutral-500 mt-1.5 font-mono">
-                    Single-use challenge issued by the server · brute-force protected
-                  </p>
-                </div>
-
                 <button
                   type="submit"
-                  disabled={loading || captchaLoading || !captchaToken || !captchaAnswer.trim()}
+                  disabled={loading || !username.trim() || !password}
                   className="w-full py-3 rounded-full bg-red-600 hover:bg-red-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold text-sm shadow-glow-red transition-all duration-300 ease-out hover:scale-[1.02] active:scale-[0.98]"
                 >
                   {loading ? 'Authenticating...' : 'Sign In as Administrator'}

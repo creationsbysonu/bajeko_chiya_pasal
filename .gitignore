@@ -18,6 +18,7 @@ backend/media/
 frontend/node_modules/
 frontend/dist/
 frontend/.tmp/
+supabase/node_modules/
 .oxlintrc.json
 
 # IDE / OS

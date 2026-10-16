@@ -1,14 +1,14 @@
 // Service Worker for Purano Dhun (App Shell & permitted static assets only)
 //
-// Deploy-aware caching strategy (Render static hosting only keeps the latest
-// build, so never serve a stale shell that points at deleted hashed bundles):
+// Deploy-aware caching strategy (Vercel keeps every build, but the shell is
+// still network-first so a fresh deploy goes live instantly):
 //   - App-shell navigations: NETWORK-FIRST (a fresh deploy goes live instantly,
 //     refreshes the cached shell, and falls back to cache, then the offline
 //     notice).
 //   - Static assets: CACHE-FIRST (bundle filenames are content-hashed, so they
 //     are immutable and safe to cache).
 //   - API + YouTube media requests: never intercepted.
-const CACHE_NAME = 'purano-dhun-v2';
+const CACHE_NAME = 'purano-dhun-v3';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
@@ -48,7 +48,13 @@ self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = request.url;
 
-  // Do NOT cache API endpoints, media streams, or external YouTube requests
+  // Never intercept cross-origin requests: Supabase (REST + Auth) responses
+  // are authenticated and must stay fresh, and YouTube media is uncacheable.
+  if (new URL(url).origin !== self.location.origin) {
+    return;
+  }
+
+  // Do NOT cache legacy API endpoints or media streams either
   if (
     url.includes('/api/') ||
     url.includes('youtube.com') ||

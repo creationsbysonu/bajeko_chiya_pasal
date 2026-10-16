@@ -57,159 +57,97 @@ An original, production-oriented Nepali music discovery and radio platform inspi
 
 | Layer | Technology |
 |---|---|
-| **Frontend** | React 19, TypeScript, Vite, Tailwind CSS, Lucide React |
-| **Backend** | Python 3.13, Django 5.2, Django REST Framework |
-| **Database** | PostgreSQL in production (SQLite fallback in local dev) |
+| **Frontend** | React 19, TypeScript, Vite, Tailwind CSS, Lucide React (Vercel) |
+| **Backend** | Supabase RPCs — SQL functions (`SECURITY DEFINER`) with deny-all RLS; no app server |
+| **Database** | Supabase PostgreSQL (free tier, no 90-day wipe) |
+| **Auth** | Supabase Auth (anonymous sessions for listeners, allowlisted admins for the portal) |
 | **Playback** | Official YouTube IFrame Player API |
-| **Testing** | Vitest + React Testing Library (frontend), pytest + Django test client (backend) |
+| **Testing** | Vitest + React Testing Library (frontend), PGlite SQL harness exercising every RPC (backend) |
+
+The Django/Render/Docker stack this project originally shipped with has been
+replaced: see **[DEPLOY.md](DEPLOY.md)** for the Supabase + Vercel setup.
 
 ---
 
-## 🚀 Quick Start Guide
+## 🚀 Quick Start
 
-### Option A — Docker (recommended)
-
-Everything runs in containers; no local Python/Node setup needed.
-
-**Development** (hot reload included):
-
-```bash
-docker compose up
-# Frontend: http://localhost:5173  (API auto-proxied to the backend)
-# Backend:  http://localhost:8000
-```
-
-- Backend uses SQLite via a bind mount, so an existing `backend/db.sqlite3`
-  (seeded catalog, admin account) keeps working. Fresh databases are seeded
-  automatically on first boot.
-- Stop any locally-run dev servers on ports 8000/5173 first, or override
-  `BACKEND_PORT` / `FRONTEND_PORT`.
-
-**Production** (nginx + gunicorn + PostgreSQL):
-
-```bash
-cp .env.example .env          # set DJANGO_SECRET_KEY + POSTGRES_PASSWORD
-docker compose -f docker-compose.prod.yml up --build -d
-# App: http://localhost:80  (override with HTTP_PORT in .env)
-
-docker compose -f docker-compose.prod.yml exec backend \
-  python manage.py createsuperuser
-```
-
-When you put real HTTPS in front (certbot / cloud proxy / PaaS), set in
-`.env`: `DJANGO_SSL_REDIRECT=True`, plus your real domain in
-`DJANGO_ALLOWED_HOSTS`, `CORS_ALLOWED_ORIGINS`, and `CSRF_TRUSTED_ORIGINS`.
-
-Logs: `docker compose logs -f` (dev) or `docker compose -f
-docker-compose.prod.yml logs -f` (prod). Stop with `Ctrl+C` (dev) or
-`docker compose -f docker-compose.prod.yml down` (prod).
-
-### Option B — Manual setup (no Docker)
-
-### 1. Prerequisites
-- Python 3.11+
-- Node.js 18+ & npm
-
-### 2. Backend Setup
-
-```bash
-cd backend
-
-# Create virtual environment
-python3 -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Run database migrations
-python manage.py migrate
-
-# Seed catalog with authentic songs and stations
-python manage.py seed_catalog
-
-# Run backend tests
-python manage.py test radio_core
-
-# Start development server
-python manage.py runserver 0.0.0.0:8000
-```
-
-### 3. Frontend Setup
+### 1. Frontend
 
 ```bash
 cd frontend
-
-# Install dependencies
 npm install
-
-# Run frontend tests
-npm run test
-
-# Build production bundle
-npm run build
-
-# Start frontend dev server
-npm run dev
+cp ../.env.example .env.local      # fill in VITE_SUPABASE_URL + VITE_SUPABASE_ANON_KEY
+npm run test                       # component tests
+npm run build                      # typecheck + production build
+npm run dev                        # http://localhost:5173
 ```
 
-Open `http://localhost:5173` in your browser.
+### 2. Database + backend functions
+
+Apply `supabase/migrations/*.sql` then `supabase/seed.sql` to your Supabase
+project (SQL Editor or `supabase db push`), enable Anonymous sign-ins, and
+allowlist an admin — the full walkthrough with exact steps is in
+**[DEPLOY.md](DEPLOY.md)**.
+
+Fully local alternative: `supabase start && supabase db reset` (Supabase CLI).
+
+### 3. Verify the backend SQL (replaces the old Django test suite)
+
+```bash
+cd supabase
+npm install
+npm run verify    # applies migrations + seed to in-process Postgres, runs
+                  # ~80 assertions across every public/admin RPC, RLS lockdown,
+                  # auth gating, audit trails — no Docker needed
+```
 
 ---
 
-## ☁️ Deploy on Render (recommended PaaS)
+## ☁️ Production deployment
 
-The repo ships a `render.yaml` blueprint that provisions everything:
+Push to GitHub, then follow **[DEPLOY.md](DEPLOY.md)**:
 
-1. Push this repo to GitHub (CI runs backend tests, frontend tests + build,
-   and both Docker image builds on every push).
-2. On [render.com](https://render.com): **New → Blueprint → select the repo**.
-   Render reads `render.yaml` and creates:
-   - **purano-dhun-api** — Django (gunicorn) from `backend/Dockerfile`
-   - **purano-dhun** — the React SPA as a static site
-   - **purano-dhun-db** — managed PostgreSQL (auto-wired via `DATABASE_URL`)
-3. After the first deploy, create the admin via the API service's Shell:
-   `python manage.py createsuperuser`
+1. **Supabase** — create project, run the 4 migrations + seed, enable
+   anonymous sign-ins, create/allowlist the admin user.
+2. **Vercel** — import repo, root directory `frontend`, set
+   `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY`, deploy.
+3. CI (`.github/workflows/ci.yml`) runs the SQL harness and the frontend
+   tests + build on every push.
 
-Notes:
-- Free plan: services spin down after ~15 min idle (~60s cold start), and
-  **free Postgres is wiped every 90 days** — switch the database plan to
-  "paid" (or back up with `pg_dump`) for anything you care about.
-- Renaming services? Update the `onrender.com` URLs in `render.yaml`
-  (`DJANGO_ALLOWED_HOSTS`, `CORS_ALLOWED_ORIGINS`, `CSRF_TRUSTED_ORIGINS`,
-  `VITE_API_BASE`) to the real hostnames.
-- Custom domain later: add it in the Render dashboard; the settings already
-  honor `X-Forwarded-Proto` for HTTPS.
+Free-tier notes (Supabase pausing after 7 days idle, Vercel Hobby limits) are
+documented at the bottom of DEPLOY.md.
 
 ---
 
 ## 🔑 Administrative Access
 
-- Create a Django staff or superuser account, then sign in through **Admin Portal** or visit `/django-admin/`.
-- The API session is cookie-based and CSRF-protected, so admin actions stay tied to the logged-in browser session.
+Admins sign in through the **Admin Portal** with a Supabase Auth account that
+appears in the `public.admins` allowlist (DEPLOY.md §4). Every `admin_*` RPC
+checks that allowlist server-side and writes an audit trail; direct table
+access is denied to browser roles by row-level security.
 
 ---
 
 ## 📂 Project Structure
 
 ```
-bajeko_chiya_pasal/
-├── backend/
-│   ├── manage.py
-│   ├── purano_dhun_backend/    # Django project settings and URLs
-│   ├── radio_core/             # Models, serializers, views, admin, seed command, tests
-│   └── requirements.txt
+purano-dhun/
 ├── frontend/
 │   ├── src/
 │   │   ├── components/         # Navigation, Player, RadioTuner, Cards, Modals, Footer
 │   │   ├── context/            # PlayerContext (YouTube API), I18nContext
 │   │   ├── locales/            # en.ts, ne.ts translation dictionaries
 │   │   ├── pages/              # Home, Catalog, RadioWorlds, Favorites
-│   │   ├── services/           # api.ts (DRF client)
+│   │   ├── services/           # api.ts (Supabase RPC client)
 │   │   └── types/              # TypeScript models
 │   ├── public/                 # PWA manifest, service worker, offline fallback, SVG icons
-│   └── package.json
-├── docs/                       # Architectural specifications
+│   └── vercel.json             # SPA rewrite rule
+├── supabase/
+│   ├── migrations/             # schema, public RPCs, admin RPCs, RLS
+│   ├── seed.sql                # full catalog seed (generated)
+│   ├── tools/generate_seed.py  # re-exports seed from the legacy SQLite catalog
+│   └── verify.mjs              # PGlite RPC test harness (CI gate)
+├── DEPLOY.md                   # Supabase + Vercel deployment guide
 ├── .env.example
 ├── README.md
 ├── SECURITY.md
