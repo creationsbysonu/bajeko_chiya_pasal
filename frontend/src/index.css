@@ -427,15 +427,6 @@ html.light .pd-dark-zone .bg-black\/30 {
   background-color: #000000;
 }
 
-/* Full-screen veils keep the dimming overlay dark in both themes so the
-   modal panel (which flips to white) still floats on darkness. */
-.pd-veil {
-  background-color: rgba(0, 0, 0, 0.8);
-}
-html.light .pd-veil {
-  background-color: rgba(0, 0, 0, 0.8);
-}
-
 /* Light-mode flips for every black-opacity panel used outside dark zones. */
 html.light .bg-black\/90 {
   background-color: rgba(255, 255, 255, 0.92);
@@ -446,11 +437,26 @@ html.light .bg-black\/80 {
 html.light .bg-black\/70 {
   background-color: rgba(255, 255, 255, 0.72);
 }
+html.light .bg-black\/50 {
+  background-color: rgba(255, 255, 255, 0.52);
+}
 html.light .bg-black\/40 {
   background-color: rgba(255, 255, 255, 0.42);
 }
 html.light .bg-black\/30 {
   background-color: rgba(255, 255, 255, 0.32);
+}
+
+/* Full-screen veils keep the dimming overlay dark in both themes so the
+   modal panel (which flips to white) still floats on darkness. This block
+   intentionally sits AFTER the flips above so it wins the cascade. */
+.pd-veil {
+  background-color: rgba(0, 0, 0, 0.8);
+}
+html.light div.pd-veil,
+html.light .pd-veil.bg-black\/80,
+html.light .pd-veil.bg-black\/90 {
+  background-color: rgba(0, 0, 0, 0.8);
 }
 
 /* ==========================================================================

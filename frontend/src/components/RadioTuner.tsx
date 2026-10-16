@@ -116,7 +116,7 @@ export const RadioTuner: React.FC<RadioTunerProps> = ({ stations }) => {
       </div>
 
       {/* 2. Visual Soundscape Selector Thumbnails */}
-      <div>
+      <div className="pd-dark-zone">
         <div className="flex items-center justify-between mb-3 px-1">
           <p className="text-[10px] uppercase tracking-widest font-mono text-neutral-500 flex items-center gap-2">
             <Sparkles className="w-3.5 h-3.5 text-red-500" />
@@ -159,7 +159,7 @@ export const RadioTuner: React.FC<RadioTunerProps> = ({ stations }) => {
                 </div>
 
                 {/* Thumbnail Metadata */}
-                <div className="p-3 bg-black/90">
+                <div className="p-3 bg-black/90 pd-dark-zone">
                   <div className="text-[10px] font-mono text-neutral-500 uppercase mb-0.5">
                     CH-{(st.display_order + 1).toString().padStart(2, '0')}
                   </div>

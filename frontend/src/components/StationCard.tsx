@@ -40,7 +40,7 @@ export const StationCard: React.FC<StationCardProps> = ({ station }) => {
 
   return (
     <div
-      className={`group relative rounded-2xl bg-black/60 backdrop-blur-md border transition-all duration-300 ease-out overflow-hidden flex flex-col justify-between hover:-translate-y-1 ${
+      className={`group relative rounded-2xl bg-black/60 backdrop-blur-md border transition-all duration-300 ease-out overflow-hidden flex flex-col justify-between hover:-translate-y-1 pd-dark-zone ${
         isCurrent
           ? 'border-red-500 shadow-glow-red ring-1 ring-red-500'
           : 'border-white/10 hover:border-white/20'
