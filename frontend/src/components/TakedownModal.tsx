@@ -62,7 +62,7 @@ export const TakedownModal: React.FC<TakedownModalProps> = ({
   const labelClass = 'block text-[10px] font-mono text-neutral-500 uppercase tracking-widest mb-1';
 
   return (
-    <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+    <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md pd-veil">
       <div className="w-full max-w-lg bg-black border border-white/10 rounded-2xl p-6 md:p-8 shadow-2xl relative max-h-[85vh] overflow-y-auto">
         <button
           onClick={resetAndClose}

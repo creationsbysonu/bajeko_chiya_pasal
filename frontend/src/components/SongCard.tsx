@@ -66,7 +66,7 @@ export const SongCard: React.FC<SongCardProps> = ({
     >
       <div>
         {/* 1. Real Music Video Thumbnail */}
-        <div className="relative aspect-video w-full overflow-hidden bg-black/90">
+        <div className="relative aspect-video w-full overflow-hidden bg-black/90 pd-dark-zone">
           {thumbnail ? (
             <img
               src={thumbnail}
@@ -75,7 +75,7 @@ export const SongCard: React.FC<SongCardProps> = ({
               className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105 brightness-[0.9] group-hover:brightness-100"
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center bg-black text-white/20">
+            <div className="w-full h-full flex items-center justify-center bg-neutral-800 text-neutral-500">
               <Music className="w-8 h-8" />
             </div>
           )}

@@ -68,7 +68,7 @@ export const Home: React.FC<HomeProps> = ({
       {/* 2. Grandfather's Tea Shop & Heritage Story Spotlight */}
       <Reveal variant="up" delay={60} className="space-y-16 pb-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <section>
-          <div className="relative rounded-3xl overflow-hidden border border-white/10 bg-black shadow-2xl p-6 md:p-10">
+          <div className="relative rounded-3xl overflow-hidden border border-white/10 bg-black shadow-2xl p-6 md:p-10 pd-dark-zone">
             {/* Soothing photographic backdrop */}
             <div className="absolute inset-0 pointer-events-none">
               <img

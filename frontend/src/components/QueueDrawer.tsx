@@ -19,7 +19,7 @@ export const QueueDrawer: React.FC = () => {
   if (!isQueueOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[70] flex justify-end bg-black/80 backdrop-blur-md animate-in fade-in">
+    <div className="fixed inset-0 z-[70] flex justify-end bg-black/80 backdrop-blur-md animate-in fade-in pd-veil">
       <div className="w-full max-w-md bg-black border-l border-white/10 h-full flex flex-col shadow-2xl pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
         
         {/* Drawer Header */}
@@ -54,7 +54,7 @@ export const QueueDrawer: React.FC = () => {
                 <Sparkles className="w-3.5 h-3.5 text-red-500" />
                 <span>{t.player.nowPlaying}</span>
               </div>
-              <div className="p-3.5 rounded-2xl bg-black/80 border border-red-500/40 flex items-center gap-3.5 shadow-glow-red">
+              <div className="p-3.5 rounded-2xl bg-neutral-950 border border-red-500/40 flex items-center gap-3.5 shadow-glow-red">
                 <div className="w-14 h-14 rounded-xl overflow-hidden bg-black flex-shrink-0 border border-white/10">
                   <img
                     src={currentSong.artwork_url || `https://img.youtube.com/vi/${currentSong.provider_video_id}/hqdefault.jpg`}
@@ -130,8 +130,8 @@ export const QueueDrawer: React.FC = () => {
           {/* Recently Played History */}
           {history.length > 0 && (
             <div>
-              <div className="flex items-center gap-2 text-xs font-mono text-white/50 uppercase tracking-wider mb-2">
-                <History className="w-3.5 h-3.5 text-white/50" />
+              <div className="flex items-center gap-2 text-xs font-mono text-neutral-500 uppercase tracking-wider mb-2">
+                <History className="w-3.5 h-3.5 text-neutral-500" />
                 <span>Recently Played ({history.length})</span>
               </div>
               <div className="space-y-2">

@@ -961,7 +961,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, onCatal
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl animate-in fade-in">
+    <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl animate-in fade-in pd-veil">
       <div className="w-full max-w-5xl bg-neutral-950 border border-red-600/30 rounded-3xl p-6 md:p-8 shadow-2xl relative max-h-[90vh] flex flex-col">
         
         {/* Header */}
@@ -1644,7 +1644,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, onCatal
 
               {/* Song edit modal (inline, over the catalog) */}
               {editingSong && (
-                <div className="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+                <div className="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md pd-veil">
                   <form
                     onSubmit={handleSaveSongEdit}
                     className="w-full max-w-lg bg-neutral-950 border border-red-600/40 rounded-3xl p-6 space-y-4 max-h-[90vh] overflow-y-auto"
@@ -1907,7 +1907,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, onCatal
 
               {/* Station queue manager modal */}
               {queueStation && (
-                <div className="fixed inset-0 z-[85] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+                <div className="fixed inset-0 z-[85] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md pd-veil">
                   <div className="w-full max-w-2xl bg-neutral-950 border border-red-600/40 rounded-3xl p-6 space-y-4 max-h-[90vh] flex flex-col">
                     <div className="flex items-center justify-between">
                       <h4 className="font-serif text-base font-bold text-white flex items-center gap-2">

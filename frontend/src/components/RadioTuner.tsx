@@ -31,7 +31,7 @@ export const RadioTuner: React.FC<RadioTunerProps> = ({ stations }) => {
     <div className="my-10 max-w-6xl mx-auto space-y-6">
       
       {/* 1. Cinematic Featured Soundscape Stage */}
-      <div className="relative rounded-3xl overflow-hidden border border-white/10 bg-black shadow-2xl group">
+      <div className="relative rounded-3xl overflow-hidden border border-white/10 bg-black shadow-2xl group pd-dark-zone">
         
         {/* Photographic Background with Atmospheric Gradient */}
         <div className="relative aspect-[4/3] sm:aspect-[16/9] lg:aspect-[21/9] w-full overflow-hidden">

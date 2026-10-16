@@ -47,7 +47,7 @@ export const StationCard: React.FC<StationCardProps> = ({ station }) => {
       }`}
     >
       {/* 1. Photographic Cover Header */}
-      <div className="relative aspect-[16/10] w-full overflow-hidden bg-black/90">
+      <div className="relative aspect-[16/10] w-full overflow-hidden bg-black/90 pd-dark-zone">
         <img
           src={coverUrl}
           alt={station.title}

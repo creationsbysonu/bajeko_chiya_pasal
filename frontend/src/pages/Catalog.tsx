@@ -134,7 +134,7 @@ export const Catalog: React.FC<CatalogProps> = ({ initialGenre, initialDecade, i
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder={locale === 'ne' ? 'गीत, गायक, रचनाकार वा नेपाली युनिकोडमा खोज्नुहोस्...' : 'Search songs, artists, composer or lyrics (Nepali / Romanized)...'}
-            className="w-full pl-12 pr-10 py-3.5 rounded-full bg-black/80 border border-white/15 text-white text-sm focus:border-red-500 focus:outline-none placeholder:text-white/40 shadow-inner font-medium transition-colors duration-300"
+            className="w-full pl-12 pr-10 py-3.5 rounded-full bg-neutral-950 border border-white/15 text-white text-sm focus:border-red-500 focus:outline-none placeholder:text-neutral-500 shadow-inner font-medium transition-colors duration-300"
           />
           {search && (
             <button
