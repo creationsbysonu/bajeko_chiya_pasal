@@ -117,11 +117,9 @@ export const Navigation: React.FC<NavigationProps> = ({
               title={themeLabel}
               aria-label={themeLabel}
               aria-pressed={theme === 'light'}
-              className="group/t p-1.5 text-neutral-500 hover:text-red-400 transition-colors duration-200 rounded hover:bg-white/5"
+              className="p-1.5 text-neutral-500 hover:text-red-400 transition-colors duration-200 rounded hover:bg-white/5"
             >
-              <span className="block transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover/t:rotate-90">
-                {theme === 'dark' ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
-              </span>
+              {theme === 'dark' ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
             </button>
 
             {/* Language */}
