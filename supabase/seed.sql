@@ -1,5 +1,5 @@
 -- Purano Dhun — seed.sql
--- Generated from the legacy dev catalog (backend/db.sqlite3) by
+-- Generated from the legacy dev catalog (legacy-dev-catalog.sqlite3) by
 -- supabase/tools/generate_seed.py. Safe to re-run only on an empty
 -- database; ids are pinned so foreign keys line up.
 

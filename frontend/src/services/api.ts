@@ -224,8 +224,13 @@ export const api = {
         p_claimant_email: data.claimant_email,
         p_reason: data.reason,
         p_details: data.details,
-      });
-    } catch {
+      }, { listener: true });
+    } catch (error) {
+      // The server-side rate limit is worth surfacing verbatim so a genuine
+      // reporter knows why they were refused; schema/validation failures keep
+      // the generic wording the tests and UI expect.
+      const message = error instanceof Error ? error.message : '';
+      if (message.includes('Too many reports')) throw new Error(message);
       throw new Error('Failed to submit notice');
     }
   },

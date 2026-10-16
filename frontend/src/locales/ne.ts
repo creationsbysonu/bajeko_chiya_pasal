@@ -12,6 +12,8 @@ export const ne = {
     searchPlaceholder: 'गीत, गायक, रचनाकार वा शब्द खोज्नुहोस्...',
     switchLanguage: 'Switch to English',
     theme: 'विन्टेज शैली',
+    themeToLight: 'दिनको (उज्यालो) शैलीमा जानुहोस्',
+    themeToDark: 'रात्रिको (अँध्यारो) शैलीमा जानुहोस्',
     reportCopyright: 'प्रतिलिपि अधिकार तथा उजुरी',
   },
   hero: {

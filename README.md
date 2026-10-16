@@ -97,8 +97,9 @@ Fully local alternative: `supabase start && supabase db reset` (Supabase CLI).
 cd supabase
 npm install
 npm run verify    # applies migrations + seed to in-process Postgres, runs
-                  # ~80 assertions across every public/admin RPC, RLS lockdown,
-                  # auth gating, audit trails — no Docker needed
+                  # ~99 assertions across every public/admin RPC, RLS lockdown,
+                  # auth gating, audit trails, internal-RPC lockdown and abuse
+                  # limits — no Docker needed
 ```
 
 ---
@@ -107,7 +108,7 @@ npm run verify    # applies migrations + seed to in-process Postgres, runs
 
 Push to GitHub, then follow **[DEPLOY.md](DEPLOY.md)**:
 
-1. **Supabase** — create project, run the 4 migrations + seed, enable
+1. **Supabase** — create project, run the 6 migrations + seed, enable
    anonymous sign-ins, create/allowlist the admin user.
 2. **Vercel** — import repo, root directory `frontend`, set
    `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY`, deploy.

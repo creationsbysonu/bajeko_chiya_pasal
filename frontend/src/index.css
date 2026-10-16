@@ -162,3 +162,465 @@ input[type='range'] {
     scroll-behavior: auto !important;
   }
 }
+
+/* ==========================================================================
+   DAY / NIGHT THEME
+   --------------------------------------------------------------------------
+   Palette values are consumed by tailwind.config.js as
+   `rgb(var(--c-<name>) / <alpha-value>)`, so every utility built from those
+   colours — text-white, border-white/10, hover:bg-red-500, group-hover:… —
+   follows the active theme with no per-component work.
+   ========================================================================== */
+
+:root,
+html.dark {
+  /* --page ------------------------------------------------------------- */
+  --page-bg: #000000;
+  --page-fg: #ffffff;
+
+  /* --white / greys (night = the original noir palette) ---------------- */
+  --c-white: 255 255 255;
+  --c-neutral-50: 250 250 250;
+  --c-neutral-100: 245 245 245;
+  --c-neutral-200: 229 229 229;
+  --c-neutral-300: 212 212 212;
+  --c-neutral-400: 163 163 163;
+  --c-neutral-500: 115 115 115;
+  --c-neutral-600: 82 82 82;
+  --c-neutral-700: 64 64 64;
+  --c-neutral-800: 38 38 38;
+  --c-neutral-900: 23 23 23;
+  --c-neutral-950: 10 10 10;
+
+  /* --crimson accent ---------------------------------------------------- */
+  --c-red-50: 254 242 242;
+  --c-red-100: 254 226 226;
+  --c-red-200: 254 202 202;
+  --c-red-300: 252 165 165;
+  --c-red-400: 248 113 113;
+  --c-red-500: 239 68 68;
+  --c-red-600: 220 38 38;
+  --c-red-700: 185 28 28;
+  --c-red-800: 153 27 27;
+  --c-red-900: 127 29 29;
+  --c-red-950: 69 10 10;
+
+  --c-amber-300: 252 211 77;
+  --c-amber-400: 251 191 36;
+  --c-amber-500: 245 158 11;
+  --c-amber-950: 69 26 3;
+
+  /* --editorial type + surfaces ---------------------------------------- */
+  --c-cream-50: 255 255 255;
+  --c-cream-100: 255 255 255;
+  --c-cream-200: 245 245 245;
+  --c-cream-300: 229 229 229;
+  --c-cream-400: 163 163 163;
+  --c-cream-500: 115 115 115;
+  --c-ink-700: 38 38 38;
+  --c-ink-750: 26 26 26;
+  --c-ink-800: 18 18 18;
+  --c-ink-850: 10 10 10;
+  --c-ink-900: 5 5 5;
+  --c-ink-950: 0 0 0;
+}
+
+html.light {
+  /* Warm paper — matches the tea-shop / vintage-archival vibe ----------- */
+  --page-bg: #fcfaf6;
+  --page-fg: #181511;
+
+  /* Inverted greys: dark surfaces become light, light text becomes dark -- */
+  --c-white: 24 21 17;
+  --c-neutral-50: 20 18 15;
+  --c-neutral-100: 30 27 23;
+  --c-neutral-200: 45 41 36;
+  --c-neutral-300: 62 58 52;
+  --c-neutral-400: 96 90 82;
+  --c-neutral-500: 116 109 100;
+  --c-neutral-600: 116 109 100;
+  --c-neutral-700: 100 94 85;
+  --c-neutral-800: 231 226 217;
+  --c-neutral-900: 255 255 255;
+  --c-neutral-950: 250 247 242;
+
+  /* Darkened crimson so red text clears AA on paper; 950 becomes a pale
+     tint because it is only ever used for chip backgrounds. -------------- */
+  --c-red-50: 254 242 242;
+  --c-red-100: 254 236 236;
+  --c-red-200: 185 28 28;
+  --c-red-300: 153 27 27;
+  --c-red-400: 185 28 28;
+  --c-red-500: 185 28 28;
+  --c-red-600: 153 27 27;
+  --c-red-700: 127 29 29;
+  --c-red-800: 100 22 22;
+  --c-red-900: 80 18 18;
+  --c-red-950: 254 236 236;
+
+  --c-amber-300: 180 83 9;
+  --c-amber-400: 180 83 9;
+  --c-amber-500: 146 64 14;
+  --c-amber-950: 255 251 235;
+
+  --c-cream-50: 10 9 8;
+  --c-cream-100: 24 21 17;
+  --c-cream-200: 45 41 36;
+  --c-cream-300: 70 65 58;
+  --c-cream-400: 110 103 94;
+  --c-cream-500: 140 132 122;
+  --c-ink-700: 226 221 212;
+  --c-ink-750: 236 232 225;
+  --c-ink-800: 244 241 235;
+  --c-ink-850: 250 248 244;
+  --c-ink-900: 252 250 246;
+  --c-ink-950: 255 255 255;
+}
+
+/* ---------------------------------------------------------------- page -- */
+html {
+  color-scheme: dark;
+}
+
+html.light {
+  color-scheme: light;
+}
+
+body {
+  background-color: var(--page-bg);
+  color: var(--page-fg);
+  transition: background-color 450ms cubic-bezier(0.16, 1, 0.3, 1),
+    color 450ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+html.light ::-webkit-scrollbar-track {
+  background: var(--page-bg);
+}
+
+html.light ::-webkit-scrollbar-thumb {
+  background: #d6cfc3;
+}
+
+/* Crimson selection with legible text in both themes. ------------------- */
+::selection {
+  background: #dc2626;
+  color: #ffffff;
+}
+
+/* ------------------------------------------------- solid dark surfaces -- */
+/* `black` stays literal so photo scrims / modal backdrops remain dark in
+   both themes; only solid panel usage is remapped for day mode. ----------- */
+html.light .bg-black {
+  background-color: #ffffff;
+}
+
+html.light .bg-black\/98 {
+  background-color: rgba(255, 255, 255, 0.98);
+}
+
+html.light .bg-black\/60 {
+  background-color: rgba(255, 255, 255, 0.62);
+}
+
+/* Day-mode surfaces for the shared component classes. -------------------- */
+html.light .minimal-card {
+  background: rgba(255, 255, 255, 0.82);
+  border-color: rgba(24, 21, 17, 0.1);
+}
+
+html.light .minimal-card:hover {
+  box-shadow: 0 20px 40px -15px rgba(60, 45, 25, 0.25),
+    0 0 30px -5px rgba(220, 38, 38, 0.18);
+}
+
+html.light .btn-noir {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(24, 21, 17, 0.16);
+  color: #181511;
+}
+
+html.light .btn-noir:hover {
+  background: #ffffff;
+  border-color: rgba(185, 28, 28, 0.55);
+}
+
+html.light .btn-red {
+  background-color: #b91c1c;
+  border-color: rgba(153, 27, 27, 0.7);
+  box-shadow: 0 4px 18px -2px rgba(153, 27, 27, 0.4);
+  color: #ffffff;
+}
+
+html.light .btn-red:hover {
+  background-color: #991b1b;
+}
+
+/* ------------------------------------------------- accent text colour -- */
+/* `text-white` flips to ink in day mode, so anything sitting on a crimson
+   surface must opt back out to white — these elements also carry their own
+   background, which lets us target them precisely (including on :hover). -- */
+html.light .bg-red-400,
+html.light .bg-red-500,
+html.light .bg-red-600,
+html.light .bg-red-700,
+html.light .hover\:bg-red-500:hover,
+html.light .hover\:bg-red-600:hover,
+html.light .focus\:bg-red-500:focus {
+  --c-white: 255 255 255;
+  --c-cream-100: 255 255 255;
+  --c-neutral-50: 255 255 255;
+}
+
+/* ------------------------------------------------------- dark zones ---- */
+/* Photographic panels stay noir in *both* themes: white copy sits on a dark
+   image, so the whole subtree re-declares the night palette. Custom
+   properties inherit, so one rule covers every descendant utility. -------- */
+html.light .pd-dark-zone {
+  --c-white: 255 255 255;
+  --c-neutral-50: 250 250 250;
+  --c-neutral-100: 245 245 245;
+  --c-neutral-200: 229 229 229;
+  --c-neutral-300: 212 212 212;
+  --c-neutral-400: 163 163 163;
+  --c-neutral-500: 115 115 115;
+  --c-neutral-600: 82 82 82;
+  --c-neutral-700: 64 64 64;
+  --c-neutral-800: 38 38 38;
+  --c-neutral-900: 23 23 23;
+  --c-neutral-950: 10 10 10;
+  --c-red-50: 254 242 242;
+  --c-red-100: 254 226 226;
+  --c-red-200: 254 202 202;
+  --c-red-300: 252 165 165;
+  --c-red-400: 248 113 113;
+  --c-red-500: 239 68 68;
+  --c-red-600: 220 38 38;
+  --c-red-700: 185 28 28;
+  --c-red-800: 153 27 27;
+  --c-red-900: 127 29 29;
+  --c-red-950: 69 10 10;
+  --c-cream-50: 255 255 255;
+  --c-cream-100: 255 255 255;
+  --c-cream-200: 245 245 245;
+  --c-cream-300: 229 229 229;
+  --c-cream-400: 163 163 163;
+  --c-cream-500: 115 115 115;
+  --c-amber-300: 252 211 77;
+  --c-amber-400: 251 191 36;
+  --c-amber-500: 245 158 11;
+  --c-ink-700: 38 38 38;
+  --c-ink-800: 18 18 18;
+  --c-ink-850: 10 10 10;
+  --c-ink-900: 5 5 5;
+  --c-ink-950: 0 0 0;
+}
+
+html.light .pd-dark-zone.bg-black,
+html.light .pd-dark-zone .bg-black,
+html.light .pd-dark-zone .bg-black\/60,
+html.light .pd-dark-zone .bg-black\/98 {
+  background-color: #000000;
+}
+
+/* ==========================================================================
+   MOTION SYSTEM — Locomotive/Apple-flavoured, tuned for a music platform
+   --------------------------------------------------------------------------
+   Every effect degrades to “already visible” when IntersectionObserver is
+   unavailable (jsdom) or when the user prefers reduced motion.
+   ========================================================================== */
+
+:root {
+  --pd-ease: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ---------------------------------------------------- scroll reveal ----- */
+.pd-reveal {
+  opacity: 0;
+  transform: translate3d(var(--reveal-x, 0px), var(--reveal-y, 30px), 0)
+    scale(var(--reveal-scale, 1));
+  filter: blur(var(--reveal-blur, 5px));
+  transition:
+    opacity 900ms var(--pd-ease) var(--reveal-delay, 0ms),
+    transform 900ms var(--pd-ease) var(--reveal-delay, 0ms),
+    filter 800ms ease-out var(--reveal-delay, 0ms);
+  will-change: opacity, transform;
+}
+
+.pd-reveal.is-in {
+  opacity: 1;
+  transform: translate3d(0, 0, 0) scale(1);
+  filter: blur(0);
+}
+
+/* Masked line reveal for headlines (the “roller” type treatment). -------- */
+.pd-line-mask {
+  display: block;
+  overflow: hidden;
+  padding-bottom: 0.08em;
+}
+
+.pd-line-mask > * {
+  display: block;
+  transform: translate3d(0, 110%, 0);
+  transition: transform 1050ms var(--pd-ease) var(--line-delay, 0ms);
+}
+
+.pd-line-mask.is-in > * {
+  transform: translate3d(0, 0, 0);
+}
+
+/* ---------------------------------------------------- marquee / roller --- */
+.pd-roller {
+  --roller-duration: 42s;
+  position: relative;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent);
+}
+
+.pd-roller__track {
+  display: flex;
+  width: max-content;
+  will-change: transform;
+}
+
+.pd-roller__group {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.pd-roller:hover .pd-roller__track {
+  animation-play-state: paused;
+}
+
+.pd-roller--rev .pd-roller__track {
+  animation-direction: reverse;
+}
+
+/* ---------------------------------------------------- scroll progress ---- */
+.pd-progress {
+  transform-origin: 0 50%;
+  transform: scaleX(var(--p, 0));
+  transition: transform 90ms linear;
+}
+
+/* ---------------------------------------------------- parallax layers ---- */
+.pd-parallax {
+  transform: translate3d(0, var(--py, 0px), 0);
+  will-change: transform;
+  backface-visibility: hidden;
+}
+
+/* ---------------------------------------------------- film grain --------- */
+.pd-grain {
+  position: relative;
+}
+
+.pd-grain::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.35;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/></filter><rect width='140' height='140' filter='url(%23n)' opacity='0.5'/></svg>");
+}
+
+html.light .pd-grain::after {
+  opacity: 0.16;
+  mix-blend-mode: multiply;
+}
+
+/* ---------------------------------------------------- sticky scene ------- */
+.pd-sticky {
+  position: sticky;
+  top: 0;
+}
+
+/* ---------------------------------------------------- equaliser bars ----- */
+.pd-eq {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 14px;
+}
+
+.pd-eq span {
+  width: 2px;
+  height: 100%;
+  background: currentColor;
+  border-radius: 999px;
+  transform-origin: 50% 100%;
+  animation: pd-eq 1.05s ease-in-out infinite;
+}
+
+.pd-eq span:nth-child(2) {
+  animation-delay: 0.18s;
+}
+
+.pd-eq span:nth-child(3) {
+  animation-delay: 0.36s;
+}
+
+.pd-eq span:nth-child(4) {
+  animation-delay: 0.1s;
+}
+
+@keyframes pd-eq {
+  0%,
+  100% {
+    transform: scaleY(0.3);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+
+/* ---------------------------------------------------- hover lift ---------- */
+.pd-lift {
+  transition:
+    transform 550ms var(--pd-ease),
+    box-shadow 550ms var(--pd-ease),
+    border-color 350ms ease;
+}
+
+.pd-lift:hover {
+  transform: translateY(-6px);
+}
+
+/* ---------------------------------------------------- reduced motion ----- */
+@media (prefers-reduced-motion: reduce) {
+  .pd-reveal,
+  .pd-line-mask > * {
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
+    transition: none !important;
+  }
+
+  .pd-parallax {
+    transform: none !important;
+  }
+
+  .pd-roller__track,
+  .pd-eq span {
+    animation: none !important;
+  }
+
+  .pd-grain::after {
+    display: none;
+  }
+}
+
+/* Roller item spacing (used by <Roller />). */
+.pd-roller__item {
+  padding-inline: 0.6rem;
+}
+
+.pd-roller__sep {
+  display: inline-flex;
+  align-items: center;
+  padding-inline: 1.15rem;
+  opacity: 0.4;
+}

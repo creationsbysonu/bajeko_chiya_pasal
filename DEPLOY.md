@@ -42,7 +42,16 @@ Files, in order:
 2. `supabase/migrations/0002_functions_public.sql` — catalog/favorites/takedown RPCs
 3. `supabase/migrations/0003_functions_admin.sql` — admin RPCs (allowlist-guarded)
 4. `supabase/migrations/0004_rls.sql` — deny-all row-level security on every table
-5. `supabase/seed.sql` — the full catalog (66 songs, 10 stations, taxonomies)
+5. `supabase/migrations/0005_security_hardening.sql` — revokes EXECUTE on the
+   internal `_`-prefixed helpers, requires the claimant email for takedown
+   status lookups, bounds free-text inputs
+6. `supabase/migrations/0006_abuse_controls.sql` — abuse controls: identified +
+   deduplicated + flood-capped playback telemetry, a 5/hour takedown rate limit,
+   and active-only reads of the public genre taxonomy
+7. `supabase/seed.sql` — the full catalog (66 songs, 10 stations, taxonomies)
+
+> **Already deployed?** Only steps 5 and 6 are new — run them once
+> (`supabase db push` does this) to apply the hardening to an existing database.
 
 > `supabase/seed.sql` is idempotent only on an **empty** database; it pins ids.
 
@@ -87,8 +96,9 @@ Custom domain later: add it under Project → Settings → Domains.
 
 ## 6. Local development
 
-Option A — point at the cloud project: copy `.env.example` to `frontend/.env`
-and fill in the cloud values, then `npm run dev` in `frontend/`.
+Option A — point at the cloud project: copy `.env.example` to
+`frontend/.env.local` (or `frontend/.env`) and fill in the cloud values, then
+`npm run dev` in `frontend/`. Both filenames are git-ignored.
 
 Option B — fully local (needs Docker + Supabase CLI):
 
@@ -119,10 +129,11 @@ with the Vercel URL:
 ## Regenerating the seed
 
 `supabase/seed.sql` was generated from the legacy dev database with
-`python3 supabase/tools/generate_seed.py` (reads `backend/db.sqlite3`, kept
-out of git). If you need to re-export, run it against a copy of that file —
-the backend directory itself is gone from the repo but recoverable from git
-history (`git show <sha>:backend/...`).
+`python3 supabase/tools/generate_seed.py`. It reads `legacy-dev-catalog.sqlite3`
+at the repo root by default (kept out of git by `*.sqlite3`), or you can pass a
+path: `python3 supabase/tools/generate_seed.py path/to/catalog.sqlite3`. The old
+`backend/` Django directory is gone from the repo but recoverable from git
+history (`git show <sha>:backend/...`) if you ever need it.
 
 ## Free-tier notes
 

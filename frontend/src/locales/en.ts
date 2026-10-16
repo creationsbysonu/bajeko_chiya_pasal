@@ -12,6 +12,8 @@ export const en = {
     searchPlaceholder: 'Search songs, artists, lyrics...',
     switchLanguage: 'नेपालीमा हेर्नुहोस्',
     theme: 'Vintage Mode',
+    themeToLight: 'Switch to day (light) mode',
+    themeToDark: 'Switch to night (dark) mode',
     reportCopyright: 'Content & Takedown',
   },
   hero: {

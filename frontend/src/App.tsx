@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { I18nProvider } from './context/I18nContext';
 import { PlayerProvider } from './context/PlayerContext';
+import { ThemeProvider } from './context/ThemeContext';
 import { Navigation } from './components/Navigation';
 import { Player } from './components/Player';
 import { QueueDrawer } from './components/QueueDrawer';
@@ -150,10 +151,12 @@ function MainApp() {
 
 export default function App() {
   return (
-    <I18nProvider>
-      <PlayerProvider>
-        <MainApp />
-      </PlayerProvider>
-    </I18nProvider>
+    <ThemeProvider>
+      <I18nProvider>
+        <PlayerProvider>
+          <MainApp />
+        </PlayerProvider>
+      </I18nProvider>
+    </ThemeProvider>
   );
 }

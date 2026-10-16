@@ -304,10 +304,25 @@ check('remove_favorite deletes', favsAfterRemove.length === favs.length - 1);
 const favNoAuth = await rpcError('add_favorite', { p_song_id: firstSongId });
 check('add_favorite without session errors', favNoAuth?.includes('authentication required'), favNoAuth);
 
+// Telemetry must be attributable: a bare `anon` JWT (a scripted caller) can
+// neither write events nor move play_count — that was the free play_count
+// inflation vector. The frontend always calls ensureListenerSession() first, so
+// real listeners do have a session.
+const listenerAs = (fn) => asUser(authUser.id, fn);
+
+const noSession = await rpcError('log_playback_event', { p_event_type: 'start', p_song_id: firstSongId });
+check('log_playback_event refuses a caller with no session', noSession?.includes('authentication required'), noSession);
+
 const playBefore = (await one(`select play_count from public.songs where id = $1`, [firstSongId])).play_count;
-await rpc('log_playback_event', { p_event_type: 'start', p_song_id: firstSongId });
+await rpc('log_playback_event', { p_event_type: 'start', p_song_id: firstSongId }, listenerAs);
 const playAfter = (await one(`select play_count from public.songs where id = $1`, [firstSongId])).play_count;
-check('log_playback_event increments play_count', playAfter === playBefore + 1, `${playBefore} -> ${playAfter}`);
+check('log_playback_event increments play_count for a real listener', playAfter === playBefore + 1, `${playBefore} -> ${playAfter}`);
+
+// Replays from the same listener inside the 30-minute window are recorded but
+// must not count again.
+await rpc('log_playback_event', { p_event_type: 'start', p_song_id: firstSongId }, listenerAs);
+const playDedup = (await one(`select play_count from public.songs where id = $1`, [firstSongId])).play_count;
+check('log_playback_event dedups repeat plays per listener', playDedup === playAfter, `${playAfter} -> ${playDedup}`);
 
 const badEvent = await rpcError('log_playback_event', { p_event_type: 'nope' });
 check('log_playback_event validates type', badEvent?.includes('Invalid event_type'), badEvent);
@@ -327,8 +342,8 @@ const ticket = await rpc('submit_takedown', {
 });
 check('submit_takedown returns ticket id', typeof ticket?.ticket_id === 'number', JSON.stringify(ticket));
 
-const status = await rpc('get_takedown_status', { p_ticket_id: ticket.ticket_id });
-check('get_takedown_status shape', status?.status === 'pending' && status?.song_title !== undefined);
+const status = await rpc('get_takedown_status', { p_ticket_id: ticket.ticket_id, p_email: 'rights@example.com' });
+check('get_takedown_status shape', status?.status === 'pending' && status?.song_title !== undefined, JSON.stringify(status));
 
 const wrongEmail = await rpcError('get_takedown_status', { p_ticket_id: ticket.ticket_id, p_email: 'wrong@example.com' });
 check('get_takedown_status email guard', wrongEmail?.includes('Email does not match'), wrongEmail);
@@ -521,6 +536,129 @@ check('audit logs refused for anon', auditAnon?.includes('Admin access required'
 // ---------------------------------------------------------------------------
 
 await sql(`update public.songs set publication_status = 'published' where id = $1`, [firstSongId]);
+
+// ---------------------------------------------------------------------------
+// Internal helper RPCs must NOT be callable by browser roles.
+//
+// Every function in the `public` schema is reachable through PostgREST
+// (/rest/v1/rpc/<fn>) and Postgres grants EXECUTE to PUBLIC by default, so any
+// SECURITY DEFINER helper that lives in public is an API endpoint unless it is
+// explicitly revoked. The helpers below are implementation details of the RPC
+// layer: they must never be an entry point.
+// ---------------------------------------------------------------------------
+
+console.log('\n== internal RPC lockdown ==');
+
+const denied = (msg) => typeof msg === 'string' && /permission denied/i.test(msg);
+
+const h1 = await rpcError('_audit', { p_action: 'FORGED', p_target_model: 'Song', p_target_id: '1', p_details: {} });
+check('anon cannot call _audit (audit-trail forgery)', denied(h1), h1);
+
+const h2 = await rpcError('_song_payload', { p_id: firstSongId });
+check('anon cannot call _song_payload', denied(h2), h2);
+
+const h3 = await rpcError('_songs_payload', { p_ids: [firstSongId] });
+check('anon cannot call _songs_payload', denied(h3), h3);
+
+const h4 = await rpcError('_bulk_target_ids', { p_payload: { filter: { status: 'draft' } } });
+check('anon cannot call _bulk_target_ids (unpublished id enumeration)', denied(h4), h4);
+
+const h5 = await rpcError('_station_queue_rows', { p_station_id: station?.id ?? 1 });
+check('anon cannot call _station_queue_rows', denied(h5), h5);
+
+const h6 = await rpcError('_unique_slug', { p_base: 'x', p_table: 'genres' });
+check('anon cannot call _unique_slug (schema probing)', denied(h6), h6);
+
+const h7 = await rpcError('_apply_song_payload', { p_data: { artist: 1 } });
+check('anon cannot call _apply_song_payload', denied(h7), h7);
+
+// The helpers must still work for the SECURITY DEFINER RPCs that call them.
+const stillWorks = await rpc('get_song_detail', { p_id: firstSongId });
+check('public RPCs still resolve internally after lockdown', stillWorks?.id === firstSongId, JSON.stringify(stillWorks).slice(0, 80));
+const adminStillWorks = await rpc('admin_song_detail', { p_id: firstSongId }, adminAs);
+check('admin RPCs still resolve internally after lockdown', adminStillWorks?.id === firstSongId, JSON.stringify(adminStillWorks).slice(0, 80));
+
+// ---------------------------------------------------------------------------
+// Takedown status lookup must prove ticket ownership (sequential ids are
+// trivial to enumerate, and resolution_notes is admin-written internal text).
+// ---------------------------------------------------------------------------
+
+const noEmail = await rpcError('get_takedown_status', { p_ticket_id: ticket.ticket_id });
+check('get_takedown_status requires the claimant email', typeof noEmail === 'string' && /claimant email is required/i.test(noEmail), noEmail);
+
+const withEmail = await rpc('get_takedown_status', { p_ticket_id: ticket.ticket_id, p_email: 'rights@example.com' });
+check('get_takedown_status with matching email', withEmail?.ticket_id === ticket.ticket_id && withEmail?.status !== undefined, JSON.stringify(withEmail));
+
+const otherEmail = await rpcError('get_takedown_status', { p_ticket_id: ticket.ticket_id, p_email: 'caps@example.com' });
+check('get_takedown_status rejects a different email', otherEmail?.includes('Email does not match'), otherEmail);
+
+// ---------------------------------------------------------------------------
+// Public write RPCs must bound free-text input so nobody can bloat the tables
+// with arbitrarily large rows.
+// ---------------------------------------------------------------------------
+
+await rpc('log_playback_event', {
+  p_event_type: 'error',
+  p_song_id: firstSongId,
+  p_error_message: 'e'.repeat(5000),
+}, listenerAs);
+const bounded = await one(
+  `select error_message from public.playback_events
+   where event_type = 'error' and song_id = $1 order by id desc limit 1`,
+  [firstSongId],
+);
+check('log_playback_event caps error_message', (bounded?.error_message?.length ?? 99999) <= 1000, `len=${bounded?.error_message?.length}`);
+
+// Flood guard: a single listener cannot write unbounded rows into
+// playback_events (a DoS/storage-growth vector on the free tier).
+const floodUser = await one(`insert into auth.users (email) values ('flood@example.com') returning id`);
+const floodAs = (fn) => asUser(floodUser.id, fn);
+for (let i = 0; i < 120; i++) {
+  await rpc('log_playback_event', { p_event_type: 'skip', p_song_id: firstSongId }, floodAs);
+}
+const floodThrottled = await rpc('log_playback_event', { p_event_type: 'skip', p_song_id: firstSongId }, floodAs);
+check(
+  'log_playback_event throttles a flooding listener',
+  floodThrottled?.status === 'throttled',
+  JSON.stringify(floodThrottled),
+);
+
+const bigTicket = await rpc('submit_takedown', {
+  p_song: firstSongId,
+  p_claimant_name: 'n'.repeat(300),
+  p_claimant_email: 'caps@example.com',
+  p_reason: 'other',
+  p_details: 'd'.repeat(20000),
+});
+const bigRow = await one(
+  `select length(details) as dlen, length(claimant_name) as nlen from public.takedown_requests where id = $1`,
+  [bigTicket.ticket_id],
+);
+check('submit_takedown caps details', bigRow.dlen <= 5000, `len=${bigRow.dlen}`);
+check('submit_takedown caps claimant_name', bigRow.nlen <= 200, `len=${bigRow.nlen}`);
+
+// Rate limit: 5 tickets/hour per claimant email, then refused.
+let throttleAllowed = 0;
+let throttleError = null;
+for (let i = 0; i < 6; i++) {
+  const err = await rpcError('submit_takedown', {
+    p_song: firstSongId,
+    p_claimant_name: 'Repeat Reporter',
+    p_claimant_email: 'throttle@example.com',
+    p_reason: 'other',
+    p_details: 'duplicate',
+  });
+  if (err) {
+    throttleError = err;
+    break;
+  }
+  throttleAllowed++;
+}
+check(
+  'submit_takedown rate limits to 5 per hour',
+  throttleAllowed === 5 && throttleError?.includes('Too many reports'),
+  `allowed=${throttleAllowed} err=${throttleError}`,
+);
 
 // ---------------------------------------------------------------------------
 // Summary

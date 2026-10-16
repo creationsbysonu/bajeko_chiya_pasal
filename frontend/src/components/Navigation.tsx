@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { ShieldAlert, Menu, X } from 'lucide-react';
+import { ShieldAlert, Menu, X, Sun, Moon } from 'lucide-react';
 import { useI18n } from '../context/I18nContext';
 import { usePlayer } from '../context/PlayerContext';
+import { useTheme } from '../context/ThemeContext';
+import { useScrollProgress } from '../hooks/useMotion';
 import { BrandMark } from './BrandMark';
 
 interface NavigationProps {
@@ -17,8 +19,12 @@ export const Navigation: React.FC<NavigationProps> = ({
 }) => {
   const { locale, t, toggleLocale } = useI18n();
   const { currentStation, status } = usePlayer();
+  const { theme, toggleTheme } = useTheme();
+  const progress = useScrollProgress();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+
+  const themeLabel = theme === 'dark' ? t.nav.themeToLight : t.nav.themeToDark;
 
   useEffect(() => {
     const handler = () => setScrolled(window.scrollY > 10);
@@ -105,6 +111,19 @@ export const Navigation: React.FC<NavigationProps> = ({
               </div>
             )}
 
+            {/* Day / Night theme toggle */}
+            <button
+              onClick={toggleTheme}
+              title={themeLabel}
+              aria-label={themeLabel}
+              aria-pressed={theme === 'light'}
+              className="group/t p-1.5 text-neutral-500 hover:text-red-400 transition-colors duration-200 rounded hover:bg-white/5"
+            >
+              <span className="block transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover/t:rotate-90">
+                {theme === 'dark' ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
+              </span>
+            </button>
+
             {/* Language */}
             <button
               onClick={toggleLocale}
@@ -130,6 +149,14 @@ export const Navigation: React.FC<NavigationProps> = ({
 
           {/* Mobile toggle */}
           <div className="flex md:hidden items-center gap-2">
+            <button
+              onClick={toggleTheme}
+              aria-label={themeLabel}
+              aria-pressed={theme === 'light'}
+              className="p-2 text-neutral-400 hover:text-white transition-colors"
+            >
+              {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            </button>
             <button
               onClick={toggleLocale}
               className="text-xs text-neutral-400 hover:text-white px-3 py-2 rounded transition-colors"
@@ -187,6 +214,13 @@ export const Navigation: React.FC<NavigationProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Locomotive-style scroll progress hairline */}
+      <div
+        className="pd-progress absolute left-0 right-0 bottom-0 h-[2px] bg-red-600/90 pointer-events-none"
+        style={{ '--p': progress } as React.CSSProperties}
+        aria-hidden="true"
+      />
     </header>
   );
 };

@@ -8,7 +8,7 @@
 //   - Static assets: CACHE-FIRST (bundle filenames are content-hashed, so they
 //     are immutable and safe to cache).
 //   - API + YouTube media requests: never intercepted.
-const CACHE_NAME = 'purano-dhun-v3';
+const CACHE_NAME = 'purano-dhun-v4';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
@@ -19,6 +19,17 @@ const ASSETS_TO_CACHE = [
   '/icons/icon-512.png',
   '/icons/apple-touch-icon.png',
 ];
+
+// Only cache things that are actually static. With an SPA rewrite every path
+// answers 200 with the shell, so caching "any successful same-origin GET" would
+// also cache arbitrary routes and any future same-origin JSON endpoint.
+function isCacheableAsset(url) {
+  const { pathname } = new URL(url);
+  if (pathname === '/sw.js') return false;            // the SW updates itself
+  if (pathname.startsWith('/assets/')) return true;   // content-hashed bundles
+  if (pathname.startsWith('/icons/')) return true;    // PWA icons
+  return /\.(?:js|mjs|css|svg|png|jpe?g|webp|ico|woff2?|ttf|json|webmanifest|html)$/.test(pathname);
+}
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -83,14 +94,15 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Static assets (hashed bundles, icons, fonts): cache-first with lazy fill
+  // Static assets (hashed bundles, icons, fonts): cache-first with lazy fill.
+  // Only genuinely static files get stored — see isCacheableAsset().
   event.respondWith(
     caches.match(request).then((cached) => {
       if (cached) {
         return cached;
       }
       return fetch(request).then((response) => {
-        if (response && (response.ok || response.type === 'opaque')) {
+        if (response && response.ok && isCacheableAsset(url)) {
           const copy = response.clone();
           caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
         }
