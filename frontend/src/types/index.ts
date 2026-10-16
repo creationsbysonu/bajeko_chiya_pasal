@@ -182,6 +182,39 @@ export interface AuditLogItem {
   timestamp: string;
 }
 
+export interface FestivalCategory {
+  id: number;
+  slug: string;
+  name: string;
+  name_ne: string;
+  emoji: string;
+  description: string;
+  display_order: number;
+  is_active: boolean;
+}
+
+export interface FestivalSong {
+  id: number;
+  title: string;
+  title_ne: string;
+  artist_name: string;
+  artist_name_ne?: string;
+  primary_genre_name?: string;
+  primary_genre_category?: string;
+  mood_tags: string[];
+  release_year?: number;
+  duration_seconds?: number;
+  artwork_url?: string;
+  play_count: number;
+  is_featured?: boolean;
+  featured_order?: number;
+}
+
+export interface Festival {
+  festival: FestivalCategory;
+  songs: FestivalSong[];
+}
+
 export interface AuthPermissionSet {
   can_manage_catalog: boolean;
   can_review_takedowns: boolean;

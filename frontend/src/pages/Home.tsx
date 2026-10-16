@@ -7,6 +7,7 @@ import { Station, Song, Genre, GenreCategory } from '../types';
 import { useI18n } from '../context/I18nContext';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { groupGenresByCategory } from '../utils/genreTaxonomy';
+import { FestiveSection } from '../components/FestiveSection';
 
 interface HomeProps {
   stations: Station[];
@@ -133,6 +134,9 @@ export const Home: React.FC<HomeProps> = ({
             ))}
           </div>
         </section>
+
+        {/* 3.5. Festive & Seasonal Festival Picker */}
+        <FestiveSection />
 
         {/* 4. Featured Verified Songs */}
         <section className="mt-10">

@@ -99,5 +99,13 @@ export const en = {
     copyright: 'Copyright & Governance',
     accessibility: 'Accessibility Statement',
     rightsDisclaimer: 'All musical works remain the sole property of their respective creators, record labels, and performers. Purano Dhun does not host or redistribute audio files.',
-  }
+  },
+  festival: {
+    title: 'Festive & Seasonal',
+    titleNe: 'चाडपर्व र मौसमी',
+    subtitle: 'Pick an upcoming festival and hear the best festive tunes before the celebration — perfect for home concerts.',
+    subtitleNe: 'आगामी चाडपर्व चुन्नुहोस् र सङ्गीतको मजाको मा आफ्नो घरको उत्सव भन्दा माथि सुन्नुहोस्।',
+    noSongs: 'No festive songs for this festival just yet.',
+    noSongsNe: 'यो चाडपर्वको लागि अहिलेसम्म कुनै गीत छैन।',
+  },
 };
