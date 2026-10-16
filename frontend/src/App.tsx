@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { I18nProvider } from './context/I18nContext';
 import { PlayerProvider } from './context/PlayerContext';
+import { AmbientProvider } from './context/AmbientContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { Navigation } from './components/Navigation';
 import { Player } from './components/Player';
@@ -162,7 +163,9 @@ export default function App() {
     <ThemeProvider>
       <I18nProvider>
         <PlayerProvider>
-          <MainApp />
+          <AmbientProvider>
+            <MainApp />
+          </AmbientProvider>
         </PlayerProvider>
       </I18nProvider>
     </ThemeProvider>
