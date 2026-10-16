@@ -16,6 +16,20 @@ vi.mock('../services/api', () => ({
       { language: 'Tamang', count: 1 },
       { language: 'Newari', count: 1 },
     ]),
+    getGenreCategories: vi.fn().mockResolvedValue([
+      {
+        id: 1,
+        slug: 'folk',
+        name: 'Folk',
+        name_ne: 'लोक गीत',
+        description: '',
+        display_order: 1,
+        is_active: true,
+        genres_count: 1,
+        songs_count: 1,
+        created_at: '2026-01-01T00:00:00Z',
+      }
+    ]),
     getSongs: vi.fn().mockResolvedValue({
       count: 1,
       results: [
