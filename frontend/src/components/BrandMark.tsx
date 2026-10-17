@@ -3,6 +3,8 @@ import React from 'react';
 interface BrandMarkProps {
   size?: number;
   className?: string;
+  /** Decorative use (e.g. a faint watermark): hides it from assistive tech. */
+  decorative?: boolean;
 }
 
 /**
@@ -10,14 +12,15 @@ interface BrandMarkProps {
  * drawn in clean geometry so it stays legible from favicon (16px) up to nav
  * tiles. The warm gold-on-ink palette keeps the nostalgic, heritage feel.
  */
-export const BrandMark: React.FC<BrandMarkProps> = ({ size = 28, className = '' }) => (
+export const BrandMark: React.FC<BrandMarkProps> = ({ size = 28, className = '', decorative = false }) => (
   <svg
     width={size}
     height={size}
     viewBox="0 0 96 96"
     fill="none"
-    role="img"
-    aria-label="Bajeko Chiya Pasal — बजेको चिया पसल"
+    role={decorative ? 'presentation' : 'img'}
+    aria-hidden={decorative || undefined}
+    aria-label={decorative ? undefined : 'Bajeko Chiya Pasal — बजेको चिया पसल'}
     className={className}
   >
     <defs>

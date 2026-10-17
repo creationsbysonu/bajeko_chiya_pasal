@@ -85,24 +85,24 @@ export const BajekoChiyaPasalSection: React.FC<BajekoChiyaPasalSectionProps> = (
     : '';
 
   return (
-    <section className="relative rounded-3xl overflow-hidden border border-gold-500/20 bg-black shadow-2xl pd-dark-zone">
-      {/* Warm shop backdrop */}
+    <section className="relative rounded-3xl overflow-hidden border border-red-500/15 bg-gradient-to-br from-ink-750 via-ink-850 to-ink-950 shadow-2xl">
+      {/* Soft warm glows — no heavy photo scrim, so the panel stays soothing
+          and follows the day/night palette. */}
       <div className="absolute inset-0 pointer-events-none">
-        <img
-          src="https://images.unsplash.com/photo-1544787219-7f47ccb76574?auto=format&fit=crop&w=1400&q=80"
-          alt=""
-          aria-hidden="true"
-          className="w-full h-full object-cover brightness-[0.18] contrast-[1.08] saturate-[0.9]"
-        />
-        <div className="absolute inset-0 bg-gradient-to-br from-black via-black/90 to-black/70" />
-        <div className="absolute -top-24 left-1/3 w-[420px] h-[240px] bg-red-600/10 blur-[120px] rounded-full" />
+        <div className="absolute -top-24 left-1/4 w-[420px] h-[240px] bg-red-600/10 blur-[130px] rounded-full" />
+        <div className="absolute -bottom-20 -right-10 w-[380px] h-[220px] bg-amber-500/10 blur-[140px] rounded-full" />
       </div>
+      <BrandMark
+        size={240}
+        decorative
+        className="pointer-events-none absolute -right-10 -bottom-14 opacity-[0.05] select-none hidden sm:block"
+      />
 
       <div className="relative z-10 p-5 sm:p-8 lg:p-10">
         {/* Shop board header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <Reveal variant="up" className="flex items-center gap-3.5">
-            <span className="grid place-items-center w-14 h-14 rounded-2xl bg-black/60 border border-gold-500/25 shadow-glow-red flex-shrink-0">
+            <span className="grid place-items-center w-14 h-14 rounded-2xl bg-white/5 border border-red-500/20 shadow-lg flex-shrink-0">
               <BrandMark size={34} />
             </span>
             <div>
@@ -136,7 +136,7 @@ export const BajekoChiyaPasalSection: React.FC<BajekoChiyaPasalSectionProps> = (
         <div className="mt-6 grid gap-5 lg:grid-cols-[1.05fr_1fr]">
           {/* Today's special */}
           <Reveal variant="up" delay={120}>
-            <div className="h-full rounded-2xl border border-gold-500/20 bg-black/55 backdrop-blur-sm p-4 sm:p-5 flex flex-col">
+            <div className="h-full rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm p-4 sm:p-5 flex flex-col">
               <div className="flex items-center justify-between">
                 <span className="text-[10px] font-mono uppercase tracking-[0.35em] text-red-400 font-bold">
                   {cp.specialLabel}
@@ -150,7 +150,7 @@ export const BajekoChiyaPasalSection: React.FC<BajekoChiyaPasalSectionProps> = (
 
               {special ? (
                 <div className="mt-3 flex items-center gap-4 flex-1">
-                  <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden border border-white/10 flex-shrink-0 bg-black">
+                  <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden border border-white/10 flex-shrink-0 bg-white/5">
                     <img
                       src={specialArt}
                       alt={specialTitle}
@@ -183,7 +183,7 @@ export const BajekoChiyaPasalSection: React.FC<BajekoChiyaPasalSectionProps> = (
 
           {/* Tea menu */}
           <Reveal variant="up" delay={180}>
-            <div className="h-full rounded-2xl border border-white/10 bg-black/45 backdrop-blur-sm p-4 sm:p-5">
+            <div className="h-full rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm p-4 sm:p-5">
               <div className="flex items-center justify-between mb-1">
                 <span className="text-[10px] font-mono uppercase tracking-[0.35em] text-gold-500/80 font-bold">
                   {cp.menuLabel}
@@ -213,7 +213,7 @@ export const BajekoChiyaPasalSection: React.FC<BajekoChiyaPasalSectionProps> = (
                       }`}
                     >
                       <div className="flex items-center gap-2.5">
-                        <span className={`grid place-items-center w-8 h-8 rounded-lg flex-shrink-0 border ${playing ? 'bg-red-600/25 border-red-500/40' : 'bg-black/60 border-white/10'}`}>
+                        <span className={`grid place-items-center w-8 h-8 rounded-lg flex-shrink-0 border ${playing ? 'bg-red-600/25 border-red-500/40' : 'bg-white/5 border-white/10'}`}>
                           <brew.Icon className={`w-4 h-4 ${playing ? 'text-red-400' : 'text-gold-500'}`} />
                         </span>
                         <div className="min-w-0">
