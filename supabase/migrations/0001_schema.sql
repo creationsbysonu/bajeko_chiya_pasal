@@ -1,4 +1,4 @@
--- Purano Dhun — 0001_schema.sql
+-- Bajeko Chiya Pasal — 0001_schema.sql
 -- Tables mirroring the previous Django models (radio_core) one-to-one, so the
 -- API payloads stay byte-compatible with the old Django REST endpoints.
 --

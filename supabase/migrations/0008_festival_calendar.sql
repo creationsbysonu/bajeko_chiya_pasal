@@ -1,4 +1,4 @@
--- Purano Dhun — 0008_festival_calendar.sql
+-- Bajeko Chiya Pasal — 0008_festival_calendar.sql
 -- Turns "Festive & Seasonal" into a calendar-aware experience:
 --
 --   * every major Nepali festival is in the taxonomy (Dashain, Tihar, Chhath,

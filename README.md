@@ -1,4 +1,4 @@
-# Purano Dhun (पुरानो धुन) — Nepali Music Radio & Nostalgia Platform
+# Bajeko Chiya Pasal (बजेको चिया पसल) — Nepali Music Radio & Nostalgia Platform
 
 > **नेपाली संगीत, पुराना सम्झना।**  
 > *Nepali Music, Timeless Memories.*
@@ -132,7 +132,7 @@ access is denied to browser roles by row-level security.
 ## Project Structure
 
 ```
-purano-dhun/
+bajeko-chiya-pasal/
 ├── frontend/
 │   ├── src/
 │   │   ├── components/         # Navigation, Player, RadioTuner, Cards, Modals, Footer

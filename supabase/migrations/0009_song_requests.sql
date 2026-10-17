@@ -1,4 +1,4 @@
--- Purano Dhun — 0009_song_requests.sql
+-- Bajeko Chiya Pasal — 0009_song_requests.sql
 --
 -- "Recommend a song" feature: an unauthenticated visitor can suggest a song we
 -- should add to the catalog. Mirrors the takedown workflow (0006) so the abuse

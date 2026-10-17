@@ -1,6 +1,6 @@
 # Privacy Policy (PRIVACY.md)
 
-**Purano Dhun (पुरानो धुन)** respects your privacy and is designed to minimize personal data collection.
+**Bajeko Chiya Pasal (बजेको चिया पसल)** respects your privacy and is designed to minimize personal data collection.
 
 ### 1. No Account Required to Listen
 Anyone can browse stations, search songs, shuffle playlists, and listen to music without creating an account or providing personal details.
@@ -9,7 +9,7 @@ Anyone can browse stations, search songs, shuffle playlists, and listen to music
 To allow guest users to save favorite tracks across browser sessions without requiring an account, the application creates a pseudonymous **anonymous sign-in session** (a random identifier stored in your browser's `localStorage` by Supabase Auth). This identifier is not linked to any personal email, phone number, or real identity, and no profile is created.
 
 ### 3. Permissions Policy
-Purano Dhun does **not** request permissions for:
+Bajeko Chiya Pasal does **not** request permissions for:
 - Microphone or camera access
 - Geolocation or GPS tracking
 - Contacts or address books
@@ -22,4 +22,4 @@ Playback event logs record only high-level playback counts (e.g., track start, c
 Audio playback is rendered via the official YouTube IFrame Player API. Interacting with YouTube embeds is subject to Google's Privacy Policy at [https://policies.google.com/privacy](https://policies.google.com/privacy).
 
 ### 6. Contact
-For questions regarding privacy practices, contact **privacy@puranodhun.org**.
+For questions regarding privacy practices, contact **privacy@bajekochiyapasal.org**.

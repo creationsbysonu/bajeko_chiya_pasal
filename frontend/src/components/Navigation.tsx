@@ -59,10 +59,10 @@ export const Navigation: React.FC<NavigationProps> = ({
               <BrandMark size={30} />
               <span className="leading-tight">
                 <span className="block text-sm font-bold text-white tracking-wide group-hover:text-red-400 transition-colors duration-200">
-                  PURANO DHUN
+                  BAJEKO CHIYA PASAL
                 </span>
                 <span className="block text-xs font-nepali text-neutral-500 group-hover:text-neutral-400 transition-colors duration-200">
-                  पुरानो धुन
+                  बजेको चिया पसल
                 </span>
               </span>
             </div>

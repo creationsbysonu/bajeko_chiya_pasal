@@ -31,7 +31,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenTakedown, onOpenAdmin }) =
           <div className="space-y-4">
             <div className="flex items-center gap-2.5">
               <BrandMark size={34} />
-              <span className="text-sm font-bold text-white tracking-wide">PURANO DHUN</span>
+              <span className="text-sm font-bold text-white tracking-wide">BAJEKO CHIYA PASAL</span>
             </div>
             <p className="text-xs leading-relaxed font-nepali">
               {t.footer.aboutText}
@@ -115,7 +115,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenTakedown, onOpenAdmin }) =
         {/* Disclaimer */}
         <div className="border-t border-white/5 pt-6">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-neutral-600">
-            <span>© 2026 Purano Dhun (पुरानो धुन). All rights reserved.</span>
+            <span>© 2026 Bajeko Chiya Pasal (बजेको चिया पसल). All rights reserved.</span>
             <span className="flex items-center gap-1">
               Built with
               <Heart className="w-3 h-3 text-red-600 fill-current mx-0.5" />

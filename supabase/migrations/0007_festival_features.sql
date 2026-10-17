@@ -1,4 +1,4 @@
--- Purano Dhun — 0007_festival_features.sql
+-- Bajeko Chiya Pasal — 0007_festival_features.sql
 -- Festival catalog section so visitors can pick an upcoming festival
 -- and hear the best festive songs for it before the celebration.
 

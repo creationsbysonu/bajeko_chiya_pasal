@@ -18,17 +18,17 @@ const I18nContext = createContext<I18nContextType | undefined>(undefined);
 
 export const I18nProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [locale, setLocaleState] = useState<Locale>(() => {
-    return (localStorage.getItem('purano_dhun_locale') as Locale) || 'ne';
+    return (localStorage.getItem('bajeko_chiya_pasal_locale') as Locale) || 'ne';
   });
 
   const [reducedMotion, setReducedMotionState] = useState<boolean>(() => {
-    return localStorage.getItem('purano_dhun_reduced_motion') === 'true' ||
+    return localStorage.getItem('bajeko_chiya_pasal_reduced_motion') === 'true' ||
       (typeof window !== 'undefined' && typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
   });
 
   const setLocale = (l: Locale) => {
     setLocaleState(l);
-    localStorage.setItem('purano_dhun_locale', l);
+    localStorage.setItem('bajeko_chiya_pasal_locale', l);
     document.documentElement.lang = l;
   };
 
@@ -38,7 +38,7 @@ export const I18nProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const setReducedMotion = (v: boolean) => {
     setReducedMotionState(v);
-    localStorage.setItem('purano_dhun_reduced_motion', v.toString());
+    localStorage.setItem('bajeko_chiya_pasal_reduced_motion', v.toString());
   };
 
   useEffect(() => {

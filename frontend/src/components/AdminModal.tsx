@@ -1021,7 +1021,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, onCatal
             </div>
             <div>
               <h3 className="font-serif text-xl font-bold text-white tracking-wide">
-                Purano Dhun Admin Portal
+                Bajeko Chiya Pasal Admin Portal
               </h3>
               <p className="text-xs text-neutral-400 font-mono">
                 SECURE CATALOG & GOVERNANCE DASHBOARD

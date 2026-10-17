@@ -1,4 +1,4 @@
--- Purano Dhun — 0005_security_hardening.sql
+-- Bajeko Chiya Pasal — 0005_security_hardening.sql
 -- Closes the gaps found in a full-project security review.
 --
 -- 1. INTERNAL HELPER LOCKDOWN (the important one)

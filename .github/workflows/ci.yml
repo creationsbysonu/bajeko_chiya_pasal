@@ -1,4 +1,4 @@
-# CI for Purano Dhun — runs on every push to main and on pull requests.
+# CI for Bajeko Chiya Pasal — runs on every push to main and on pull requests.
 # Two gates:
 #   1. Supabase SQL: migrations + seed applied to an in-process Postgres
 #      (PGlite) and every public/admin RPC exercised with role switching

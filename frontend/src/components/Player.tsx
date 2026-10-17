@@ -68,7 +68,7 @@ export const Player: React.FC = () => {
             : 'fixed bottom-2 right-2 w-[240px] h-[135px] opacity-0 pointer-events-none -z-50 transition-all duration-300'
         }
       >
-        <div id="purano-dhun-yt-iframe-slot" className="w-full h-full" />
+        <div id="bajeko-chiya-pasal-yt-iframe-slot" className="w-full h-full" />
       </div>
 
       {/* Expanded Cinematic View Modal */}
@@ -261,7 +261,7 @@ export const Player: React.FC = () => {
                 <h4 className="font-serif text-sm font-black text-white truncate drop-shadow-sm">
                   {currentSong
                     ? (locale === 'ne' ? currentSong.title_ne || currentSong.title : currentSong.title)
-                    : 'Purano Dhun'}
+                    : 'Bajeko Chiya Pasal'}
                 </h4>
               </div>
               <p className="text-xs text-neutral-500 font-nepali truncate">

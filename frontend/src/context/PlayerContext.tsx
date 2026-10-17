@@ -109,7 +109,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const consecutiveErrorsRef = useRef<number>(0);
   const ytPlayerRef = useRef<YTPlayerInstance | null>(null);
   const isApiReadyRef = useRef<boolean>(false);
-  const containerId = 'purano-dhun-yt-iframe-slot';
+  const containerId = 'bajeko-chiya-pasal-yt-iframe-slot';
 
   // Listener intent + background-safe state. `wantsPlaybackRef` survives screen
   // locks and tab switches so we know whether audio should still be running when
@@ -622,7 +622,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         ms.metadata = new MediaMetadata({
           title: currentSong.title_ne || currentSong.title,
           artist: currentSong.artist_name_ne || currentSong.artist_name,
-          album: currentStation ? currentStation.title_ne || currentStation.title : 'Purano Dhun',
+          album: currentStation ? currentStation.title_ne || currentStation.title : 'Bajeko Chiya Pasal',
           artwork: [
             { src: currentSong.artwork_url || thumb, sizes: '480x360', type: 'image/jpeg' },
             { src: thumb, sizes: '480x360', type: 'image/jpeg' },

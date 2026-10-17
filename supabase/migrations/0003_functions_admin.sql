@@ -1,4 +1,4 @@
--- Purano Dhun — 0003_functions_admin.sql
+-- Bajeko Chiya Pasal — 0003_functions_admin.sql
 -- Admin RPCs. Every function starts with an is_admin() guard (the admins
 -- allowlist), reproduces the old Django admin view behaviour incl. audit-log
 -- entries, and raises the same error message strings the frontend surfaces.

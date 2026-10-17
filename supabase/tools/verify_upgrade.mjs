@@ -1,4 +1,4 @@
-// Purano Dhun — verifies the generated festive upgrade actually brings a
+// Bajeko Chiya Pasal — verifies the generated festive upgrade actually brings a
 // pre-festival database up to date.
 //
 //   node supabase/tools/verify_upgrade.mjs

@@ -1,4 +1,4 @@
-# Deploying Purano Dhun (Supabase + Vercel)
+# Deploying Bajeko Chiya Pasal (Supabase + Vercel)
 
 The app is a React SPA (Vercel) talking directly to Supabase — Postgres plus
 a locked-down RPC layer that replaces the old Django API. There is no

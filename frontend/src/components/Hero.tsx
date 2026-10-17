@@ -50,7 +50,7 @@ export const Hero: React.FC<HeroProps> = ({ stations, onExploreCatalog }) => {
                 <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
                 <span className="font-nepali">{t.hero.badge}</span>
                 <span className="text-white/20">•</span>
-                <span className="font-mono text-red-500 font-bold">PURANO DHUN</span>
+                <span className="font-mono text-red-500 font-bold">BAJEKO CHIYA PASAL</span>
               </div>
             </Reveal>
 

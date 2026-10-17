@@ -1,4 +1,4 @@
-// Service Worker for Purano Dhun (App Shell & permitted static assets only)
+// Service Worker for Bajeko Chiya Pasal (App Shell & permitted static assets only)
 //
 // Deploy-aware caching strategy (Vercel keeps every build, but the shell is
 // still network-first so a fresh deploy goes live instantly):
@@ -8,7 +8,7 @@
 //   - Static assets: CACHE-FIRST (bundle filenames are content-hashed, so they
 //     are immutable and safe to cache).
 //   - API + YouTube media requests: never intercepted.
-const CACHE_NAME = 'purano-dhun-v4';
+const CACHE_NAME = 'bajeko-chiya-pasal-v1';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',

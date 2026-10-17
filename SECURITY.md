@@ -2,7 +2,7 @@
 
 ## 1. Threat Model & Principles
 
-Purano Dhun takes security, privacy, and content rights seriously. The application adheres to defense-in-depth principles:
+Bajeko Chiya Pasal takes security, privacy, and content rights seriously. The application adheres to defense-in-depth principles:
 
 1. **Zero Media Extraction**: The system never downloads, extracts audio streams, re-hosts, or circumvents access controls of external providers. All music playback occurs strictly via client-side official YouTube IFrame embeds.
 2. **Server-Side Authorization**: Administrative capabilities (adding songs, moderating takedowns, changing publication status) live in `SECURITY DEFINER` SQL functions that first check the `public.admins` allowlist (`is_admin()`). Every browser-facing table has row-level security enabled with **zero policies**, so the `anon` and `authenticated` roles cannot read or write a single row directly — all access flows through the audited RPC surface. No client-side checks are trusted.
@@ -48,8 +48,8 @@ Purano Dhun takes security, privacy, and content rights seriously. The applicati
 
 ## 4. Reporting Security Vulnerabilities
 
-If you discover a security vulnerability in Purano Dhun:
-- Please send a detailed email to **security@puranodhun.org**.
+If you discover a security vulnerability in Bajeko Chiya Pasal:
+- Please send a detailed email to **security@bajekochiyapasal.org**.
 - Do not publicly disclose the issue until it has been reviewed and addressed.
 - Our team will acknowledge receipt within 48 hours and work on remediation.
 

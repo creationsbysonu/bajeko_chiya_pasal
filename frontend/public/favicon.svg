@@ -1,13 +1,28 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <defs>
+    <linearGradient id="bcp-gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#F2C879"/>
+      <stop offset="100%" stop-color="#C77E2C"/>
+    </linearGradient>
+    <radialGradient id="bcp-cup" cx="45%" cy="30%" r="80%">
+      <stop offset="0%" stop-color="#3D302A"/>
+      <stop offset="70%" stop-color="#241B15"/>
+      <stop offset="100%" stop-color="#140F0C"/>
+    </radialGradient>
+  </defs>
   <rect width="100" height="100" rx="22" fill="#171614"/>
   <rect x="8" y="8" width="84" height="84" rx="16" stroke="#E8B04B" stroke-width="2.5" fill="#24211E"/>
-  <!-- Record + Play Pointer -->
-  <circle cx="50" cy="50" r="30" fill="#140F0C"/>
-  <circle cx="50" cy="50" r="30" stroke="#E8B04B" stroke-width="1.5" stroke-opacity="0.5"/>
-  <circle cx="50" cy="50" r="22" stroke="rgba(232,176,75,0.12)" stroke-width="1"/>
-  <circle cx="50" cy="50" r="14" fill="#1A1310"/>
-  <circle cx="50" cy="50" r="10.5" stroke="rgba(232,176,75,0.25)" stroke-width="1.2"/>
-  <!-- Play pointer -->
-  <path d="M50 40 L54 50 L50 60 L46 50 Z" fill="#E8B04B"/>
-  <circle cx="50" cy="50" r="2" fill="#3D302A"/>
+  <g transform="translate(48 52) scale(0.82) translate(-48 -52)">
+    <g stroke="url(#bcp-gold)" stroke-width="2.6" stroke-linecap="round" fill="none" opacity="0.6">
+      <path d="M37 40c-5-5.5 5-8.5 0-14"/>
+      <path d="M48 37c-5-5.5 5-8.5 0-14"/>
+      <path d="M59 40c-5-5.5 5-8.5 0-14"/>
+    </g>
+    <ellipse cx="48" cy="76" rx="33" ry="6" fill="#140F0C" stroke="url(#bcp-gold)" stroke-width="1.8"/>
+    <path d="M22 74a26 5 0 0 0 52 0" stroke="rgba(232,176,75,0.28)" stroke-width="1" fill="none"/>
+    <path d="M69 51c10 1 10 15-1 17" fill="none" stroke="url(#bcp-gold)" stroke-width="3.6" stroke-linecap="round"/>
+    <path d="M24 46h48l-6 22c-1.6 6-31.6 6-36 0z" fill="url(#bcp-cup)" stroke="url(#bcp-gold)" stroke-width="1.9" stroke-linejoin="round"/>
+    <ellipse cx="48" cy="46" rx="24" ry="4.6" fill="#1A1310" stroke="url(#bcp-gold)" stroke-width="1.7"/>
+    <ellipse cx="48" cy="47" rx="19.5" ry="3.1" fill="#C77E2C" opacity="0.4"/>
+  </g>
 </svg>

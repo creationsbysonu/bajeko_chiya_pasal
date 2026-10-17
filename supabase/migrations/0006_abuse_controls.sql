@@ -1,4 +1,4 @@
--- Purano Dhun — 0006_abuse_controls.sql
+-- Bajeko Chiya Pasal — 0006_abuse_controls.sql
 --
 -- Abuse / integrity controls for the unauthenticated surface, following up on
 -- 0005. Everything here is callable by guests by design, so the goal is to make

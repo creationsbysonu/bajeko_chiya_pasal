@@ -1,4 +1,4 @@
-// Purano Dhun — supabase/verify.mjs
+// Bajeko Chiya Pasal — supabase/verify.mjs
 //
 // Runs the SQL migrations + seed against an in-process Postgres (PGlite) and
 // exercises every public and admin RPC the way PostgREST would: role switching

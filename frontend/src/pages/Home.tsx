@@ -8,6 +8,7 @@ import { ChevronDown, ChevronUp } from 'lucide-react';
 import { groupGenresByCategory } from '../utils/genreTaxonomy';
 import { FestiveSection } from '../components/FestiveSection';
 import { RecommendSongSection } from '../components/RecommendSongSection';
+import { BajekoChiyaPasalSection } from '../components/BajekoChiyaPasalSection';
 
 interface HomeProps {
   stations: Station[];
@@ -40,10 +41,10 @@ export const Home: React.FC<HomeProps> = ({
 
   const faqs = [
     {
-      q: 'पुरानो धुन के हो र यो कसरी काम गर्दछ?',
-      q_en: 'What is Purano Dhun and how does it operate?',
-      a: 'पुरानो धुन एक मौलिक नेपाली संगीत रेडियो प्लेटफर्म हो। यहाँ विभिन्न सांगीतिक परिवेश (जस्तै चिया पसल, पुरानो रेडियो, बस यात्रा) छनौट गरी निरन्तर कालजयी गीतहरू सुन्न सकिन्छ। सम्पूर्ण प्लेब्याक आधिकारिक युट्युब प्लेयर इम्बेड मार्फत हुन्छ।',
-      a_en: 'Purano Dhun is an original Nepali music radio experience designed around nostalgic themes (tea shops, vintage radio, highway buses). All playback is powered strictly via official YouTube embeds without unauthorized streaming or audio extraction.',
+      q: 'बजेको चिया पसल के हो र यो कसरी काम गर्दछ?',
+      q_en: 'What is Bajeko Chiya Pasal and how does it operate?',
+      a: 'बजेको चिया पसल एक मौलिक नेपाली संगीत रेडियो प्लेटफर्म हो। यहाँ विभिन्न सांगीतिक परिवेश (जस्तै चिया पसल, पुरानो रेडियो, बस यात्रा) छनौट गरी निरन्तर कालजयी गीतहरू सुन्न सकिन्छ। सम्पूर्ण प्लेब्याक आधिकारिक युट्युब प्लेयर इम्बेड मार्फत हुन्छ।',
+      a_en: 'Bajeko Chiya Pasal is an original Nepali music radio experience designed around nostalgic themes (tea shops, vintage radio, highway buses). All playback is powered strictly via official YouTube embeds without unauthorized streaming or audio extraction.',
     },
     {
       q: 'के गीत सुन्न खाता खोल्नु अनिवार्य छ?',
@@ -70,8 +71,17 @@ export const Home: React.FC<HomeProps> = ({
       {/* 1. Hero with Integrated Vintage Radio Tuner */}
       <Hero stations={stations} onExploreCatalog={onExploreCatalog} />
 
-      {/* 2. Main content column (Showcase → Spotlight → Festive → Decades → …) */}
+      {/* 2. Main content column (Chiya Pasal → Showcase → Festive → Decades → …) */}
       <Reveal variant="up" delay={60} className="space-y-16 pb-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* 2.0. The shop-front: Bajeko Chiya Pasal signature counter */}
+        <BajekoChiyaPasalSection
+          stations={stations}
+          featuredSongs={featuredSongs}
+          trendingSongs={trendingSongs}
+          newSongs={newSongs}
+          onExploreCatalog={onExploreCatalog}
+        />
+
         {/* 2. Interactive four-panel showcase: Trending · New Releases · Radio Worlds · Featured */}
         <HomeShowcase
           stations={stations}
@@ -80,53 +90,6 @@ export const Home: React.FC<HomeProps> = ({
           featuredSongs={featuredSongs}
           onExploreCatalog={onExploreCatalog}
         />
-
-        <section>
-          <div className="relative rounded-3xl overflow-hidden border border-white/10 bg-black shadow-2xl p-6 md:p-10 pd-dark-zone">
-            {/* Soothing photographic backdrop */}
-            <div className="absolute inset-0 pointer-events-none">
-              <img
-                src="https://images.unsplash.com/photo-1544787219-7f47ccb76574?auto=format&fit=crop&w=1200&q=80"
-                alt="Baje ko Chiya Pasal"
-                className="w-full h-full object-cover brightness-[0.22] contrast-[1.1]"
-              />
-              <div className="absolute inset-0 bg-gradient-to-r from-black via-black/85 to-black/60" />
-            </div>
-
-            <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
-              <div className="max-w-2xl space-y-3">
-                <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-red-600 text-white text-xs font-bold font-nepali tracking-wider">
-                  <span>बजेको चिया पसल • परम्परागत सम्झना</span>
-                </div>
-                <h2 className="font-serif text-2xl md:text-3xl font-black text-white drop-shadow-sm">
-                  {locale === 'ne'
-                    ? 'चियाको चुस्की, पुरानो रेडियो र पहाडी सम्झना'
-                    : 'Steaming Milk Tea, Vintage Transistors & Mountain Memories'}
-                </h2>
-                <p className="text-sm text-cream-200/90 font-nepali leading-relaxed font-medium">
-                  {locale === 'ne'
-                    ? 'बिहानीको चिसो कुइरो, भट्टीको कोइलामा उम्लिँदै गरेको दूध चिया, र काठको टेबुलमा बजिरहेको नारायण गोपाल वा तारा देवीको धुन। पुरानो धुन केवल एउटा संगीत एप होइन, यो हाम्रो बाल्यकाल र अग्रजहरूको आत्मीय सम्झनाको संगम हो।'
-                    : "Morning hill fog, hot cardamom milk tea simmering on copper kettles, and a wooden transistor playing the timeless melodies of Narayan Gopal and Tara Devi. Purano Dhun is a living tribute to Nepal's collective nostalgia."}
-                </p>
-              </div>
-
-              <div className="flex flex-col sm:flex-row items-center gap-3 flex-shrink-0">
-                <button
-                  onClick={() => onSelectGenre('adhunik-geet')}
-                  className="px-6 py-3 rounded-full bg-red-600 hover:bg-red-500 text-white font-bold text-xs tracking-wide shadow-glow-red border border-red-500/50 transition-all duration-300 ease-out hover:scale-105 active:scale-95"
-                >
-                  {locale === 'ne' ? 'आधुनिक गीत सुन्नुहोस्' : 'Listen to Golden Classics'}
-                </button>
-                <button
-                  onClick={() => onSelectGenre('folk-instrumental')}
-                  className="px-6 py-3 rounded-full bg-transparent hover:bg-white/5 text-white font-medium text-xs border border-white/15 hover:border-white/30 transition-all duration-200 ease-out hover:scale-105 active:scale-95"
-                >
-                  {locale === 'ne' ? 'सारङ्गी र बाँसुरी धुन' : 'Sarangi & Flute Heritage'}
-                </button>
-              </div>
-            </div>
-          </div>
-        </section>
 
         {/* 3.5. Festive & Seasonal Festival Picker */}
         <FestiveSection />

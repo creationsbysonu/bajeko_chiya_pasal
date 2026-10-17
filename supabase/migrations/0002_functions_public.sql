@@ -1,4 +1,4 @@
--- Purano Dhun — 0002_functions_public.sql
+-- Bajeko Chiya Pasal — 0002_functions_public.sql
 -- Every read/write the website performs goes through these SECURITY DEFINER
 -- RPCs, which reproduce the response shapes of the old Django REST API exactly
 -- (snake_case keys, DRF pagination envelopes, error message strings).

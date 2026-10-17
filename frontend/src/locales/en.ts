@@ -1,5 +1,5 @@
 export const en = {
-  appName: 'Purano Dhun',
+  appName: 'Bajeko Chiya Pasal',
   appTagline: 'Nepali Music, Timeless Memories',
   nav: {
     home: 'Home',
@@ -18,7 +18,7 @@ export const en = {
   },
   hero: {
     badge: 'Authentic Nepali Heritage Stream',
-    title: 'Purano Dhun, Timeless Memories',
+    title: 'Bajeko Chiya Pasal, Timeless Memories',
     subtitle: 'Step into a world of crackling radios, steaming mountain tea, highway buses, and immortal melodies that defined generations.',
     startRadio: 'Tune into Radio',
     exploreSongs: 'Explore Catalog',
@@ -78,7 +78,7 @@ export const en = {
   },
   takedown: {
     title: 'Content Governance & Takedown Notice',
-    description: 'Purano Dhun honors creators and rights holders. If any video embed or metadata requires adjustment or removal, submit this notice for immediate review.',
+    description: 'Bajeko Chiya Pasal honors creators and rights holders. If any video embed or metadata requires adjustment or removal, submit this notice for immediate review.',
     claimantName: 'Your Full Name / Entity',
     claimantEmail: 'Contact Email',
     reason: 'Reason for Notice',
@@ -92,13 +92,13 @@ export const en = {
     success: 'Your notice has been recorded and logged for moderation review.',
   },
   footer: {
-    about: 'About Purano Dhun',
+    about: 'About Bajeko Chiya Pasal',
     aboutText: 'An original cultural tribute to Nepal’s musical history, tea stalls, vintage transistor radios, and mountain highways. All playback is powered exclusively through authorized official YouTube player embeds.',
     privacy: 'Privacy Policy',
     terms: 'Terms of Service',
     copyright: 'Copyright & Governance',
     accessibility: 'Accessibility Statement',
-    rightsDisclaimer: 'All musical works remain the sole property of their respective creators, record labels, and performers. Purano Dhun does not host or redistribute audio files.',
+    rightsDisclaimer: 'All musical works remain the sole property of their respective creators, record labels, and performers. Bajeko Chiya Pasal does not host or redistribute audio files.',
   },
   festival: {
     title: 'Festive & Seasonal',
@@ -145,8 +145,8 @@ export const en = {
   songRequest: {
     title: 'Recommend a Song',
     titleNe: 'गीत सिफारिस गर्नुहोस्',
-    subtitle: 'Know a festive gem (or any purano dhun) we are missing? Suggest it and our curators will listen.',
-    subtitleNe: 'हामीसँग छुटेको कुनै चाडपर्वको गीत वा पुरानो धुन थाहा छ? सिफारिस गर्नुहोस् — हाम्रो टोलीले सुन्नेछ।',
+    subtitle: 'Know a festive gem (or an old favourite) we are missing? Suggest it and our curators will listen.',
+    subtitleNe: 'हामीसँग छुटेको कुनै चाडपर्वको गीत वा बजेको चिया पसल थाहा छ? सिफारिस गर्नुहोस् — हाम्रो टोलीले सुन्नेछ।',
     titleLabel: 'Song title',
     titlePlaceholder: 'e.g. Malshree Dhun',
     artistLabel: 'Artist / singer',
@@ -179,5 +179,24 @@ export const en = {
     statusAdded: 'Added',
     statusRejected: 'Not added',
     errorGeneric: 'Could not send your suggestion. Please check your network and inputs.',
+  },
+  chiyaPasal: {
+    kicker: 'The Tea Shop',
+    heading: 'Bajeko Chiya Pasal',
+    intro:
+      'Pull up a stool — Grandfather is by the stove, the kettle is singing, and the wooden radio is tuned to the oldies.',
+    openNow: 'Open now',
+    closedNow: 'Closed — opens 6 AM',
+    specialLabel: "Today's Special",
+    specialHint: 'Baje is steeping this one for you today.',
+    specialEmpty: 'The kettle is still warming up — come back in a bit.',
+    sipPlay: 'Sip & play',
+    nowPouring: 'Now pouring',
+    menuLabel: 'Tea Menu',
+    menuHint: 'Pick a brew — it starts playing right away.',
+    menuAll: 'See the full menu',
+    houseRule: 'House rule',
+    houseRuleText: 'No bill, no hurry — stay as long as the songs keep playing.',
+    firstSip: 'First sip is on the house',
   },
 };

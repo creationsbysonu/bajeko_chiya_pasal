@@ -1,4 +1,4 @@
--- Purano Dhun — 0004_rls.sql
+-- Bajeko Chiya Pasal — 0004_rls.sql
 -- Lock every table down. The website never touches tables directly: all reads
 -- and writes go through the SECURITY DEFINER RPCs in 0002/0003, which filter
 -- by publication status and check the admins allowlist themselves.

@@ -1,5 +1,5 @@
 {
-  "name": "purano-dhun-supabase-verify",
+  "name": "bajeko-chiya-pasal-supabase-verify",
   "private": true,
   "type": "module",
   "description": "Runs the Supabase migrations against an in-process Postgres (PGlite) and smoke-tests every RPC with PostgREST-style role switching.",

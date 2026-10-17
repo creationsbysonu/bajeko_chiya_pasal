@@ -3,7 +3,7 @@ import { flushSync } from 'react-dom';
 
 export type Theme = 'dark' | 'light';
 
-const STORAGE_KEY = 'purano_dhun_theme';
+const STORAGE_KEY = 'bajeko_chiya_pasal_theme';
 
 interface ThemeContextType {
   theme: Theme;
