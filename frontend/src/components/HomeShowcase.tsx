@@ -186,20 +186,28 @@ export const HomeShowcase: React.FC<HomeShowcaseProps> = ({
     }
   }, [currentSong]);
 
-  // Tea shop songs - curated mix of popular, folk, and festive songs
+  // Tea shop songs - curated mix of classic, romantic, and nostalgic songs
+  // These are timeless melodies perfect for a tea shop atmosphere
   const teaShopSongs = [
     ...featuredSongs.filter((s) =>
-      ['popular', 'folk', 'special'].includes(s.primary_genre_category || '')
+      ['popular', 'folk'].includes(s.primary_genre_category || '')
     ),
     ...trendingSongs.filter((s) =>
-      ['popular', 'folk', 'special'].includes(s.primary_genre_category || '')
+      ['popular', 'folk'].includes(s.primary_genre_category || '')
     ),
     ...newSongs.filter((s) =>
-      ['popular', 'folk', 'special'].includes(s.primary_genre_category || '')
+      ['popular', 'folk'].includes(s.primary_genre_category || '')
     ),
   ]
     .filter((song, index, self) => self.findIndex((s) => s.id === song.id) === index)
-    .slice(0, 12);
+    .sort((a, b) => {
+      // Prioritize featured songs
+      if (a.is_featured && !b.is_featured) return -1;
+      if (!a.is_featured && b.is_featured) return 1;
+      // Then by play count
+      return (b.play_count || 0) - (a.play_count || 0);
+    })
+    .slice(0, 20);
 
   const panels: Panel[] = [
     {
