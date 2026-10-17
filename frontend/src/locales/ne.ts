@@ -137,5 +137,9 @@ export const ne = {
     dedicatedLabelNe: 'समर्पित गीत',
     categoryLabel: 'श्रेणी',
     categoryLabelNe: 'श्रेणी',
+    tagDedicated: 'समर्पित',
+    tagDedicatedNe: 'समर्पित',
+    tagTrending: 'ट्रेन्डिङ',
+    tagTrendingNe: 'ट्रेन्डिङ',
   },
 };

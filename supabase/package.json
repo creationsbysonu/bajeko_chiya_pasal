@@ -4,7 +4,9 @@
   "type": "module",
   "description": "Runs the Supabase migrations against an in-process Postgres (PGlite) and smoke-tests every RPC with PostgREST-style role switching.",
   "scripts": {
-    "verify": "node verify.mjs"
+    "verify": "node verify.mjs",
+    "build:upgrade": "node tools/build_festive_upgrade.mjs",
+    "verify:upgrade": "node tools/build_festive_upgrade.mjs && node tools/verify_upgrade.mjs"
   },
   "devDependencies": {
     "@electric-sql/pglite": "^0.3.14"

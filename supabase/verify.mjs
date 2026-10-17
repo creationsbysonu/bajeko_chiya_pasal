@@ -300,6 +300,8 @@ const chhathIds = (chhath?.results ?? []).map((s) => s.id);
 check('chhath has dedicated songs', chhathIds.includes(1030) && chhathIds.includes(1031), `chhath ids: ${chhathIds.join(',')}`);
 check('festival songs carry provider_video_id (playable)', (chhath?.results ?? []).every((s) => typeof s.provider_video_id === 'string' && s.provider_video_id.length > 0), JSON.stringify(chhath?.results?.[0]).slice(0, 160));
 check('get_festival_songs reports dedicated_count', typeof chhath?.dedicated_count === 'number', JSON.stringify(chhath).slice(0, 120));
+const chhathSources = new Set((chhath?.results ?? []).map((s) => s.source));
+check('festival playlist blends trending festive tracks', chhathSources.has('festival') && chhathSources.has('trending'), [...chhathSources].join(','));
 
 const christmas = await rpc('get_festival_songs', { p_festival_slug: 'christmas', p_limit: 24 });
 check('festival playlist is never empty (fallback fills)', Array.isArray(christmas?.results) && christmas.results.length >= 2, `got ${christmas?.results?.length}`);

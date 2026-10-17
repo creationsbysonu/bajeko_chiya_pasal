@@ -212,6 +212,8 @@ export interface FestivalSong {
   playback_provider?: string;
   provider_video_id?: string;
   provider_url?: string;
+  /** Where the song came from: dedicated to the festival, vibe-matched, or a trending festive track. */
+  source?: 'festival' | 'vibe' | 'trending';
 }
 
 export interface Festival {

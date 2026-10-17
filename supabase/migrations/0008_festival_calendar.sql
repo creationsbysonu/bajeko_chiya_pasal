@@ -273,8 +273,10 @@ $$;
 comment on function public.get_festival_calendar() is 'Active festivals ordered by the soonest upcoming occurrence, with countdown fields.';
 
 -- ---------------------------------------------------------------------------
--- Festival playlist: dedicated songs first, then thematically-close catalog
--- songs so every festival always has a full, playable set.
+-- Festival playlist: dedicated songs first, then vibe-matched songs, then a
+-- trending festive layer (popular + recent festive tracks from across the
+-- catalog, so "the thing playing right now" leads the mix). Every festival
+-- therefore always has a full, playable set even before it has many uploads.
 -- ---------------------------------------------------------------------------
 create or replace function public.get_festival_songs(p_festival_slug text, p_limit int default 24)
 returns jsonb
@@ -295,7 +297,7 @@ begin
     where slug = p_festival_slug and is_active;
 
     if v_festival is null then
-        return jsonb_build_object('count', 0, 'results', '[]'::jsonb);
+        return jsonb_build_object('count', 0, 'dedicated_count', 0, 'results', '[]'::jsonb);
     end if;
 
     select count(*) into v_count
@@ -303,44 +305,43 @@ begin
     where s.festival_id = v_festival and s.publication_status = 'published';
 
     with direct as (
-        select s.id, s.play_count, 0 as tier
+        select s.id, s.play_count, s.release_year, 0 as tier, 'festival'::text as source
         from public.songs s
         where s.festival_id = v_festival and s.publication_status = 'published'
     ),
-    related as (
-        select s.id, s.play_count, 1 as tier
+    vibe as (
+        select s.id, s.play_count, s.release_year, 1 as tier, 'vibe'::text as source
         from public.songs s
-        where s.festival_id is null
-          and s.publication_status = 'published'
+        where s.publication_status = 'published'
+          and s.festival_id is distinct from v_festival
           and coalesce(cardinality(v_tags), 0) > 0
           and s.mood_tags ?| v_tags
     ),
-    generic as (
-        select s.id, s.play_count, 2 as tier
+    trending as (
+        select s.id, s.play_count, s.release_year, 2 as tier, 'trending'::text as source
         from public.songs s
-        where s.festival_id is null
-          and s.publication_status = 'published'
-          and s.mood_tags ? 'festive'
+        where s.publication_status = 'published'
+          and (s.mood_tags ? 'festive' or s.festival_id is not null)
     ),
     picked as (
-        select id, play_count, tier from direct
+        select id, play_count, release_year, tier, source from direct
         union all
-        select id, play_count, tier from related
+        select id, play_count, release_year, tier, source from vibe
         union all
-        select id, play_count, tier from generic
+        select id, play_count, release_year, tier, source from trending
     ),
-    ranked as (
-        select distinct on (id) id, tier, play_count
+    best as (
+        select distinct on (id) id, play_count, release_year, tier, source
         from picked
         order by id, tier asc
     )
     select coalesce(
-        jsonb_agg(sp.song order by sp.tier asc, sp.play_count desc nulls last, sp.id desc),
+        jsonb_agg(sp.song order by sp.tier asc, sp.play_count desc nulls last, sp.release_year desc nulls last, sp.id desc),
         '[]'::jsonb
     )
     into v_results
     from (
-        select r.tier, s.id, s.play_count,
+        select b.tier, b.source, s.id, s.play_count, s.release_year,
             jsonb_build_object(
                 'id', s.id,
                 'title', s.title,
@@ -358,15 +359,16 @@ begin
                 'featured_order', s.featured_order,
                 'playback_provider', s.playback_provider,
                 'provider_video_id', s.provider_video_id,
-                'provider_url', s.provider_url
+                'provider_url', s.provider_url,
+                'source', b.source
             ) as song
         from (
-            select id, tier, play_count
-            from ranked
-            order by tier asc, play_count desc nulls last, id desc
+            select id, play_count, release_year, tier, source
+            from best
+            order by tier asc, play_count desc nulls last, release_year desc nulls last, id desc
             limit v_limit
-        ) r
-        join public.songs s on s.id = r.id
+        ) b
+        join public.songs s on s.id = b.id
         join public.artists a on a.id = s.artist_id
         left join public.genres g on g.id = s.primary_genre_id
     ) sp;
@@ -379,6 +381,6 @@ begin
 end;
 $$;
 
-comment on function public.get_festival_songs(text, int) is 'Festival playlist: dedicated songs ranked first, then thematically-close fallbacks.';
+comment on function public.get_festival_songs(text, int) is 'Festival playlist: dedicated songs, then vibe-matched songs, then trending festive tracks.';
 
 commit;

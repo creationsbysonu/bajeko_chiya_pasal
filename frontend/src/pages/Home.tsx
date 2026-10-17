@@ -66,12 +66,8 @@ export const Home: React.FC<HomeProps> = ({
 
   return (
     <div className="space-y-16 pb-20">
-      {/* 1. Hero with Integrated Vintage Radio Tuner */}
-      <Hero stations={stations} onExploreCatalog={onExploreCatalog} />
-
-      {/* 2. Main content column (Showcase → Spotlight → Festive → Decades → …) */}
-      <Reveal variant="up" delay={60} className="space-y-16 pb-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* 2. Interactive four-panel showcase: Trending · New Releases · Radio Worlds · Featured */}
+      {/* 1. Interactive four-panel showcase: Trending · New Releases · Radio Worlds · Featured */}
+      <Reveal variant="up" className="pt-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <HomeShowcase
           stations={stations}
           trendingSongs={trendingSongs}
@@ -79,7 +75,13 @@ export const Home: React.FC<HomeProps> = ({
           featuredSongs={featuredSongs}
           onExploreCatalog={onExploreCatalog}
         />
+      </Reveal>
 
+      {/* 2. Hero with Integrated Vintage Radio Tuner */}
+      <Hero stations={stations} onExploreCatalog={onExploreCatalog} />
+
+      {/* 3. Main content column (Spotlight → Festive → Decades → …) */}
+      <Reveal variant="up" delay={60} className="space-y-16 pb-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <section>
           <div className="relative rounded-3xl overflow-hidden border border-white/10 bg-black shadow-2xl p-6 md:p-10 pd-dark-zone">
             {/* Soothing photographic backdrop */}

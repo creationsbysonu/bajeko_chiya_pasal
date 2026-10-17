@@ -48,10 +48,23 @@ Files, in order:
 6. `supabase/migrations/0006_abuse_controls.sql` — abuse controls: identified +
    deduplicated + flood-capped playback telemetry, a 5/hour takedown rate limit,
    and active-only reads of the public genre taxonomy
-7. `supabase/seed.sql` — the full catalog (66 songs, 10 stations, taxonomies)
+7. `supabase/migrations/0007_festival_features.sql` — festival taxonomy
+   (`festival_categories`), a nullable `songs.festival_id`, and the festival
+   RPCs
+8. `supabase/migrations/0008_festival_calendar.sql` — `festival_dates`, every
+   major Nepali festival, per-festival `mood_tags`, `get_festival_calendar()`,
+   and the calendar-aware `get_festival_songs()`
+9. `supabase/seed.sql` — the full catalog (127 songs, 59 artists, 10 stations,
+   23 festivals, taxonomies)
 
-> **Already deployed?** Only steps 5 and 6 are new — run them once
-> (`supabase db push` does this) to apply the hardening to an existing database.
+> **Already deployed?** Run the new migrations once (`supabase db push` applies
+> `0007` + `0008`). Because `supabase/seed.sql` is only safe on an empty
+> database, existing installs should instead paste the generated
+> **`supabase/deploy/upgrade_festive.sql`** into the SQL Editor — it bundles
+> `0007` + `0008` + just the festival rows, and is safe to re-run. Regenerate
+> it after changing the seed or migrations with
+> `cd supabase && npm run build:upgrade` (`npm run verify:upgrade` proves it
+> upgrades a pre-festival database).
 
 > `supabase/seed.sql` is idempotent only on an **empty** database; it pins ids.
 
@@ -112,7 +125,7 @@ The SQL verification suite (the old Django tests' replacement) runs anywhere,
 no Docker needed:
 
 ```bash
-cd supabase && npm install && npm run verify
+cd supabase && npm install && npm run verify && npm run verify:upgrade
 ```
 
 ## 7. Cut over from Render

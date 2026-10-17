@@ -4,7 +4,7 @@ import { api } from '../services/api';
 import { FestivalCalendarEntry, FestivalSong, Song } from '../types';
 import { useI18n } from '../context/I18nContext';
 import { usePlayer } from '../context/PlayerContext';
-import { Play, Pause, Music, CalendarDays, Sparkles, ChevronRight } from 'lucide-react';
+import { Play, Pause, Music, CalendarDays, Sparkles, ChevronRight, Flame } from 'lucide-react';
 
 /* --------------------------------------------------------------------------- */
 /* Helpers                                                                     */
@@ -107,7 +107,7 @@ const TONE_STYLES: Record<Tone, { pill: string; text: string; border: string; gl
 /* --------------------------------------------------------------------------- */
 
 const FestiveSongRow: React.FC<{ song: FestivalSong; index: number }> = ({ song, index }) => {
-  const { locale } = useI18n();
+  const { locale, t } = useI18n();
   const { currentSong, status, playSong, togglePlayPause } = usePlayer();
   const ne = locale === 'ne';
   const isCurrent = currentSong?.id === song.id;
@@ -167,9 +167,20 @@ const FestiveSongRow: React.FC<{ song: FestivalSong; index: number }> = ({ song,
         </p>
       </div>
 
-      <span className="hidden sm:block text-[11px] font-mono text-neutral-500 tabular-nums flex-shrink-0 max-w-[120px] truncate">
-        {song.primary_genre_name || song.release_year || ''}
-      </span>
+      {song.source === 'festival' ? (
+        <span className="hidden sm:inline-flex items-center gap-1 text-[10px] font-mono font-bold uppercase tracking-wider text-red-300 bg-red-600/15 border border-red-500/30 px-2 py-0.5 rounded-full flex-shrink-0">
+          {ne ? t.festival.tagDedicatedNe : t.festival.tagDedicated}
+        </span>
+      ) : song.source === 'trending' ? (
+        <span className="hidden sm:inline-flex items-center gap-1 text-[10px] font-mono font-bold uppercase tracking-wider text-amber-300 bg-amber-500/15 border border-amber-500/30 px-2 py-0.5 rounded-full flex-shrink-0">
+          <Flame className="w-3 h-3" />
+          {ne ? t.festival.tagTrendingNe : t.festival.tagTrending}
+        </span>
+      ) : (
+        <span className="hidden sm:block text-[11px] font-mono text-neutral-500 tabular-nums flex-shrink-0 max-w-[120px] truncate">
+          {song.primary_genre_name || song.release_year || ''}
+        </span>
+      )}
     </button>
   );
 };

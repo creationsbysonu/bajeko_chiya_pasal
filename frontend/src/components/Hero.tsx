@@ -1,8 +1,7 @@
 import React from 'react';
-import { Play, Search, ShieldCheck, HeartHandshake } from 'lucide-react';
+import { Play, Search } from 'lucide-react';
 import { useI18n } from '../context/I18nContext';
 import { usePlayer } from '../context/PlayerContext';
-import { useTheme } from '../context/ThemeContext';
 import { Station } from '../types';
 import { RadioTuner } from './RadioTuner';
 import { Reveal } from './motion/Reveal';
@@ -16,7 +15,6 @@ interface HeroProps {
 export const Hero: React.FC<HeroProps> = ({ stations, onExploreCatalog }) => {
   const { locale, t } = useI18n();
   const { currentStation, playStation, status } = usePlayer();
-  const { theme } = useTheme();
 
   const stationNames = stations.map((s) => ({
     text: locale === 'ne' ? s.title_ne || s.title : s.title,
