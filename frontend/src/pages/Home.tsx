@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Hero } from '../components/Hero';
 import { HomeShowcase } from '../components/HomeShowcase';
 import { Reveal } from '../components/motion/Reveal';
 import { Station, Song, Genre, GenreCategory } from '../types';
 import { useI18n } from '../context/I18nContext';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronDown, ChevronUp, ArrowUp } from 'lucide-react';
 import { groupGenresByCategory, resolveCategories } from '../utils/genreTaxonomy';
 import { RecommendSongSection } from '../components/RecommendSongSection';
 
@@ -37,6 +37,20 @@ export const Home: React.FC<HomeProps> = ({
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const resolvedCategories = resolveCategories(categories || []);
   const availableSongs = [...featuredSongs, ...newSongs, ...trendingSongs];
+  const [showScrollTop, setShowScrollTop] = useState(false);
+
+  // Show scroll-to-top button when user scrolls down
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowScrollTop(window.scrollY > 500);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   const faqs = [
     {
@@ -241,6 +255,18 @@ export const Home: React.FC<HomeProps> = ({
         {/* 7. Recommend a song — listener contributions */}
         <RecommendSongSection />
       </Reveal>
+
+      {/* Scroll to top button */}
+      {showScrollTop && (
+        <button
+          onClick={scrollToTop}
+          className="fixed bottom-24 right-4 z-40 p-3 rounded-full bg-red-600 hover:bg-red-500 text-white shadow-lg hover:shadow-xl transition-all duration-300 ease-out hover:scale-110 active:scale-95"
+          aria-label="Scroll to top"
+          title="Scroll to top"
+        >
+          <ArrowUp className="w-5 h-5" />
+        </button>
+      )}
     </div>
   );
 };

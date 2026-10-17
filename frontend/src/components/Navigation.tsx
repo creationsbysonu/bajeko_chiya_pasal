@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ShieldAlert, Menu, X, Sun, Moon } from 'lucide-react';
+import { ShieldAlert, Menu, X, Sun, Moon, Music } from 'lucide-react';
 import { useI18n } from '../context/I18nContext';
 import { usePlayer } from '../context/PlayerContext';
 import { useTheme } from '../context/ThemeContext';
@@ -18,13 +18,14 @@ export const Navigation: React.FC<NavigationProps> = ({
   onOpenTakedown,
 }) => {
   const { locale, t, toggleLocale } = useI18n();
-  const { currentStation, status } = usePlayer();
+  const { currentSong, currentStation, status } = usePlayer();
   const { theme, toggleTheme } = useTheme();
   const progress = useScrollProgress();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
   const themeLabel = theme === 'dark' ? t.nav.themeToLight : t.nav.themeToDark;
+  const isPlaying = status === 'playing';
 
   useEffect(() => {
     const handler = () => setScrolled(window.scrollY > 10);
@@ -110,6 +111,21 @@ export const Navigation: React.FC<NavigationProps> = ({
                 </span>
               </div>
             )}
+
+            {/* Now Playing Indicator */}
+            {currentSong && (
+              <div
+                className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 max-w-[180px]"
+                title={locale === 'ne' ? currentSong.title_ne || currentSong.title : currentSong.title}
+              >
+                <Music className={`w-3 h-3 text-red-400 flex-shrink-0 ${isPlaying ? 'animate-pulse' : ''}`} />
+                <span className="text-xs text-neutral-300 truncate">
+                  {locale === 'ne' ? currentSong.title_ne || currentSong.title : currentSong.title}
+                </span>
+              </div>
+            )}
+
+            <div className="w-px h-4 bg-white/10 mx-1" />
 
             {/* Day / Night theme toggle */}
             <button
