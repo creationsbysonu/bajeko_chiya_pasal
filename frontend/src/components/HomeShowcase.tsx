@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Song, Station } from '../types';
 import { useI18n } from '../context/I18nContext';
 import { usePlayer } from '../context/PlayerContext';
@@ -12,9 +12,35 @@ import {
   CalendarDays,
   ArrowRight,
   ChevronDown,
+  History,
 } from 'lucide-react';
 import { FestiveSection } from './FestiveSection';
 import { FESTIVAL_IMAGES } from '../utils/festivalImagery';
+
+const RECENTLY_PLAYED_KEY = 'bajeko_chiya_pasal_recently_played';
+const MAX_RECENT_SONGS = 20;
+
+/** Load recently played songs from localStorage */
+const loadRecentlyPlayed = (): Song[] => {
+  try {
+    const stored = localStorage.getItem(RECENTLY_PLAYED_KEY);
+    return stored ? JSON.parse(stored) : [];
+  } catch {
+    return [];
+  }
+};
+
+/** Save a song to recently played (most recent first, deduplicated) */
+const saveToRecentlyPlayed = (song: Song): void => {
+  try {
+    const recent = loadRecentlyPlayed();
+    const filtered = recent.filter((s) => s.id !== song.id);
+    const updated = [song, ...filtered].slice(0, MAX_RECENT_SONGS);
+    localStorage.setItem(RECENTLY_PLAYED_KEY, JSON.stringify(updated));
+  } catch {
+    // localStorage might be full or unavailable
+  }
+};
 
 interface HomeShowcaseProps {
   stations: Station[];
@@ -144,6 +170,21 @@ export const HomeShowcase: React.FC<HomeShowcaseProps> = ({
   const { locale, t } = useI18n();
   const ne = locale === 'ne';
   const [active, setActive] = useState<number | null>(null);
+  const [recentlyPlayed, setRecentlyPlayed] = useState<Song[]>([]);
+  const { currentSong } = usePlayer();
+
+  // Load recently played on mount
+  useEffect(() => {
+    setRecentlyPlayed(loadRecentlyPlayed());
+  }, []);
+
+  // Save current song to recently played when it changes
+  useEffect(() => {
+    if (currentSong) {
+      saveToRecentlyPlayed(currentSong);
+      setRecentlyPlayed(loadRecentlyPlayed());
+    }
+  }, [currentSong]);
 
   // Tea shop songs - curated mix of popular, folk, and festive songs
   const teaShopSongs = [
@@ -252,6 +293,35 @@ export const HomeShowcase: React.FC<HomeShowcaseProps> = ({
         </div>
       ),
       action: { label: ne ? 'सबै हेर्नुहोस्' : 'View all', onClick: onExploreCatalog },
+    },
+    {
+      key: 'recent',
+      icon: History,
+      eyebrow: ne ? 'हालको इतिहास' : 'HISTORY',
+      title: ne ? 'हाल सुनेका गीतहरू' : 'Recently Played',
+      caption: ne ? 'तपाईंको श्रवण इतिहास' : 'Your listening history',
+      countLabel: ne ? `${recentlyPlayed.length} गीत` : `${recentlyPlayed.length} tracks`,
+      image: artworkFor(recentlyPlayed[0]) || FALLBACK,
+      accentText: 'text-amber-300',
+      accentBg: 'bg-amber-400',
+      glow: 'from-amber-400/40',
+      content: recentlyPlayed.length === 0 ? (
+        <div className="flex flex-col items-center justify-center h-full text-center py-8">
+          <History className="w-10 h-10 text-neutral-600 mb-3" />
+          <p className="text-sm text-neutral-400">
+            {ne ? 'अहिलेसम्म कुनै गीत सुन्नुभएको छैन' : 'No songs played yet'}
+          </p>
+          <p className="text-xs text-neutral-500 mt-1">
+            {ne ? 'गीत सुन्नुहोस् र यहाँ देखिन्छ' : 'Play some songs and they will appear here'}
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-1">
+          {recentlyPlayed.slice(0, 10).map((song) => (
+            <SongRow key={song.id} song={song} />
+          ))}
+        </div>
+      ),
     },
   ];
 
