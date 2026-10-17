@@ -157,6 +157,7 @@ export const Home: React.FC<HomeProps> = ({
                             <div className="text-sm text-gray-400 text-center mt-1">
                               +{categorySongs.length - 5} more
                             </div>
+                            ))}\n
                           )}
                         </div>
                       </div>
@@ -203,6 +204,7 @@ export const Home: React.FC<HomeProps> = ({
                               {category.label.toUpperCase()}
                             </p>
                           </button>
+                         ))}\n
                         ))
                       </div>
                     )
