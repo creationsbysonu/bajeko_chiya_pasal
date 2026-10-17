@@ -122,12 +122,16 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     nextTrack: () => void;
     prevTrack: () => void;
     seekTo: (seconds: number) => void;
+    getCurrentVolume: () => number;
+    setVolumeLevel: (vol: number) => void;
   }>({
     togglePlayPause: () => undefined,
     toggleMute: () => undefined,
     nextTrack: () => undefined,
     prevTrack: () => undefined,
     seekTo: () => undefined,
+    getCurrentVolume: () => 80,
+    setVolumeLevel: () => undefined,
   });
 
   // Load YouTube IFrame Player API script safely once
@@ -476,7 +480,15 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   // Keep actionsRef fresh so the one-time Media Session listeners below always
   // call the latest closures.
   useEffect(() => {
-    actionsRef.current = { togglePlayPause, toggleMute, nextTrack, prevTrack, seekTo };
+    actionsRef.current = {
+      togglePlayPause,
+      toggleMute,
+      nextTrack,
+      prevTrack,
+      seekTo,
+      getCurrentVolume: () => volume,
+      setVolumeLevel,
+    };
   });
 
   // ---------------------------------------------------------------------------
@@ -674,6 +686,22 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       } else if (e.key === 'm' || e.key === 'M') {
         e.preventDefault();
         actionsRef.current.toggleMute();
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        // Increase volume by 10%
+        const currentVol = actionsRef.current.getCurrentVolume();
+        actionsRef.current.setVolumeLevel(Math.min(100, currentVol + 10));
+      } else if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        // Decrease volume by 10%
+        const currentVol = actionsRef.current.getCurrentVolume();
+        actionsRef.current.setVolumeLevel(Math.max(0, currentVol - 10));
+      } else if (e.key === 'ArrowRight' && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        actionsRef.current.nextTrack();
+      } else if (e.key === 'ArrowLeft' && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        actionsRef.current.prevTrack();
       }
     };
 
