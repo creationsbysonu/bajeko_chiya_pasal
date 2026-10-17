@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Hero } from '../components/Hero';
 import { HomeShowcase } from '../components/HomeShowcase';
+import { RecentlyPlayedSection } from '../components/RecentlyPlayedSection';
 import { Reveal } from '../components/motion/Reveal';
 import { Station, Song, Genre, GenreCategory } from '../types';
 import { useI18n } from '../context/I18nContext';
@@ -94,6 +95,9 @@ export const Home: React.FC<HomeProps> = ({
           featuredSongs={featuredSongs}
           onExploreCatalog={onExploreCatalog}
         />
+
+        {/* 3. Recently Played - user's listening history */}
+        <RecentlyPlayedSection />
 
         {/* 4. Featured chart now lives in the HomeShowcase wall above */}
 
