@@ -159,14 +159,8 @@ export const BajekoChiyaPasalSection: React.FC<BajekoChiyaPasalSectionProps> = (
           </Reveal>
         </div>
 
-        <Reveal variant="up" delay={200}>
-          <p className={`mt-5 max-w-2xl text-[15px] sm:text-base text-cream-200/80 leading-relaxed ${ne ? 'font-nepali' : ''}`}>
-            {cp.intro}
-          </p>
-        </Reveal>
-
         {/* Ornamental divider */}
-        <Reveal variant="fade" delay={240} className="mt-6">
+        <Reveal variant="fade" delay={200} className="mt-6">
           <TeaLeafDivider className="w-full max-w-md h-6 mx-auto text-red-500/40" />
         </Reveal>
 
@@ -212,9 +206,6 @@ export const BajekoChiyaPasalSection: React.FC<BajekoChiyaPasalSectionProps> = (
                     <p className="mt-1 text-[13px] text-neutral-400 truncate">
                       {specialArtist || special.film_or_source}
                     </p>
-                    <p className={`mt-2 text-xs text-cream-300/70 leading-relaxed ${ne ? 'font-nepali' : ''}`}>
-                      {cp.specialHint}
-                    </p>
                     <button
                       onClick={() => playSong(special)}
                       className="mt-4 inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-red-600 hover:bg-red-500 text-white text-[13px] font-semibold tracking-wide shadow-glow-red border border-red-500/50 transition-all duration-200 ease-out hover:scale-105 active:scale-95"
@@ -233,7 +224,7 @@ export const BajekoChiyaPasalSection: React.FC<BajekoChiyaPasalSectionProps> = (
           {/* Tea menu */}
           <Reveal variant="up" delay={180}>
             <div className="h-full rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm p-5">
-              <div className="flex items-center justify-between mb-1">
+              <div className="flex items-center justify-between mb-4">
                 <span className="text-[11px] font-mono uppercase tracking-[0.3em] text-red-400 font-semibold">
                   {cp.menuLabel}
                 </span>
@@ -244,7 +235,6 @@ export const BajekoChiyaPasalSection: React.FC<BajekoChiyaPasalSectionProps> = (
                   {cp.menuAll} <ArrowRight className="w-3.5 h-3.5" />
                 </button>
               </div>
-              <p className={`text-xs text-neutral-500 mb-4 ${ne ? 'font-nepali' : ''}`}>{cp.menuHint}</p>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {BREWS.map((brew) => {
@@ -310,15 +300,6 @@ export const BajekoChiyaPasalSection: React.FC<BajekoChiyaPasalSectionProps> = (
             />
           </div>
         </Reveal>
-
-        {/* House rule */}
-        <div className="mt-6 pt-5 border-t border-white/10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-          <p className={`text-xs text-neutral-500 leading-relaxed ${ne ? 'font-nepali' : ''}`}>
-            <span className="text-red-400 font-mono uppercase tracking-[0.2em] text-[11px] mr-2">{cp.houseRule}</span>
-            {cp.houseRuleText}
-          </p>
-          <p className={`text-xs text-red-400/80 font-mono tracking-wide ${ne ? 'font-nepali' : ''}`}>{cp.firstSip}</p>
-        </div>
       </div>
     </section>
   );

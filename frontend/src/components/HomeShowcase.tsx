@@ -9,6 +9,7 @@ import {
   Radio,
   Star,
   Music,
+  Coffee,
   Volume2,
   ArrowRight,
   ChevronDown,
@@ -278,6 +279,15 @@ export const HomeShowcase: React.FC<HomeShowcaseProps> = ({
     <section className="mt-4">
       <div className="mb-6 flex flex-col sm:flex-row sm:items-end justify-between gap-3">
         <div>
+          {/* Shop identity that hosts the wall of worlds */}
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] font-mono uppercase tracking-[0.3em] text-red-400/90 mb-2">
+            <Coffee className="w-3.5 h-3.5" />
+            <span>{ne ? 'चिया पसल' : 'THE TEA SHOP'}</span>
+            <span className="text-white/15">•</span>
+            <span className={`tracking-[0.2em] normal-case text-neutral-400 ${ne ? 'font-nepali' : ''}`}>
+              {ne ? 'बजेको चिया पसल' : 'Bajeko Chiya Pasal'}
+            </span>
+          </div>
           <div className="flex items-center gap-2 text-[11px] font-mono uppercase tracking-[0.3em] text-neutral-500 mb-1.5">
             <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
             <span>{ne ? 'अन्वेषण' : 'EXPLORE'}</span>

@@ -183,20 +183,13 @@ export const en = {
   chiyaPasal: {
     kicker: 'The Tea Shop',
     heading: 'Bajeko Chiya Pasal',
-    intro:
-      'Pull up a stool — Grandfather is by the stove, the kettle is singing, and the wooden radio is tuned to the oldies.',
     openNow: 'Open now',
     closedNow: 'Closed — opens 6 AM',
     specialLabel: "Today's Special",
-    specialHint: 'Baje is steeping this one for you today.',
-    specialEmpty: 'The kettle is still warming up — come back in a bit.',
+    specialEmpty: 'The kettle is still warming up.',
     sipPlay: 'Sip & play',
     nowPouring: 'Now pouring',
     menuLabel: 'Tea Menu',
-    menuHint: 'Pick a brew — it starts playing right away.',
     menuAll: 'See the full menu',
-    houseRule: 'House rule',
-    houseRuleText: 'No bill, no hurry — stay as long as the songs keep playing.',
-    firstSip: 'First sip is on the house',
   },
 };
