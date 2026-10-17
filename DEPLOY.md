@@ -59,7 +59,7 @@ Files, in order:
    `submit_song_request()`, a contact-free `get_song_requests_recent()` feed,
    and the admin moderation RPCs (`admin_song_requests`,
    `admin_song_request_action`)
-10. `supabase/seed.sql` — the full catalog (163 songs, 88 artists, 10 stations,
+10. `supabase/seed.sql` — the full catalog (224 songs, 116 artists, 10 stations,
     23 festivals, taxonomies)
 
 > **Already deployed?** Run the new migrations once (`supabase db push` applies

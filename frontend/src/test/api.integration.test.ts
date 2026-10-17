@@ -312,7 +312,7 @@ describe('api.ts end-to-end against PostgREST bridge', () => {
     expect(stations[0]).toHaveProperty('songs_count');
 
     const songs = await api.getSongs();
-    expect(songs.count).toBe(163);
+    expect(songs.count).toBe(224);
     expect(songs.results).toHaveLength(24);
     expect(songs.previous).toBeNull();
     expect(typeof songs.next).toBe('string');
@@ -443,8 +443,8 @@ describe('api.ts end-to-end against PostgREST bridge', () => {
     expect(me.email).toBe(TEST_ADMIN.email);
 
     const stats = await api.getAdminStats();
-    expect(stats.total_songs).toBe(163);
-    expect(stats.total_artists).toBe(88);
+    expect(stats.total_songs).toBe(224);
+    expect(stats.total_artists).toBe(116);
 
     const insights = await api.getAdminInsights(30);
     expect(insights.window_days).toBe(30);
