@@ -313,7 +313,7 @@ begin
         select s.id, s.play_count, s.release_year, 1 as tier, 'vibe'::text as source
         from public.songs s
         where s.publication_status = 'published'
-          and s.festival_id is distinct from v_festival
+          and s.festival_id is null
           and coalesce(cardinality(v_tags), 0) > 0
           and s.mood_tags ?| v_tags
     ),
@@ -381,6 +381,6 @@ begin
 end;
 $$;
 
-comment on function public.get_festival_songs(text, int) is 'Festival playlist: dedicated songs, then vibe-matched songs, then trending festive tracks.';
+comment on function public.get_festival_songs(text, int) is 'Festival playlist: dedicated songs, then vibe-matched non-festival songs, then trending festive tracks.';
 
 commit;
