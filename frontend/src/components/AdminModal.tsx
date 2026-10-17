@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { X, Lock, LogOut, AlertTriangle, ShieldCheck, FileText, Database, Plus, Search, Radio, Trash2, RefreshCw, FolderTree, ChevronLeft, ChevronRight, Pencil, ArrowUp, ArrowDown, ListMusic, TrendingUp, Star } from 'lucide-react';
+import { X, Lock, LogOut, AlertTriangle, ShieldCheck, FileText, Database, Plus, Search, Radio, Trash2, RefreshCw, FolderTree, ChevronLeft, ChevronRight, Pencil, ArrowUp, ArrowDown, ListMusic, TrendingUp, Star, Inbox, ExternalLink } from 'lucide-react';
 import { api } from '../services/api';
-import { AdminStats, TakedownTicket, AuditLogItem, Song, Station, Artist, AuthUser, Genre, GenreCategory, StationQueueItem, AdminInsights } from '../types';
+import { AdminStats, TakedownTicket, AuditLogItem, Song, Station, Artist, AuthUser, Genre, GenreCategory, StationQueueItem, AdminInsights, SongRequestTicket } from '../types';
 import { resolveCategories, categoryLabel } from '../utils/genreTaxonomy';
 
 
@@ -24,7 +24,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, onCatal
   const [securityError, setSecurityError] = useState<string | null>(null);
   const [securitySuccess, setSecuritySuccess] = useState<string | null>(null);
 
-  const [activeTab, setActiveTab] = useState<'stats' | 'insights' | 'songs' | 'addSong' | 'taxonomy' | 'stations' | 'takedowns' | 'audit' | 'security'>('stats');
+  const [activeTab, setActiveTab] = useState<'stats' | 'insights' | 'songs' | 'addSong' | 'taxonomy' | 'stations' | 'takedowns' | 'requests' | 'audit' | 'security'>('stats');
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [songs, setSongs] = useState<Song[]>([]);
   const [stations, setStations] = useState<Station[]>([]);
@@ -33,6 +33,8 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, onCatal
   const [categories, setCategories] = useState<GenreCategory[]>([]);
   const [takedowns, setTakedowns] = useState<TakedownTicket[]>([]);
   const [takedownStatuses, setTakedownStatuses] = useState<string[]>([]);
+  const [songRequests, setSongRequests] = useState<SongRequestTicket[]>([]);
+  const [songRequestStatuses, setSongRequestStatuses] = useState<string[]>([]);
   const [auditLogs, setAuditLogs] = useState<AuditLogItem[]>([]);
   const [songSearch, setSongSearch] = useState('');
 
@@ -95,6 +97,11 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, onCatal
   const [ticketStatusFilter, setTicketStatusFilter] = useState('all');
   const [ticketSearch, setTicketSearch] = useState('');
   const [ticketNotes, setTicketNotes] = useState<Record<number, string>>({});
+
+  // Song-request ("Recommend a song") moderation state
+  const [requestStatusFilter, setRequestStatusFilter] = useState('all');
+  const [requestSearch, setRequestSearch] = useState('');
+  const [requestNotes, setRequestNotes] = useState<Record<number, string>>({});
 
   // Insights / analytics dashboard state
   const [insights, setInsights] = useState<AdminInsights | null>(null);
@@ -237,7 +244,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, onCatal
 
   const loadAdminData = async () => {
     try {
-      const [statsData, takedownData, auditData, stationsData, artistsData, genresData, categoriesData] = await Promise.all([
+      const [statsData, takedownData, auditData, stationsData, artistsData, genresData, categoriesData, requestData] = await Promise.all([
         api.getAdminStats(),
         api.getAdminTakedowns(),
         api.getAdminAuditLogs(),
@@ -245,6 +252,8 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, onCatal
         api.getAdminArtists(),
         api.getAdminGenres(),
         api.getAdminGenreCategories(),
+        // Tolerate a pre-0009 database: never let a missing RPC blank the panel.
+        api.getAdminSongRequests().catch(() => ({ count: 0, results: [], available_statuses: [] })),
       ]);
       setStats(statsData);
       setTakedowns(takedownData.results);
@@ -254,6 +263,8 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, onCatal
       setArtists(artistsData);
       setGenres(genresData);
       setCategories(categoriesData);
+      setSongRequests(requestData.results);
+      if (requestData.available_statuses?.length) setSongRequestStatuses(requestData.available_statuses);
     } catch (err) {
       console.error('Failed to load admin data', err);
     }
@@ -958,6 +969,48 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, onCatal
     }
   };
 
+  // ---- Song requests ("Recommend a song") ----
+
+  const loadSongRequests = async (overrides: { status?: string; search?: string } = {}) => {
+    try {
+      const data = await api.getAdminSongRequests({
+        status: overrides.status ?? requestStatusFilter,
+        search: overrides.search ?? requestSearch,
+      });
+      setSongRequests(data.results);
+      if (data.available_statuses?.length) setSongRequestStatuses(data.available_statuses);
+    } catch (err) {
+      console.error('Failed to load song requests', err);
+    }
+  };
+
+  const youtubeIdOf = (url: string) => {
+    const m = url.match(/(?:v=|youtu\.be\/|shorts\/|embed\/)([A-Za-z0-9_-]{6,})/);
+    return m ? m[1] : '';
+  };
+
+  const handleSongRequestDecision = async (id: number, statusChoice: string) => {
+    const notes = (requestNotes[id] ?? '').trim() || `Reviewed by admin: ${statusChoice}`;
+    try {
+      await api.handleSongRequestAction(id, statusChoice, notes);
+      setRequestNotes((prev) => ({ ...prev, [id]: '' }));
+      await loadSongRequests();
+    } catch {
+      alert('Failed to update song suggestion.');
+    }
+  };
+
+  /** Hand a suggestion to the Add Track form so it can be promoted to the catalog. */
+  const prefillSongFromRequest = (req: SongRequestTicket) => {
+    setNewTitle(req.title);
+    setNewTitleNe('');
+    const vid = youtubeIdOf(req.youtube_url);
+    if (vid) setNewVideoId(vid);
+    if (req.genre) setNewGenreId(String(req.genre));
+    setSongSuccessMsg(null);
+    setActiveTab('addSong');
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -1073,6 +1126,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, onCatal
                   { id: 'taxonomy', label: `Taxonomy (${genres.length})`, icon: FolderTree },
                   { id: 'stations', label: `Stations (${stations.length})`, icon: Radio },
                   { id: 'takedowns', label: `Tickets (${takedowns.filter(t => t.status === 'pending').length})`, icon: AlertTriangle },
+                  { id: 'requests', label: `Requests (${songRequests.filter(r => r.status === 'pending').length})`, icon: Inbox },
                   { id: 'security', label: 'Security', icon: Lock },
                   { id: 'audit', label: 'Audit Log', icon: FileText },
                 ].map((tab) => {
@@ -2776,6 +2830,129 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, onCatal
                               Reopen / Under Review
                             </button>
                           )}
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Song requests: listener "Recommend a song" suggestions */}
+              {activeTab === 'requests' && (
+                <div className="space-y-4">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <select
+                      value={requestStatusFilter}
+                      onChange={(e) => { setRequestStatusFilter(e.target.value); loadSongRequests({ status: e.target.value }); }}
+                      className="px-3 py-1.5 rounded-full bg-black border border-white/15 text-neutral-300 text-xs focus:border-red-500 focus:outline-none"
+                    >
+                      <option value="all">All statuses</option>
+                      {(songRequestStatuses.length ? songRequestStatuses : ['pending', 'under_review', 'added', 'rejected']).map((status) => (
+                        <option key={status} value={status}>{status.replace('_', ' ')}</option>
+                      ))}
+                    </select>
+                    <div className="relative">
+                      <Search className="w-3.5 h-3.5 text-neutral-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="text"
+                        value={requestSearch}
+                        onChange={(e) => setRequestSearch(e.target.value)}
+                        onBlur={() => loadSongRequests({ search: requestSearch })}
+                        onKeyDown={(e) => { if (e.key === 'Enter') loadSongRequests({ search: requestSearch }); }}
+                        placeholder="Search title, artist, requester..."
+                        className="pl-8 pr-3 py-1.5 rounded-full bg-black border border-white/15 text-white text-xs focus:border-red-500 focus:outline-none w-56"
+                      />
+                    </div>
+                    <button onClick={() => loadSongRequests()} className="p-1.5 rounded-full text-neutral-400 hover:text-white hover:bg-white/5 transition-colors" title="Refresh suggestions">
+                      <RefreshCw className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+
+                  <div className="space-y-4 max-h-[46vh] overflow-y-auto">
+                    {songRequests.length === 0 ? (
+                      <p className="text-xs text-neutral-400 text-center py-8">No song suggestions match.</p>
+                    ) : (
+                      songRequests.map((req) => (
+                        <div key={req.id} className="p-4 rounded-2xl bg-black border border-white/10 space-y-3">
+                          <div className="flex flex-wrap items-center justify-between gap-3">
+                            <span className="text-xs font-mono text-red-500 font-bold">
+                              REQUEST #{req.id} • {req.status.replace('_', ' ').toUpperCase()}
+                            </span>
+                            {req.festival_emoji && (
+                              <span className="text-xs px-2.5 py-0.5 rounded-full font-mono bg-neutral-900 text-neutral-300 border border-white/10">
+                                {req.festival_emoji} {req.festival_name}
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-sm font-serif font-bold text-white">
+                            {req.title}{req.artist ? ` — ${req.artist}` : ''}
+                          </p>
+                          {req.youtube_url && (
+                            <a
+                              href={req.youtube_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1.5 text-xs text-red-400 hover:text-red-300 break-all"
+                            >
+                              <ExternalLink className="w-3 h-3 flex-shrink-0" /> {req.youtube_url}
+                            </a>
+                          )}
+                          {req.note && (
+                            <p className="text-xs text-neutral-300 bg-neutral-900 p-2.5 rounded-xl border border-white/5 whitespace-pre-wrap">
+                              {req.note}
+                            </p>
+                          )}
+                          <div className="text-xs text-neutral-400 font-mono">
+                            From: {req.requester_name}{req.requester_email ? ` (${req.requester_email})` : ''} · {new Date(req.created_at).toLocaleString()}
+                          </div>
+                          {req.admin_notes && (
+                            <div className="text-xs text-neutral-400 font-mono">Notes: {req.admin_notes}</div>
+                          )}
+                          <input
+                            type="text"
+                            value={requestNotes[req.id] ?? ''}
+                            onChange={(e) => setRequestNotes((prev) => ({ ...prev, [req.id]: e.target.value }))}
+                            placeholder="Optional admin note..."
+                            className="w-full px-3 py-1.5 rounded-full bg-neutral-900 border border-white/15 text-white text-xs focus:border-red-500 focus:outline-none"
+                          />
+                          <div className="flex flex-wrap items-center gap-2 pt-1">
+                            {(req.status === 'pending' || req.status === 'under_review') && (
+                              <>
+                                <button
+                                  onClick={() => handleSongRequestDecision(req.id, 'under_review')}
+                                  className="px-3 py-1.5 rounded-full bg-neutral-800 hover:bg-neutral-700 text-white text-xs"
+                                >
+                                  Mark Under Review
+                                </button>
+                                <button
+                                  onClick={() => handleSongRequestDecision(req.id, 'added')}
+                                  className="px-3 py-1.5 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold"
+                                >
+                                  Mark Added
+                                </button>
+                                <button
+                                  onClick={() => handleSongRequestDecision(req.id, 'rejected')}
+                                  className="px-3 py-1.5 rounded-full bg-neutral-900 hover:bg-neutral-800 text-neutral-400 text-xs"
+                                >
+                                  Reject
+                                </button>
+                              </>
+                            )}
+                            <button
+                              onClick={() => prefillSongFromRequest(req)}
+                              className="px-3 py-1.5 rounded-full bg-red-600 hover:bg-red-500 text-white text-xs font-bold"
+                            >
+                              Add to Catalog →
+                            </button>
+                            {req.status !== 'pending' && req.status !== 'under_review' && (
+                              <button
+                                onClick={() => handleSongRequestDecision(req.id, 'under_review')}
+                                className="px-3 py-1.5 rounded-full bg-neutral-900 hover:bg-neutral-800 text-neutral-300 text-xs"
+                              >
+                                Reopen
+                              </button>
+                            )}
+                          </div>
                         </div>
                       ))
                     )}
