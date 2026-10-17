@@ -36,7 +36,6 @@ export const Home: React.FC<HomeProps> = ({
   const { locale } = useI18n();
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const resolvedCategories = resolveCategories(categories || []);
-  const [hoveredCategory, setHoveredCategory] = useState<string | null>(null);
   const availableSongs = [...featuredSongs, ...newSongs, ...trendingSongs];
 
   const faqs = [
@@ -137,8 +136,6 @@ export const Home: React.FC<HomeProps> = ({
                 <div
                   key={category.slug}
                   className="space-y-3"
-                  onMouseEnter={() => setHoveredCategory(category.slug)}
-                  onMouseLeave={() => setHoveredCategory(null)}
                 >
                   <div className="flex items-center justify-between gap-3">
                     <h3 className="text-xs font-mono font-bold uppercase tracking-[0.3em] text-neutral-500">
@@ -176,35 +173,8 @@ export const Home: React.FC<HomeProps> = ({
                         )}
                       </div>
                     </div>
-                  ) : hoveredCategory === category.slug ? (
-                    // Show song list preview on hover for other categories
-                    <div className="mt-2">
-                      <h4 className="font-semibold text-white mb-1">
-                        Songs in {category.label}
-                      </h4>
-                      <div className="max-h-32 overflow-y-auto space-y-2">
-                        {categorySongs.slice(0, 5).map((song) => (
-                          <div key={song.id} className="flex items-start gap-2">
-                            <div className="w-2 h-2 bg-red-400 rounded mt-0.5"></div>
-                            <div>
-                              <div className="text-white">{song.title}</div>
-                              {song.artist_name && (
-                                <div className="text-sm text-gray-400">
-                                  {song.artist_name}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        ))}
-                        {categorySongs.length > 5 && (
-                          <div className="text-sm text-gray-400 text-center mt-1">
-                            +{categorySongs.length - 5} more
-                          </div>
-                        )}
-                      </div>
-                    </div>
                   ) : (
-                    // Show genre grid by default
+                    // Show genre grid
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
                       {categoryGenres.map((g) => (
                         <button
