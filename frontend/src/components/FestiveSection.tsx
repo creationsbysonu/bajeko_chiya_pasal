@@ -4,7 +4,8 @@ import { api } from '../services/api';
 import { FestivalCalendarEntry, FestivalSong, Song } from '../types';
 import { useI18n } from '../context/I18nContext';
 import { usePlayer } from '../context/PlayerContext';
-import { Play, Pause, Music, CalendarDays, Sparkles, ChevronRight, Flame } from 'lucide-react';
+import { Play, Pause, Music, CalendarDays, Sparkles, ChevronRight, Flame, Camera } from 'lucide-react';
+import { festivalImage } from '../utils/festivalImagery';
 
 /* --------------------------------------------------------------------------- */
 /* Helpers                                                                     */
@@ -199,19 +200,33 @@ const FestivalChip: React.FC<{
   const status = countdownFor(entry, locale, t);
   const tone = TONE_STYLES[status.tone];
 
+  const img = festivalImage(entry.slug);
+
   return (
     <button
       onClick={() => onSelect(entry.slug)}
       aria-pressed={isActive}
-      className={`group/chip relative flex-shrink-0 w-44 text-left rounded-2xl border p-3.5 transition-all duration-200 ease-out ${
+      className={`group/chip relative flex-shrink-0 w-44 text-left rounded-2xl border overflow-hidden transition-all duration-200 ease-out ${
         isActive
           ? `${tone.border} bg-white/8 shadow-lg scale-[1.02]`
           : 'border-white/8 bg-white/3 hover:bg-white/6 hover:border-white/20'
       } focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500`}
     >
-      <div className="flex items-center justify-between gap-2 mb-2">
-        <span className="text-xl leading-none">{entry.emoji}</span>
-        <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-full ${tone.pill}`}>
+      <div className="relative h-16">
+        {img ? (
+          <img
+            src={img.url}
+            alt=""
+            aria-hidden
+            loading="lazy"
+            className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 ease-out group-hover/chip:scale-105"
+          />
+        ) : (
+          <div className={`absolute inset-0 bg-gradient-to-br ${tone.glow} to-black`} />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-black/45" />
+        <span className="absolute top-2 left-2 text-xl leading-none drop-shadow">{entry.emoji}</span>
+        <span className={`absolute top-2 right-2 text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-full ${tone.pill}`}>
           {entry.is_active_window
             ? (ne ? 'अहिले' : 'Now')
             : entry.days_until_start <= 0
@@ -219,12 +234,14 @@ const FestivalChip: React.FC<{
               : `${entry.days_until_start}d`}
         </span>
       </div>
-      <p className={`font-serif text-sm font-black leading-snug truncate ${isActive ? 'text-white' : 'text-neutral-200'}`}>
-        {ne ? entry.name_ne || entry.name : entry.name}
-      </p>
-      <p className="text-[11px] font-mono text-neutral-500 mt-1 truncate">
-        {status.detail} · {entry.song_count} {ne ? t.festival.tracksLabelNe : t.festival.tracksLabel}
-      </p>
+      <div className="p-3">
+        <p className={`font-serif text-sm font-black leading-snug truncate ${isActive ? 'text-white' : 'text-neutral-200'}`}>
+          {ne ? entry.name_ne || entry.name : entry.name}
+        </p>
+        <p className="text-[11px] font-mono text-neutral-500 mt-1 truncate">
+          {status.detail} · {entry.song_count} {ne ? t.festival.tracksLabelNe : t.festival.tracksLabel}
+        </p>
+      </div>
     </button>
   );
 };
@@ -292,6 +309,9 @@ export const FestiveSection: React.FC = () => {
   const tone = status ? TONE_STYLES[status.tone] : TONE_STYLES.later;
   const vibeWindow = Boolean(current && (current.is_active_window || current.is_imminent));
 
+  const curated = festivalImage(current?.slug);
+  const heroImage = curated?.url ?? (playlist[0] ? artworkFor(playlist[0]) : null);
+
   const playMix = () => {
     if (!playlist.length) return;
     const [first, ...rest] = playlist.map(toPlayableSong);
@@ -324,8 +344,22 @@ export const FestiveSection: React.FC = () => {
           {/* Spotlight: the next festival and its mood-ready mix */}
           <Reveal variant="up" delay={40}>
             <div
-              className={`relative overflow-hidden rounded-3xl border ${tone.border} bg-gradient-to-br ${tone.glow} via-black/60 to-black/80 pd-dark-zone`}
+              className={`relative overflow-hidden rounded-3xl border ${tone.border} bg-black pd-dark-zone`}
             >
+              {heroImage ? (
+                <>
+                  <img
+                    src={heroImage}
+                    alt=""
+                    aria-hidden
+                    className="absolute inset-0 w-full h-full object-cover opacity-70"
+                  />
+                  <div className={`absolute inset-0 bg-gradient-to-br ${tone.glow} via-black/70 to-black/85`} />
+                  <div className="absolute inset-0 bg-gradient-to-r from-black via-black/80 to-black/35" />
+                </>
+              ) : (
+                <div className={`absolute inset-0 bg-gradient-to-br ${tone.glow} via-black/60 to-black/80`} />
+              )}
               <span
                 aria-hidden
                 className="pointer-events-none absolute -right-6 -bottom-10 text-[10rem] leading-none opacity-[0.07] select-none"
@@ -394,6 +428,18 @@ export const FestiveSection: React.FC = () => {
                       {current.song_count} {ne ? t.festival.dedicatedLabelNe : t.festival.dedicatedLabel}
                     </span>
                   </div>
+
+                  {curated && (
+                    <a
+                      href={curated.creditUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="mt-3 inline-flex items-center gap-1.5 text-[10px] font-mono text-neutral-500 hover:text-neutral-300 transition-colors self-start"
+                    >
+                      <Camera className="w-3 h-3" />
+                      {curated.credit} · {curated.license} · Wikimedia Commons
+                    </a>
+                  )}
                 </div>
 
                 {/* Right: the playlist for this festival */}
