@@ -5,7 +5,7 @@ import { Reveal } from '../components/motion/Reveal';
 import { Station, Song, Genre, GenreCategory } from '../types';
 import { useI18n } from '../context/I18nContext';
 import { ChevronDown, ChevronUp } from 'lucide-react';
-import { groupGenresByCategory } from '../utils/genreTaxonomy';
+import { groupGenresByCategory, resolveCategories } from '../utils/genreTaxonomy';
 import { RecommendSongSection } from '../components/RecommendSongSection';
 
 interface HomeProps {
@@ -35,7 +35,9 @@ export const Home: React.FC<HomeProps> = ({
 }) => {
   const { locale } = useI18n();
   const [openFaq, setOpenFaq] = useState<number | null>(null);
-  const genreGroups = groupGenresByCategory(genres, categories);
+  const resolvedCategories = resolveCategories(categories || []);
+  const [hoveredCategory, setHoveredCategory] = useState<string | null>(null);
+  const availableSongs = [...featuredSongs, ...newSongs, ...trendingSongs];
 
   const faqs = [
     {
@@ -71,80 +73,87 @@ export const Home: React.FC<HomeProps> = ({
 
       {/* 2. Main content column (Wall of Worlds → Decades → …) */}
       <Reveal variant="up" delay={60} className="space-y-16 pb-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* 2. The wall of worlds: Tea Shop · Festival calendar · Trending · New · Featured */}
-        <HomeShowcase
-          stations={stations}
-          trendingSongs={trendingSongs}
-          newSongs={newSongs}
-          featuredSongs={featuredSongs}
-          onExploreCatalog={onExploreCatalog}
-        />
+            <section className="space-y-4">
+              <div className="text-center mb-8">
+                <div className="flex items-center justify-center gap-2 text-xs font-mono text-neutral-500 uppercase tracking-widest mb-1">
+                  <span>DECADES</span>
+                </div>
+                <h2 className="font-serif text-2xl font-black text-cream-100">
+                  {locale === 'ne' ? 'युगान्तर संगीत' : 'Decades Music'}
+                </h2>
+              </div>
 
-        {/* 4. Featured chart now lives in the HomeShowcase wall above */}
-
-        {/* 5. Browse by Decade */}
-        <section className="mt-10">
-          <div className="mb-6">
-            <div className="flex items-center gap-2 text-xs font-mono text-neutral-500 uppercase tracking-widest mb-1">
-              <span>EXPLORE BY ERA</span>
-            </div>
-            <h2 className="font-serif text-2xl font-black text-white drop-shadow-sm">
-              {locale === 'ne' ? 'दशक अनुसार संगीत खोज्नुहोस्' : 'Explore by Musical Era'}
-            </h2>
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-3">
+              <div className="space-y-6">
             {decades.map((d) => (
               <button
                 key={d.decade}
                 onClick={() => onSelectDecade(d.decade)}
                 className="pd-lift p-4 rounded-2xl bg-black/60 hover:bg-red-600 text-center transition-all duration-300 ease-out hover:scale-105 active:scale-95 border border-white/10 hover:border-red-500/50 shadow-md group"
               >
-                <span className="font-serif text-lg font-bold block text-white group-hover:text-white">{d.decade}</span>
-                <span className="text-xs font-mono text-neutral-500 group-hover:text-white/70 transition-colors">{d.count} songs</span>
-              </button>
-            ))}
-          </div>
-        </section>
-
-        {/* 6. Browse by Genre Taxonomy */}
-        <section className="mt-10">
-          <div className="mb-6">
-            <div className="flex items-center gap-2 text-xs font-mono text-neutral-500 uppercase tracking-widest mb-1">
-              <span>BROWSE GENRES</span>
+                <span className="font-serif text-lg font-bold block text-white group-hover:text-white">{d.decade}</span>                </button>
+              ))}
             </div>
-            <h2 className="font-serif text-2xl font-black text-white drop-shadow-sm">
-              {locale === 'ne' ? 'सांगीतिक विधा वर्गीकरण' : 'Browse Musical Genres'}
-            </h2>
-          </div>
+          </section>
+             {resolvedCategories.map((category) => {
+               const categoryGenres = genres.filter((g) => g.category === category.slug);
+               return (
+                 <div key={category.slug} className="space-y-3">
+                   <div className="flex items-center justify-between gap-3">
+                     <h3 className="text-xs font-mono font-bold uppercase tracking-[0.3em] text-neutral-500">{category.label}</h3>
+                     <span className="text-xs font-mono text-neutral-600">{categoryGenres.length} genres</span>
+                   </div>
+                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                     {categoryGenres.map((g) => (
+                       <button
+                         key={g.slug}
+                         onClick={() => onSelectGenre(g.slug)}
+                         className="pd-lift p-3.5 rounded-xl bg-black hover:bg-white/4 border border-white/8 hover:border-white/20 text-left transition-all duration-200 ease-out hover:scale-105 active:scale-95 group"
+                       >
+                         <h4 className="font-serif text-xs font-bold text-white truncate group-hover:text-red-400 transition-colors">
+                           {locale === 'ne' ? g.name_ne || g.name : g.name}
+                         </h4>
+                         <p className="text-xs text-red-400 font-mono mt-0.5 font-bold">
+                           {category.label.toUpperCase()}
+                         </p>
+                       </button>
+                     ))}
+                   </div>
+                 </div>
+               );
+             })}
+           </div>
+         </section>
 
-          <div className="space-y-6">
-            {genreGroups.map((group) => (
-              <div key={group.category} className="space-y-3">
-                <div className="flex items-center justify-between gap-3">
-                  <h3 className="text-xs font-mono font-bold uppercase tracking-[0.3em] text-neutral-500">{group.label}</h3>
-                  <span className="text-xs font-mono text-neutral-600">{group.genres.length} genres</span>
-                </div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-                  {group.genres.map((g) => (
-                    <button
-                      key={g.slug}
-                      onClick={() => onSelectGenre(g.slug)}
-                      className="pd-lift p-3.5 rounded-xl bg-black hover:bg-white/4 border border-white/8 hover:border-white/20 text-left transition-all duration-200 ease-out hover:scale-105 active:scale-95 group"
-                    >
-                      <h4 className="font-serif text-xs font-bold text-white truncate group-hover:text-red-400 transition-colors">
-                        {locale === 'ne' ? g.name_ne || g.name : g.name}
-                      </h4>
-                      <p className="text-xs text-red-400 font-mono mt-0.5 font-bold">
-                        {group.label.toUpperCase()}
-                      </p>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
+           <div className="space-y-6">
+             {resolvedCategories.map((category) => {
+               const categoryGenres = genres.filter((g) => g.category === category.slug);
+               return (
+                 <div key={category.slug} className="space-y-3">
+                   <div className="flex items-center justify-between gap-3">
+                     <h3 className="text-xs font-mono font-bold uppercase tracking-[0.3em] text-neutral-500">{category.label}</h3>
+                     <span className="text-xs font-mono text-neutral-600">{categoryGenres.length} genres</span>
+                   </div>
+                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                     {categoryGenres.map((g) => (
+                       <button
+                         key={g.slug}
+                         onClick={() => onSelectGenre(g.slug)}
+                         className="pd-lift p-3.5 rounded-xl bg-black hover:bg-white/4 border border-white/8 hover:border-white/20 text-left transition-all duration-200 ease-out hover:scale-105 active:scale-95 group"
+                       >
+                         <h4 className="font-serif text-xs font-bold text-white truncate group-hover:text-red-400 transition-colors">
+                           {locale === 'ne' ? g.name_ne || g.name : g.name}
+                         </h4>
+                         <p className="text-xs text-red-400 font-mono mt-0.5 font-bold">
+                           {category.label.toUpperCase()}
+                         </p>
+                       </button>
+                     ))}
+                   </div>
+                 </div>
+               );
+             })}
+           </div>
+         </section>
 
         {/* 6. FAQ Accordion */}
         <section className="mt-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
