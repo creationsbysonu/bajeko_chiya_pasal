@@ -88,9 +88,9 @@ try {
 }
 
 const songs = await q('select count(*)::int as n from public.songs');
-check('upgrade yields 273 songs', songs[0].n === 273, `got ${songs[0].n}`);
+check('upgrade yields 286 songs', songs[0].n === 286, `got ${songs[0].n}`);
 const artists = await q('select count(*)::int as n from public.artists');
-check('upgrade yields 159 artists', artists[0].n === 159, `got ${artists[0].n}`);
+check('upgrade yields 163 artists', artists[0].n === 163, `got ${artists[0].n}`);
 
 const festivals = (await q('select public.get_festival_categories() as f'))[0].f;
 check('upgrade ships 23 festivals', Array.isArray(festivals) && festivals.length === 23, `got ${festivals?.length}`);
@@ -113,7 +113,7 @@ check('upgrade adds the song request workflow', typeof suggestion?.request_id ==
 // 3. Idempotency: re-running the upgrade must be a no-op, not an error.
 await db.exec(readFileSync(join(supa, 'deploy', 'upgrade_festive.sql'), 'utf8'));
 const songs2 = await q('select count(*)::int as n from public.songs');
-check('upgrade is idempotent', songs2[0].n === 273, `got ${songs2[0].n}`);
+check('upgrade is idempotent', songs2[0].n === 286, `got ${songs2[0].n}`);
 
 await db.close();
 

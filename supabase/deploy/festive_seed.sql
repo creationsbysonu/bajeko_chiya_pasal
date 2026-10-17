@@ -138,7 +138,11 @@ insert into public.artists (id, display_name, display_name_ne, biography, biogra
     (156, 'Raz Rai', '', 'Raz Rai — festival artist featured on Purano Dhun.', '', '', 'verified', '2026-10-17T12:00:00.000000', '2026-10-17T12:00:00.000000'),
     (157, 'Ahmed Shah', '', 'Ahmed Shah — festival artist featured on Purano Dhun.', '', '', 'verified', '2026-10-17T12:00:00.000000', '2026-10-17T12:00:00.000000'),
     (158, 'Nikesh Rai', '', 'Nikesh Rai — festival artist featured on Purano Dhun.', '', '', 'verified', '2026-10-17T12:00:00.000000', '2026-10-17T12:00:00.000000'),
-    (159, 'Binod Kham', '', 'Binod Kham — festival artist featured on Purano Dhun.', '', '', 'verified', '2026-10-17T12:00:00.000000', '2026-10-17T12:00:00.000000')
+    (159, 'Binod Kham', '', 'Binod Kham — festival artist featured on Purano Dhun.', '', '', 'verified', '2026-10-17T12:00:00.000000', '2026-10-17T12:00:00.000000'),
+    (160, 'Armed Police Force Nepal', '', 'Armed Police Force Nepal — festival artist featured on Purano Dhun.', '', '', 'verified', '2026-10-17T12:00:00.000000', '2026-10-17T12:00:00.000000'),
+    (161, 'Bhawana Music Solution', '', 'Bhawana Music Solution — festival artist featured on Purano Dhun.', '', '', 'verified', '2026-10-17T12:00:00.000000', '2026-10-17T12:00:00.000000'),
+    (162, 'Dharma Darshan Bhajan', '', 'Dharma Darshan Bhajan — festival artist featured on Purano Dhun.', '', '', 'verified', '2026-10-17T12:00:00.000000', '2026-10-17T12:00:00.000000'),
+    (163, 'Swati Mishra', '', 'Swati Mishra — festival artist featured on Purano Dhun.', '', '', 'verified', '2026-10-17T12:00:00.000000', '2026-10-17T12:00:00.000000')
 on conflict (id) do nothing;
 
 -- Festive songs (1001-1061)
@@ -349,7 +353,20 @@ insert into public.songs (id, title, title_ne, romanized_title, artist_id, featu
     (1204, 'Happy Christmas', '', 'Happy Christmas', 56, '', '', '', '', '', 2020, 'Nepali', 13, '["festive", "christmas", "devotional", "peaceful"]'::jsonb, '2020s', NULL, 'https://img.youtube.com/vi/yOGrHxSYiEQ/hqdefault.jpg', 'youtube', 'yOGrHxSYiEQ', 'https://www.youtube.com/watch?v=yOGrHxSYiEQ', 'https://www.youtube.com/watch?v=yOGrHxSYiEQ', 'Adrian Dewan Official', 'verified', 'published', 3000, false, 0, '2026-10-17T12:00:00.000000', '2026-10-17T12:00:00.000000'),
     (1205, 'Eid Mubarak (Nasheed)', '', 'Eid Mubarak (Nasheed)', 157, '', '', '', '', '', 2022, 'Urdu', 13, '["festive", "eid", "devotional", "peaceful"]'::jsonb, '2020s', NULL, 'https://img.youtube.com/vi/0ap9lQcM6XQ/hqdefault.jpg', 'youtube', '0ap9lQcM6XQ', 'https://www.youtube.com/watch?v=0ap9lQcM6XQ', 'https://www.youtube.com/watch?v=0ap9lQcM6XQ', 'Heera Gold', 'verified', 'published', 3000, false, 0, '2026-10-17T12:00:00.000000', '2026-10-17T12:00:00.000000'),
     (1206, 'Taan Bunne Tayama Khiyama (Sakela Sili)', '', 'Taan Bunne Tayama Khiyama (Sakela Sili)', 158, '', '', '', '', '', 2019, 'Nepali', 3, '["festive", "udhauli-ubhauli", "sakela", "kirat", "dance"]'::jsonb, '2010s', NULL, 'https://img.youtube.com/vi/xrGKGe3QCgY/hqdefault.jpg', 'youtube', 'xrGKGe3QCgY', 'https://www.youtube.com/watch?v=xrGKGe3QCgY', 'https://www.youtube.com/watch?v=xrGKGe3QCgY', 'Nikesh Rai', 'verified', 'published', 3000, false, 0, '2026-10-17T12:00:00.000000', '2026-10-17T12:00:00.000000'),
-    (1207, 'Sumnima Ra Paruhang', '', 'Sumnima Ra Paruhang', 159, '', '', '', '', '', 2019, 'Nepali', 3, '["festive", "udhauli-ubhauli", "sakela", "kirat"]'::jsonb, '2010s', NULL, 'https://img.youtube.com/vi/BdNqygXjkQA/hqdefault.jpg', 'youtube', 'BdNqygXjkQA', 'https://www.youtube.com/watch?v=BdNqygXjkQA', 'https://www.youtube.com/watch?v=BdNqygXjkQA', 'Budha Subba Digital', 'verified', 'published', 3000, false, 0, '2026-10-17T12:00:00.000000', '2026-10-17T12:00:00.000000')
+    (1207, 'Sumnima Ra Paruhang', '', 'Sumnima Ra Paruhang', 159, '', '', '', '', '', 2019, 'Nepali', 3, '["festive", "udhauli-ubhauli", "sakela", "kirat"]'::jsonb, '2010s', NULL, 'https://img.youtube.com/vi/BdNqygXjkQA/hqdefault.jpg', 'youtube', 'BdNqygXjkQA', 'https://www.youtube.com/watch?v=BdNqygXjkQA', 'https://www.youtube.com/watch?v=BdNqygXjkQA', 'Budha Subba Digital', 'verified', 'published', 3000, false, 0, '2026-10-17T12:00:00.000000', '2026-10-17T12:00:00.000000'),
+    (1208, 'Dashain Dikpal', '', 'Dashain Dikpal', 118, '', '', '', '', '', 1998, 'Nepali', 10, '["festive", "dashain", "classic", "popular"]'::jsonb, '1990s', NULL, 'https://img.youtube.com/vi/hsLsa1pYfxg/hqdefault.jpg', 'youtube', 'hsLsa1pYfxg', 'https://www.youtube.com/watch?v=hsLsa1pYfxg', 'https://www.youtube.com/watch?v=hsLsa1pYfxg', 'HiTechEntertainment', 'verified', 'published', 14534, false, 0, '2026-10-17T12:00:00.000000', '2026-10-17T12:00:00.000000'),
+    (1209, 'Faujilai Kun Ho Dashain Kun Ho Chad Tihar', '', 'Faujilai Kun Ho Dashain Kun Ho Chad Tihar', 160, '', '', '', '', '', 2020, 'Nepali', 10, '["festive", "dashain", "popular"]'::jsonb, '2020s', NULL, 'https://img.youtube.com/vi/92NmMcS1w0o/hqdefault.jpg', 'youtube', '92NmMcS1w0o', 'https://www.youtube.com/watch?v=92NmMcS1w0o', 'https://www.youtube.com/watch?v=92NmMcS1w0o', 'Armed Police Force Nepal, (Samarpan Rastraka Lagi)', 'verified', 'published', 5952, false, 0, '2026-10-17T12:00:00.000000', '2026-10-17T12:00:00.000000'),
+    (1210, 'Rato Tika Siraima Jamara', '', 'Rato Tika Siraima Jamara', 161, '', '', '', '', '', 2022, 'Nepali', 10, '["festive", "dashain", "traditional"]'::jsonb, '2020s', NULL, 'https://img.youtube.com/vi/B77Tmsx-Ckg/hqdefault.jpg', 'youtube', 'B77Tmsx-Ckg', 'https://www.youtube.com/watch?v=B77Tmsx-Ckg', 'https://www.youtube.com/watch?v=B77Tmsx-Ckg', 'Bhawana Music Solution', 'verified', 'published', 9823, false, 0, '2026-10-17T12:00:00.000000', '2026-10-17T12:00:00.000000'),
+    (1211, 'Bhaileni Aye Aagana', '', 'Bhaileni Aye Aagana', 120, '', '', '', '', '', 1995, 'Nepali', 10, '["festive", "tihar", "bhailo", "classic"]'::jsonb, '1990s', NULL, 'https://img.youtube.com/vi/gPYRNCHsl6M/hqdefault.jpg', 'youtube', 'gPYRNCHsl6M', 'https://www.youtube.com/watch?v=gPYRNCHsl6M', 'https://www.youtube.com/watch?v=gPYRNCHsl6M', 'HighlightsNepal', 'verified', 'published', 6645, false, 0, '2026-10-17T12:00:00.000000', '2026-10-17T12:00:00.000000'),
+    (1212, 'Saptarangi Tika', '', 'Saptarangi Tika', 66, '', '', '', '', '', 2019, 'Nepali', 10, '["festive", "tihar", "deusi", "bhailo"]'::jsonb, '2010s', NULL, 'https://img.youtube.com/vi/eZwQsUkPyPU/hqdefault.jpg', 'youtube', 'eZwQsUkPyPU', 'https://www.youtube.com/watch?v=eZwQsUkPyPU', 'https://www.youtube.com/watch?v=eZwQsUkPyPU', 'Jigme Media', 'verified', 'published', 6398, false, 0, '2026-10-17T12:00:00.000000', '2026-10-17T12:00:00.000000'),
+    (1213, 'Nidharama Larkayera Saptarangi Tiko', '', 'Nidharama Larkayera Saptarangi Tiko', 118, '', '', '', '', '', 2000, 'Nepali', 10, '["festive", "tihar", "classic"]'::jsonb, '2000s', NULL, 'https://img.youtube.com/vi/K_5sVddaXh4/hqdefault.jpg', 'youtube', 'K_5sVddaXh4', 'https://www.youtube.com/watch?v=K_5sVddaXh4', 'https://www.youtube.com/watch?v=K_5sVddaXh4', 'HiTechEntertainment', 'verified', 'published', 4220, false, 0, '2026-10-17T12:00:00.000000', '2026-10-17T12:00:00.000000'),
+    (1214, 'Om Jai Laxmi Mata (Nepali Laxmi Aarati)', '', 'Om Jai Laxmi Mata (Nepali Laxmi Aarati)', 162, '', '', '', '', '', 2018, 'Nepali', 13, '["festive", "tihar", "devotional", "bhajan", "aarti"]'::jsonb, '2010s', NULL, 'https://img.youtube.com/vi/j0V58Gs2Fqc/hqdefault.jpg', 'youtube', 'j0V58Gs2Fqc', 'https://www.youtube.com/watch?v=j0V58Gs2Fqc', 'https://www.youtube.com/watch?v=j0V58Gs2Fqc', 'Dharma Darshan Bhajan', 'verified', 'published', 3000, false, 0, '2026-10-17T12:00:00.000000', '2026-10-17T12:00:00.000000'),
+    (1215, 'Adharma Aaj Unkai Chha Geet (Bahilo Geet)', '', 'Adharma Aaj Unkai Chha Geet (Bahilo Geet)', 118, '', '', '', '', '', 1998, 'Nepali', 10, '["festive", "tihar", "bhailo", "classic"]'::jsonb, '1990s', NULL, 'https://img.youtube.com/vi/5lrYa2ThysY/hqdefault.jpg', 'youtube', '5lrYa2ThysY', 'https://www.youtube.com/watch?v=5lrYa2ThysY', 'https://www.youtube.com/watch?v=5lrYa2ThysY', 'HiTechEntertainment', 'verified', 'published', 3000, false, 0, '2026-10-17T12:00:00.000000', '2026-10-17T12:00:00.000000'),
+    (1216, 'Kaanch Hi Baans Ke Bahangiya', '', 'Kaanch Hi Baans Ke Bahangiya', 131, '', '', '', '', '', 2005, 'Hindi', 13, '["festive", "chhath", "devotional", "sun", "classic"]'::jsonb, '2000s', NULL, 'https://img.youtube.com/vi/Eyq7vfxu4iA/hqdefault.jpg', 'youtube', 'Eyq7vfxu4iA', 'https://www.youtube.com/watch?v=Eyq7vfxu4iA', 'https://www.youtube.com/watch?v=Eyq7vfxu4iA', 'T-Series Bhakti Sagar', 'verified', 'published', 48000, false, 0, '2026-10-17T12:00:00.000000', '2026-10-17T12:00:00.000000'),
+    (1217, 'Kelwa Ke Paat Par', '', 'Kelwa Ke Paat Par', 36, '', '', '', '', '', 2006, 'Hindi', 13, '["festive", "chhath", "devotional", "sun", "classic"]'::jsonb, '2000s', NULL, 'https://img.youtube.com/vi/knZ8b5YnQiY/hqdefault.jpg', 'youtube', 'knZ8b5YnQiY', 'https://www.youtube.com/watch?v=knZ8b5YnQiY', 'https://www.youtube.com/watch?v=knZ8b5YnQiY', 'T-Series Bhakti Sagar', 'verified', 'published', 48000, false, 0, '2026-10-17T12:00:00.000000', '2026-10-17T12:00:00.000000'),
+    (1218, 'Pahile Pahil Chhathi Maiya', '', 'Pahile Pahil Chhathi Maiya', 36, '', '', '', '', '', 2010, 'Hindi', 13, '["festive", "chhath", "devotional", "sun", "classic"]'::jsonb, '2010s', NULL, 'https://img.youtube.com/vi/DG8F-csoRAQ/hqdefault.jpg', 'youtube', 'DG8F-csoRAQ', 'https://www.youtube.com/watch?v=DG8F-csoRAQ', 'https://www.youtube.com/watch?v=DG8F-csoRAQ', 'Worldwide Records Bhojpuri', 'verified', 'published', 48000, false, 0, '2026-10-17T12:00:00.000000', '2026-10-17T12:00:00.000000'),
+    (1219, 'Baanjhi Kewdwa Dhaile Thaadh', '', 'Baanjhi Kewdwa Dhaile Thaadh', 36, '', '', '', '', '', 2008, 'Hindi', 13, '["festive", "chhath", "devotional", "sun"]'::jsonb, '2000s', NULL, 'https://img.youtube.com/vi/MEnyozGodAU/hqdefault.jpg', 'youtube', 'MEnyozGodAU', 'https://www.youtube.com/watch?v=MEnyozGodAU', 'https://www.youtube.com/watch?v=MEnyozGodAU', 'T-Series Bhakti Sagar', 'verified', 'published', 29170, false, 0, '2026-10-17T12:00:00.000000', '2026-10-17T12:00:00.000000'),
+    (1220, 'Nimiya Ke Dadh Maiya', '', 'Nimiya Ke Dadh Maiya', 163, '', '', '', '', '', 2022, 'Hindi', 13, '["festive", "chhath", "devotional", "sun"]'::jsonb, '2020s', NULL, 'https://img.youtube.com/vi/MJ4Sn-_Mkk0/hqdefault.jpg', 'youtube', 'MJ4Sn-_Mkk0', 'https://www.youtube.com/watch?v=MJ4Sn-_Mkk0', 'https://www.youtube.com/watch?v=MJ4Sn-_Mkk0', 'Swati Mishra Bhakti', 'verified', 'published', 22946, false, 0, '2026-10-17T12:00:00.000000', '2026-10-17T12:00:00.000000')
 on conflict (id) do nothing;
 
 -- Tag songs with their festival
@@ -506,6 +523,26 @@ from (values
     (1205, 22),
     (1206, 23),
     (1207, 23)
+) as mapping(song_id, festival_id)
+join public.festival_categories c on c.id = mapping.festival_id
+where public.songs.id = mapping.song_id;
+
+update public.songs
+set festival_id = c.id
+from (values
+    (1208, 1),
+    (1209, 1),
+    (1210, 1),
+    (1211, 2),
+    (1212, 2),
+    (1213, 2),
+    (1214, 2),
+    (1215, 2),
+    (1216, 8),
+    (1217, 8),
+    (1218, 8),
+    (1219, 8),
+    (1220, 8)
 ) as mapping(song_id, festival_id)
 join public.festival_categories c on c.id = mapping.festival_id
 where public.songs.id = mapping.song_id;
