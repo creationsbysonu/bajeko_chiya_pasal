@@ -73,6 +73,18 @@ export const Home: React.FC<HomeProps> = ({
 
       {/* 2. Main content column (Wall of Worlds → Decades → …) */}
       <Reveal variant="up" delay={60} className="space-y-16 pb-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* 2. The wall of worlds: Tea Shop · Festival calendar · Trending · New · Featured */}
+        <HomeShowcase
+          stations={stations}
+          trendingSongs={trendingSongs}
+          newSongs={newSongs}
+          featuredSongs={featuredSongs}
+          onExploreCatalog={onExploreCatalog}
+        />
+
+        {/* 4. Featured chart now lives in the HomeShowcase wall above */}
+
+        {/* 5. Browse by Decade */}
         <section className="space-y-4">
           <div className="text-center mb-8">
             <div className="flex items-center justify-center gap-2 text-xs font-mono text-neutral-500 uppercase tracking-widest mb-1">
