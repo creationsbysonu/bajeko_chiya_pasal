@@ -145,12 +145,20 @@ export const HomeShowcase: React.FC<HomeShowcaseProps> = ({
   const ne = locale === 'ne';
   const [active, setActive] = useState<number | null>(null);
 
-  // Tea shop songs - filter by primary_genre_category
+  // Tea shop songs - curated mix of popular, folk, and festive songs
   const teaShopSongs = [
-    ...featuredSongs.filter((s) => s.primary_genre_category === 'tea-shop'),
-    ...newSongs.filter((s) => s.primary_genre_category === 'tea-shop'),
-    ...trendingSongs.filter((s) => s.primary_genre_category === 'tea-shop'),
-  ].filter((song, index, self) => self.findIndex((s) => s.id === song.id) === index);
+    ...featuredSongs.filter((s) =>
+      ['popular', 'folk', 'special'].includes(s.primary_genre_category || '')
+    ),
+    ...trendingSongs.filter((s) =>
+      ['popular', 'folk', 'special'].includes(s.primary_genre_category || '')
+    ),
+    ...newSongs.filter((s) =>
+      ['popular', 'folk', 'special'].includes(s.primary_genre_category || '')
+    ),
+  ]
+    .filter((song, index, self) => self.findIndex((s) => s.id === song.id) === index)
+    .slice(0, 12);
 
   const panels: Panel[] = [
     {
@@ -159,7 +167,7 @@ export const HomeShowcase: React.FC<HomeShowcaseProps> = ({
       eyebrow: ne ? 'चिया पसल' : 'THE TEA SHOP',
       title: ne ? 'बजेको चिया पसल' : 'Bajeko Chiya Pasal',
       caption: ne ? 'आजको विशेष चिया र चिया मेनु' : "Today's special and the tea menu",
-      countLabel: ne ? '६ चिया' : '6 brews',
+      countLabel: `${teaShopSongs.length} ${ne ? 'गीत' : 'songs'}`,
       image: stations.find((s) => s.slug === 'chiya-pasal')?.cover_image || FALLBACK,
       accentText: 'text-red-400',
       accentBg: 'bg-red-600',
