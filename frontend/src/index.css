@@ -660,6 +660,78 @@ html.light .pd-grain::after {
   transform: translateY(-6px);
 }
 
+/* ---------------------------------------------------- steam / brew ------- */
+@keyframes pd-steam {
+  0% {
+    opacity: 0;
+    transform: translateY(6px) scaleY(0.7);
+  }
+  35% {
+    opacity: 0.85;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-18px) scaleY(1.15);
+  }
+}
+
+.pd-steam path {
+  transform-origin: 50% 100%;
+  transform-box: fill-box;
+  animation: pd-steam 3.6s ease-in-out infinite;
+}
+
+.pd-steam path:nth-child(2) {
+  animation-delay: 0.9s;
+}
+
+.pd-steam path:nth-child(3) {
+  animation-delay: 1.8s;
+}
+
+@keyframes pd-brew {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+.pd-brew {
+  animation: pd-brew 5.5s ease-in-out infinite;
+}
+
+@keyframes pd-spin-slow {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.pd-spin-slow {
+  animation: pd-spin-slow 70s linear infinite;
+  transform-origin: 50% 50%;
+}
+
+/* Softened film grain for the shop panel (see .pd-grain above). */
+.pd-grain--soft::after {
+  opacity: 0.1;
+}
+
+html.light .pd-grain--soft::after {
+  opacity: 0.06;
+}
+
+/* In-flow warm halo used behind illustrative glyphs. */
+.pd-halo {
+  background: radial-gradient(circle at 50% 45%, rgba(220, 38, 38, 0.16), rgba(220, 38, 38, 0) 68%);
+}
+
+html.light .pd-halo {
+  background: radial-gradient(circle at 50% 45%, rgba(185, 28, 28, 0.12), rgba(185, 28, 28, 0) 68%);
+}
+
 /* ---------------------------------------------------- reduced motion ----- */
 @media (prefers-reduced-motion: reduce) {
   .pd-reveal,
@@ -675,7 +747,10 @@ html.light .pd-grain::after {
   }
 
   .pd-roller__track,
-  .pd-eq span {
+  .pd-eq span,
+  .pd-steam path,
+  .pd-brew,
+  .pd-spin-slow {
     animation: none !important;
   }
 

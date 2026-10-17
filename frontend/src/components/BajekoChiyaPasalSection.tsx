@@ -1,10 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { Coffee, Flame, Radio, Mountain, Heart, Bus, Play, ArrowRight, Clock, Volume2 } from 'lucide-react';
+import { Coffee, Flame, Radio, Mountain, Heart, Bus, Play, ArrowRight, Clock } from 'lucide-react';
 import { useI18n } from '../context/I18nContext';
 import { usePlayer } from '../context/PlayerContext';
 import { Song, Station } from '../types';
 import { BrandMark } from './BrandMark';
 import { Reveal } from './motion/Reveal';
+import { Roller } from './motion/Roller';
+import { SteamCup, TeaLeafDivider, BrewRing } from './ChiyaGraphics';
+import { useParallax } from '../hooks/useMotion';
 
 interface BajekoChiyaPasalSectionProps {
   stations: Station[];
@@ -61,6 +64,12 @@ export const BajekoChiyaPasalSection: React.FC<BajekoChiyaPasalSectionProps> = (
   const { playSong, playStation, currentStation, currentSong, status } = usePlayer();
   const ne = locale === 'ne';
 
+  // Scroll depth: the glows drift with the page and the big watermark lags
+  // behind, so the panel gains a gentle layered parallax as you scroll past.
+  const glowRedRef = useParallax<HTMLDivElement>(-0.16);
+  const glowAmberRef = useParallax<HTMLDivElement>(0.12);
+  const cupRef = useParallax<HTMLDivElement>(-0.08);
+
   // Keep the open/closed sign honest without a full re-render loop.
   const [hour, setHour] = useState(() => new Date().getHours());
   useEffect(() => {
@@ -85,41 +94,57 @@ export const BajekoChiyaPasalSection: React.FC<BajekoChiyaPasalSectionProps> = (
     : '';
 
   return (
-    <section className="relative rounded-3xl overflow-hidden border border-red-500/15 bg-gradient-to-br from-ink-750 via-ink-850 to-ink-950 shadow-2xl">
-      {/* Soft warm glows — no heavy photo scrim, so the panel stays soothing
-          and follows the day/night palette. */}
+    <section className="relative rounded-3xl overflow-hidden border border-red-500/15 bg-gradient-to-br from-ink-750 via-ink-850 to-ink-950 shadow-2xl pd-grain pd-grain--soft">
+      {/* Layered warm glows — parallaxed so the panel breathes as you scroll. */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute -top-24 left-1/4 w-[420px] h-[240px] bg-red-600/10 blur-[130px] rounded-full" />
-        <div className="absolute -bottom-20 -right-10 w-[380px] h-[220px] bg-amber-500/10 blur-[140px] rounded-full" />
+        <div
+          ref={glowRedRef}
+          className="pd-parallax absolute -top-24 left-1/4 w-[420px] h-[240px] bg-red-600/10 blur-[130px] rounded-full"
+        />
+        <div
+          ref={glowAmberRef}
+          className="pd-parallax absolute -bottom-20 -right-10 w-[380px] h-[220px] bg-amber-500/10 blur-[140px] rounded-full"
+        />
+        <div className="pd-halo absolute -top-10 -right-10 w-56 h-56 rounded-full hidden md:block" />
       </div>
-      <BrandMark
-        size={240}
-        decorative
-        className="pointer-events-none absolute -right-10 -bottom-14 opacity-[0.05] select-none hidden sm:block"
-      />
+
+      {/* Big parallaxed teacup watermark */}
+      <div ref={cupRef} className="pd-parallax pointer-events-none absolute -right-10 -bottom-14 hidden sm:block">
+        <BrandMark size={240} decorative className="opacity-[0.05]" />
+      </div>
+
+      {/* Slow-bobbing steam, tucked into the corner */}
+      <SteamCup className="pd-brew pointer-events-none absolute -top-2 -right-2 w-24 h-24 text-red-500/20 hidden md:block" />
 
       <div className="relative z-10 p-5 sm:p-8 lg:p-10">
         {/* Shop board header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <Reveal variant="up" className="flex items-center gap-4">
-            <span className="grid place-items-center w-16 h-16 rounded-2xl bg-white/5 border border-red-500/20 shadow-lg flex-shrink-0">
-              <BrandMark size={38} />
-            </span>
+          <div className="flex items-center gap-4">
+            <Reveal variant="zoom">
+              <span className="relative grid place-items-center w-16 h-16 rounded-2xl bg-white/5 border border-red-500/20 shadow-lg flex-shrink-0">
+                <BrewRing className="pd-spin-slow pointer-events-none absolute -inset-2 text-red-500/25" />
+                <BrandMark size={38} />
+              </span>
+            </Reveal>
             <div className="min-w-0">
-              <p className="text-[11px] font-mono uppercase tracking-[0.4em] text-red-400/90">
-                {cp.kicker}
-              </p>
-              <h2
-                className={`mt-1 text-3xl sm:text-4xl font-black text-white leading-[1.05] ${
-                  ne ? 'font-nepali' : 'font-serif tracking-tight'
-                }`}
-              >
-                {cp.heading}
-              </h2>
+              <Reveal variant="fade" delay={60}>
+                <p className="text-[11px] font-mono uppercase tracking-[0.4em] text-red-400/90">
+                  {cp.kicker}
+                </p>
+              </Reveal>
+              <Reveal mask delay={120}>
+                <h2
+                  className={`mt-1 text-3xl sm:text-4xl font-black text-white leading-[1.05] ${
+                    ne ? 'font-nepali' : 'font-serif tracking-tight'
+                  }`}
+                >
+                  {cp.heading}
+                </h2>
+              </Reveal>
             </div>
-          </Reveal>
+          </div>
 
-          <Reveal variant="fade" delay={80}>
+          <Reveal variant="fade" delay={160}>
             <span
               className={`inline-flex items-center gap-2 px-4 py-2 rounded-full border text-[11px] font-semibold font-mono uppercase tracking-[0.15em] ${
                 isOpen
@@ -134,9 +159,16 @@ export const BajekoChiyaPasalSection: React.FC<BajekoChiyaPasalSectionProps> = (
           </Reveal>
         </div>
 
-        <p className={`mt-5 max-w-2xl text-[15px] sm:text-base text-cream-200/80 leading-relaxed ${ne ? 'font-nepali' : ''}`}>
-          {cp.intro}
-        </p>
+        <Reveal variant="up" delay={200}>
+          <p className={`mt-5 max-w-2xl text-[15px] sm:text-base text-cream-200/80 leading-relaxed ${ne ? 'font-nepali' : ''}`}>
+            {cp.intro}
+          </p>
+        </Reveal>
+
+        {/* Ornamental divider */}
+        <Reveal variant="fade" delay={240} className="mt-6">
+          <TeaLeafDivider className="w-full max-w-md h-6 mx-auto text-red-500/40" />
+        </Reveal>
 
         {/* The counter: today's special + the menu */}
         <div className="mt-6 grid gap-5 lg:grid-cols-[1.05fr_1fr]">
@@ -148,8 +180,14 @@ export const BajekoChiyaPasalSection: React.FC<BajekoChiyaPasalSectionProps> = (
                   {cp.specialLabel}
                 </span>
                 {specialPlaying && (
-                  <span className="inline-flex items-center gap-1.5 text-[11px] font-mono uppercase tracking-[0.15em] text-emerald-300">
-                    <Volume2 className="w-3.5 h-3.5" /> {cp.nowPouring}
+                  <span className="inline-flex items-center gap-2 text-[11px] font-mono uppercase tracking-[0.15em] text-emerald-300">
+                    <span className="pd-eq" aria-hidden="true">
+                      <span />
+                      <span />
+                      <span />
+                      <span />
+                    </span>
+                    {cp.nowPouring}
                   </span>
                 )}
               </div>
@@ -217,15 +255,27 @@ export const BajekoChiyaPasalSection: React.FC<BajekoChiyaPasalSectionProps> = (
                       key={brew.id}
                       onClick={() => station && playStation(station)}
                       disabled={!station}
-                      className={`group text-left p-3.5 rounded-xl border transition-all duration-200 ease-out hover:-translate-y-0.5 disabled:opacity-40 disabled:cursor-not-allowed ${
+                      className={`group relative overflow-hidden text-left p-3.5 rounded-xl border transition-all duration-300 ease-out hover:-translate-y-0.5 disabled:opacity-40 disabled:cursor-not-allowed ${
                         playing
                           ? 'bg-red-600/15 border-red-500/50'
                           : 'bg-white/3 border-white/8 hover:border-red-500/40 hover:bg-white/6'
                       }`}
                     >
-                      <div className="flex items-center gap-3">
-                        <span className={`grid place-items-center w-9 h-9 rounded-lg flex-shrink-0 border ${playing ? 'bg-red-600/25 border-red-500/40' : 'bg-white/5 border-white/10'}`}>
-                          <brew.Icon className={`w-[18px] h-[18px] ${playing ? 'text-red-400' : 'text-red-400/80'}`} />
+                      {/* left accent that grows on hover / while playing */}
+                      <span
+                        aria-hidden="true"
+                        className={`absolute left-0 top-2.5 bottom-2.5 w-0.5 rounded-full bg-red-500 origin-center transition-transform duration-300 ease-out ${
+                          playing ? 'scale-y-100' : 'scale-y-0 group-hover:scale-y-100'
+                        }`}
+                      />
+                      {/* slow sheen sweep on hover */}
+                      <span
+                        aria-hidden="true"
+                        className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/6 to-transparent transition-transform duration-700 ease-out group-hover:translate-x-full"
+                      />
+                      <div className="relative flex items-center gap-3">
+                        <span className={`grid place-items-center w-9 h-9 rounded-lg flex-shrink-0 border transition-colors ${playing ? 'bg-red-600/25 border-red-500/40' : 'bg-white/5 border-white/10 group-hover:border-red-500/40'}`}>
+                          <brew.Icon className={`w-[18px] h-[18px] transition-transform duration-300 group-hover:scale-110 ${playing ? 'text-red-400' : 'text-red-400/80'}`} />
                         </span>
                         <div className="min-w-0">
                           <h4 className={`text-sm font-semibold text-white truncate ${ne ? 'font-nepali' : ''}`}>
@@ -243,6 +293,23 @@ export const BajekoChiyaPasalSection: React.FC<BajekoChiyaPasalSectionProps> = (
             </div>
           </Reveal>
         </div>
+
+        {/* Rolling ticker of what's brewing */}
+        <Reveal variant="fade" delay={260} className="mt-6">
+          <div className="rounded-full border border-white/8 bg-white/3 px-1">
+            <Roller
+              items={BREWS.map((b) => (
+                <span key={b.id} className={`text-xs text-neutral-400 ${ne ? 'font-nepali' : ''}`}>
+                  {ne ? b.ne : b.en}
+                </span>
+              ))}
+              separator={<span className="w-1 h-1 rounded-full bg-red-500/60" aria-hidden="true" />}
+              duration={30}
+              className="py-1"
+              label={ne ? 'चिया मेनु टिकर' : 'Tea menu ticker'}
+            />
+          </div>
+        </Reveal>
 
         {/* House rule */}
         <div className="mt-6 pt-5 border-t border-white/10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
