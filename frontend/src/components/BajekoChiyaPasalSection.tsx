@@ -15,6 +15,8 @@ interface BajekoChiyaPasalSectionProps {
   trendingSongs: Song[];
   newSongs: Song[];
   onExploreCatalog: () => void;
+  /** Render a compact, chrome-less counter for embedding inside a panel. */
+  embedded?: boolean;
 }
 
 // The "menu" of the shop: each brew is a mood that pours straight into one of
@@ -47,10 +49,13 @@ function dayOfYear(d: Date): number {
 }
 
 /**
- * The shop-front: Bajeko Chiya Pasal. A signature block at the top of the home
+ * The shop-front: Bajeko Chiya Pasal. A signature block near the top of the home
  * page — an open/closed sign that follows the local clock, "today's special"
  * (a song that rotates once a day), and a tea menu whose brews pour one of the
  * themed radio worlds. All data comes from the existing catalog.
+ *
+ * Rendered as the first panel of the home "wall of worlds"; the standalone
+ * `embedded` variant drops the outer chrome so it can live inside a panel.
  */
 export const BajekoChiyaPasalSection: React.FC<BajekoChiyaPasalSectionProps> = ({
   stations,
@@ -58,6 +63,7 @@ export const BajekoChiyaPasalSection: React.FC<BajekoChiyaPasalSectionProps> = (
   trendingSongs,
   newSongs,
   onExploreCatalog,
+  embedded = false,
 }) => {
   const { locale, t } = useI18n();
   const cp = t.chiyaPasal;
@@ -92,6 +98,148 @@ export const BajekoChiyaPasalSection: React.FC<BajekoChiyaPasalSectionProps> = (
   const specialArt = special
     ? special.artwork_url || `https://img.youtube.com/vi/${special.provider_video_id}/hqdefault.jpg`
     : '';
+
+  const openChip = (
+    <span
+      className={`inline-flex items-center gap-2 px-4 py-2 rounded-full border text-[11px] font-semibold font-mono uppercase tracking-[0.15em] ${
+        isOpen
+          ? 'bg-emerald-500/10 border-emerald-400/40 text-emerald-300'
+          : 'bg-white/5 border-white/15 text-neutral-400'
+      }`}
+    >
+      <span className={`w-1.5 h-1.5 rounded-full ${isOpen ? 'bg-emerald-400 animate-pulse' : 'bg-neutral-500'}`} />
+      <Clock className="w-3.5 h-3.5" />
+      {isOpen ? cp.openNow : cp.closedNow}
+    </span>
+  );
+
+  const specialCard = (
+    <div className="h-full rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm p-5 flex flex-col">
+      <div className="flex items-center justify-between">
+        <span className="text-[11px] font-mono uppercase tracking-[0.3em] text-red-400 font-semibold">
+          {cp.specialLabel}
+        </span>
+        {specialPlaying && (
+          <span className="inline-flex items-center gap-2 text-[11px] font-mono uppercase tracking-[0.15em] text-emerald-300">
+            <span className="pd-eq" aria-hidden="true">
+              <span />
+              <span />
+              <span />
+              <span />
+            </span>
+            {cp.nowPouring}
+          </span>
+        )}
+      </div>
+
+      {special ? (
+        <div className="mt-4 flex items-center gap-5 flex-1">
+          <div className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-xl overflow-hidden border border-white/10 flex-shrink-0 bg-white/5 shadow-lg">
+            <img
+              src={specialArt}
+              alt={specialTitle}
+              loading="lazy"
+              className="w-full h-full object-cover"
+            />
+          </div>
+          <div className="min-w-0 flex-1">
+            <h3
+              className={`text-lg sm:text-xl font-bold text-white leading-snug truncate ${ne ? 'font-nepali' : 'font-serif'}`}
+              title={specialTitle}
+            >
+              {specialTitle}
+            </h3>
+            <p className="mt-1 text-[13px] text-neutral-400 truncate">
+              {specialArtist || special.film_or_source}
+            </p>
+            <button
+              onClick={() => playSong(special)}
+              className="mt-4 inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-red-600 hover:bg-red-500 text-white text-[13px] font-semibold tracking-wide shadow-glow-red border border-red-500/50 transition-all duration-200 ease-out hover:scale-105 active:scale-95"
+            >
+              <Play className="w-3.5 h-3.5 fill-white" />
+              {cp.sipPlay}
+            </button>
+          </div>
+        </div>
+      ) : (
+        <p className={`mt-4 text-sm text-neutral-500 leading-relaxed ${ne ? 'font-nepali' : ''}`}>{cp.specialEmpty}</p>
+      )}
+    </div>
+  );
+
+  const menuCard = (
+    <div className="h-full rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm p-5">
+      <div className="flex items-center justify-between mb-4">
+        <span className="text-[11px] font-mono uppercase tracking-[0.3em] text-red-400 font-semibold">
+          {cp.menuLabel}
+        </span>
+        <button
+          onClick={onExploreCatalog}
+          className="inline-flex items-center gap-1 text-xs font-medium text-neutral-400 hover:text-white transition-colors"
+        >
+          {cp.menuAll} <ArrowRight className="w-3.5 h-3.5" />
+        </button>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {BREWS.map((brew) => {
+          const station = stationFor(brew.station);
+          const playing = Boolean(station && currentStation?.slug === station.slug && status === 'playing');
+          return (
+            <button
+              key={brew.id}
+              onClick={() => station && playStation(station)}
+              disabled={!station}
+              className={`group relative overflow-hidden text-left p-3.5 rounded-xl border transition-all duration-300 ease-out hover:-translate-y-0.5 disabled:opacity-40 disabled:cursor-not-allowed ${
+                playing
+                  ? 'bg-red-600/15 border-red-500/50'
+                  : 'bg-white/3 border-white/8 hover:border-red-500/40 hover:bg-white/6'
+              }`}
+            >
+              {/* left accent that grows on hover / while playing */}
+              <span
+                aria-hidden="true"
+                className={`absolute left-0 top-2.5 bottom-2.5 w-0.5 rounded-full bg-red-500 origin-center transition-transform duration-300 ease-out ${
+                  playing ? 'scale-y-100' : 'scale-y-0 group-hover:scale-y-100'
+                }`}
+              />
+              {/* slow sheen sweep on hover */}
+              <span
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/6 to-transparent transition-transform duration-700 ease-out group-hover:translate-x-full"
+              />
+              <div className="relative flex items-center gap-3">
+                <span className={`grid place-items-center w-9 h-9 rounded-lg flex-shrink-0 border transition-colors ${playing ? 'bg-red-600/25 border-red-500/40' : 'bg-white/5 border-white/10 group-hover:border-red-500/40'}`}>
+                  <brew.Icon className={`w-[18px] h-[18px] transition-transform duration-300 group-hover:scale-110 ${playing ? 'text-red-400' : 'text-red-400/80'}`} />
+                </span>
+                <div className="min-w-0">
+                  <h4 className={`text-sm font-semibold text-white truncate ${ne ? 'font-nepali' : ''}`}>
+                    {ne ? brew.ne : brew.en}
+                  </h4>
+                  <p className={`mt-0.5 text-xs text-neutral-500 truncate ${ne ? 'font-nepali' : ''}`}>
+                    {ne ? brew.noteNe : brew.noteEn}
+                  </p>
+                </div>
+              </div>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+
+  // Embedded: just the counter, for the "The Tea Shop" panel of the home wall.
+  if (embedded) {
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center gap-3">{openChip}</div>
+        <div className="grid gap-4 lg:grid-cols-[1.05fr_1fr]">
+          <Reveal variant="up">{specialCard}</Reveal>
+          <Reveal variant="up" delay={60}>{menuCard}</Reveal>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <section className="relative rounded-3xl overflow-hidden border border-red-500/15 bg-gradient-to-br from-ink-750 via-ink-850 to-ink-950 shadow-2xl pd-grain pd-grain--soft">
@@ -145,17 +293,7 @@ export const BajekoChiyaPasalSection: React.FC<BajekoChiyaPasalSectionProps> = (
           </div>
 
           <Reveal variant="fade" delay={160}>
-            <span
-              className={`inline-flex items-center gap-2 px-4 py-2 rounded-full border text-[11px] font-semibold font-mono uppercase tracking-[0.15em] ${
-                isOpen
-                  ? 'bg-emerald-500/10 border-emerald-400/40 text-emerald-300'
-                  : 'bg-white/5 border-white/15 text-neutral-400'
-              }`}
-            >
-              <span className={`w-1.5 h-1.5 rounded-full ${isOpen ? 'bg-emerald-400 animate-pulse' : 'bg-neutral-500'}`} />
-              <Clock className="w-3.5 h-3.5" />
-              {isOpen ? cp.openNow : cp.closedNow}
-            </span>
+            {openChip}
           </Reveal>
         </div>
 
@@ -166,121 +304,11 @@ export const BajekoChiyaPasalSection: React.FC<BajekoChiyaPasalSectionProps> = (
 
         {/* The counter: today's special + the menu */}
         <div className="mt-6 grid gap-5 lg:grid-cols-[1.05fr_1fr]">
-          {/* Today's special */}
           <Reveal variant="up" delay={120}>
-            <div className="h-full rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm p-5 flex flex-col">
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] font-mono uppercase tracking-[0.3em] text-red-400 font-semibold">
-                  {cp.specialLabel}
-                </span>
-                {specialPlaying && (
-                  <span className="inline-flex items-center gap-2 text-[11px] font-mono uppercase tracking-[0.15em] text-emerald-300">
-                    <span className="pd-eq" aria-hidden="true">
-                      <span />
-                      <span />
-                      <span />
-                      <span />
-                    </span>
-                    {cp.nowPouring}
-                  </span>
-                )}
-              </div>
-
-              {special ? (
-                <div className="mt-4 flex items-center gap-5 flex-1">
-                  <div className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-xl overflow-hidden border border-white/10 flex-shrink-0 bg-white/5 shadow-lg">
-                    <img
-                      src={specialArt}
-                      alt={specialTitle}
-                      loading="lazy"
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <h3
-                      className={`text-lg sm:text-xl font-bold text-white leading-snug truncate ${ne ? 'font-nepali' : 'font-serif'}`}
-                      title={specialTitle}
-                    >
-                      {specialTitle}
-                    </h3>
-                    <p className="mt-1 text-[13px] text-neutral-400 truncate">
-                      {specialArtist || special.film_or_source}
-                    </p>
-                    <button
-                      onClick={() => playSong(special)}
-                      className="mt-4 inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-red-600 hover:bg-red-500 text-white text-[13px] font-semibold tracking-wide shadow-glow-red border border-red-500/50 transition-all duration-200 ease-out hover:scale-105 active:scale-95"
-                    >
-                      <Play className="w-3.5 h-3.5 fill-white" />
-                      {cp.sipPlay}
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <p className={`mt-4 text-sm text-neutral-500 leading-relaxed ${ne ? 'font-nepali' : ''}`}>{cp.specialEmpty}</p>
-              )}
-            </div>
+            {specialCard}
           </Reveal>
-
-          {/* Tea menu */}
           <Reveal variant="up" delay={180}>
-            <div className="h-full rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm p-5">
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-[11px] font-mono uppercase tracking-[0.3em] text-red-400 font-semibold">
-                  {cp.menuLabel}
-                </span>
-                <button
-                  onClick={onExploreCatalog}
-                  className="inline-flex items-center gap-1 text-xs font-medium text-neutral-400 hover:text-white transition-colors"
-                >
-                  {cp.menuAll} <ArrowRight className="w-3.5 h-3.5" />
-                </button>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {BREWS.map((brew) => {
-                  const station = stationFor(brew.station);
-                  const playing = Boolean(station && currentStation?.slug === station.slug && status === 'playing');
-                  return (
-                    <button
-                      key={brew.id}
-                      onClick={() => station && playStation(station)}
-                      disabled={!station}
-                      className={`group relative overflow-hidden text-left p-3.5 rounded-xl border transition-all duration-300 ease-out hover:-translate-y-0.5 disabled:opacity-40 disabled:cursor-not-allowed ${
-                        playing
-                          ? 'bg-red-600/15 border-red-500/50'
-                          : 'bg-white/3 border-white/8 hover:border-red-500/40 hover:bg-white/6'
-                      }`}
-                    >
-                      {/* left accent that grows on hover / while playing */}
-                      <span
-                        aria-hidden="true"
-                        className={`absolute left-0 top-2.5 bottom-2.5 w-0.5 rounded-full bg-red-500 origin-center transition-transform duration-300 ease-out ${
-                          playing ? 'scale-y-100' : 'scale-y-0 group-hover:scale-y-100'
-                        }`}
-                      />
-                      {/* slow sheen sweep on hover */}
-                      <span
-                        aria-hidden="true"
-                        className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/6 to-transparent transition-transform duration-700 ease-out group-hover:translate-x-full"
-                      />
-                      <div className="relative flex items-center gap-3">
-                        <span className={`grid place-items-center w-9 h-9 rounded-lg flex-shrink-0 border transition-colors ${playing ? 'bg-red-600/25 border-red-500/40' : 'bg-white/5 border-white/10 group-hover:border-red-500/40'}`}>
-                          <brew.Icon className={`w-[18px] h-[18px] transition-transform duration-300 group-hover:scale-110 ${playing ? 'text-red-400' : 'text-red-400/80'}`} />
-                        </span>
-                        <div className="min-w-0">
-                          <h4 className={`text-sm font-semibold text-white truncate ${ne ? 'font-nepali' : ''}`}>
-                            {ne ? brew.ne : brew.en}
-                          </h4>
-                          <p className={`mt-0.5 text-xs text-neutral-500 truncate ${ne ? 'font-nepali' : ''}`}>
-                            {ne ? brew.noteNe : brew.noteEn}
-                          </p>
-                        </div>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
+            {menuCard}
           </Reveal>
         </div>
 

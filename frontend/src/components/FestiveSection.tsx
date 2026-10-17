@@ -254,7 +254,7 @@ const FestivalChip: React.FC<{
 /* --------------------------------------------------------------------------- */
 
 /** Calendar-aware festive catalog: spotlights the next festival and the songs to vibe to before it. */
-export const FestiveSection: React.FC = () => {
+export const FestiveSection: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => {
   const { locale, t } = useI18n();
   const { playSong } = usePlayer();
   const ne = locale === 'ne';
@@ -321,21 +321,25 @@ export const FestiveSection: React.FC = () => {
     playSong(first, undefined, rest);
   };
 
+  const Wrapper: React.ElementType = embedded ? 'div' : 'section';
+
   return (
-    <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
+    <Wrapper className={embedded ? 'space-y-6' : 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20'}>
       {/* Section header */}
-      <Reveal variant="up" className="text-center mb-10">
-        <div className="inline-flex items-center gap-2 text-xs font-mono text-neutral-400 uppercase tracking-[0.3em] mb-2">
-          <CalendarDays className="w-3.5 h-3.5 text-red-400" />
-          <span>{t.festival.calendarLabel}</span>
-        </div>
-        <h2 className="font-serif text-3xl font-black text-white">
-          {ne ? t.festival.titleNe : t.festival.title}
-        </h2>
-        <p className="text-neutral-400 mt-3 max-w-2xl mx-auto text-sm leading-relaxed font-nepali">
-          {ne ? t.festival.subtitleNe : t.festival.subtitle}
-        </p>
-      </Reveal>
+      {!embedded && (
+        <Reveal variant="up" className="text-center mb-10">
+          <div className="inline-flex items-center gap-2 text-xs font-mono text-neutral-400 uppercase tracking-[0.3em] mb-2">
+            <CalendarDays className="w-3.5 h-3.5 text-red-400" />
+            <span>{t.festival.calendarLabel}</span>
+          </div>
+          <h2 className="font-serif text-3xl font-black text-white">
+            {ne ? t.festival.titleNe : t.festival.title}
+          </h2>
+          <p className="text-neutral-400 mt-3 max-w-2xl mx-auto text-sm leading-relaxed font-nepali">
+            {ne ? t.festival.subtitleNe : t.festival.subtitle}
+          </p>
+        </Reveal>
+      )}
 
       {loadingCalendar ? (
         <div className="space-y-4">
@@ -369,7 +373,7 @@ export const FestiveSection: React.FC = () => {
                 className="pointer-events-none absolute -right-8 -bottom-10 w-56 h-56 text-white opacity-[0.06] select-none"
               />
 
-              <div className="relative grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] p-6 sm:p-8">
+              <div className={`relative grid gap-6 ${embedded ? '' : 'lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]'} p-5 sm:p-7`}>
                 {/* Left: identity + countdown + CTA */}
                 <div className="flex flex-col">
                   <div className="flex items-center gap-3">
@@ -446,7 +450,7 @@ export const FestiveSection: React.FC = () => {
 
                 {/* Right: the playlist for this festival */}
                 <div className="relative">
-                  <div className="max-h-[360px] overflow-y-auto overscroll-contain pr-1 [scrollbar-width:thin]">
+                  <div className={embedded ? 'pr-1' : 'max-h-[360px] overflow-y-auto overscroll-contain pr-1 [scrollbar-width:thin]'}>
                     {loadingSongs ? (
                       <div className="space-y-1.5">
                         {Array.from({ length: 6 }).map((_, i) => (
@@ -474,7 +478,7 @@ export const FestiveSection: React.FC = () => {
           </Reveal>
 
           {/* Calendar rail: every major festival, soonest first */}
-          <Reveal variant="up" delay={90} className="mt-10">
+          <Reveal variant="up" delay={90} className={embedded ? '' : 'mt-10'}>
             <div className="flex items-center justify-between mb-3">
               <h3 className="font-serif text-lg font-black text-white flex items-center gap-2">
                 <CalendarDays className="w-4 h-4 text-red-400" />
@@ -502,7 +506,7 @@ export const FestiveSection: React.FC = () => {
           {ne ? t.festival.noSongsNe : t.festival.noSongs}
         </div>
       )}
-    </section>
+    </Wrapper>
   );
 };
 

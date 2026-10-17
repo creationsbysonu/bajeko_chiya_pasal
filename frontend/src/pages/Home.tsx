@@ -6,9 +6,7 @@ import { Station, Song, Genre, GenreCategory } from '../types';
 import { useI18n } from '../context/I18nContext';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { groupGenresByCategory } from '../utils/genreTaxonomy';
-import { FestiveSection } from '../components/FestiveSection';
 import { RecommendSongSection } from '../components/RecommendSongSection';
-import { BajekoChiyaPasalSection } from '../components/BajekoChiyaPasalSection';
 
 interface HomeProps {
   stations: Station[];
@@ -71,18 +69,9 @@ export const Home: React.FC<HomeProps> = ({
       {/* 1. Hero with Integrated Vintage Radio Tuner */}
       <Hero stations={stations} onExploreCatalog={onExploreCatalog} />
 
-      {/* 2. Main content column (Chiya Pasal → Showcase → Festive → Decades → …) */}
+      {/* 2. Main content column (Wall of Worlds → Decades → …) */}
       <Reveal variant="up" delay={60} className="space-y-16 pb-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* 2.0. The shop-front: Bajeko Chiya Pasal signature counter */}
-        <BajekoChiyaPasalSection
-          stations={stations}
-          featuredSongs={featuredSongs}
-          trendingSongs={trendingSongs}
-          newSongs={newSongs}
-          onExploreCatalog={onExploreCatalog}
-        />
-
-        {/* 2. Interactive four-panel showcase: Trending · New Releases · Radio Worlds · Featured */}
+        {/* 2. The wall of worlds: Tea Shop · Festival calendar · Trending · New · Featured */}
         <HomeShowcase
           stations={stations}
           trendingSongs={trendingSongs}
@@ -90,9 +79,6 @@ export const Home: React.FC<HomeProps> = ({
           featuredSongs={featuredSongs}
           onExploreCatalog={onExploreCatalog}
         />
-
-        {/* 3.5. Festive & Seasonal Festival Picker */}
-        <FestiveSection />
 
         {/* 4. Featured chart now lives in the HomeShowcase wall above */}
 

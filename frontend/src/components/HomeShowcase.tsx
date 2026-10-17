@@ -6,14 +6,16 @@ import {
   Play,
   Pause,
   Flame,
-  Radio,
   Star,
   Music,
   Coffee,
-  Volume2,
+  CalendarDays,
   ArrowRight,
   ChevronDown,
 } from 'lucide-react';
+import { BajekoChiyaPasalSection } from './BajekoChiyaPasalSection';
+import { FestiveSection } from './FestiveSection';
+import { FESTIVAL_IMAGES } from '../utils/festivalImagery';
 
 interface HomeShowcaseProps {
   stations: Station[];
@@ -108,53 +110,6 @@ const SongRow: React.FC<{ song: Song; rank?: number; showYear?: boolean }> = ({ 
   );
 };
 
-/** Mini station tile used inside the opened "Themed Radio Worlds" panel. */
-const StationTile: React.FC<{ station: Station }> = ({ station }) => {
-  const { locale } = useI18n();
-  const { currentStation, status, playStation } = usePlayer();
-  const ne = locale === 'ne';
-  const isCurrent = currentStation?.slug === station.slug;
-  const isPlaying = isCurrent && status === 'playing';
-  const cover = station.cover_image || FALLBACK;
-
-  const handlePlay = (event: React.MouseEvent) => {
-    event.stopPropagation();
-    playStation(station);
-  };
-
-  return (
-    <button
-      onClick={handlePlay}
-      className={`group/station relative text-left rounded-xl overflow-hidden border transition-colors duration-200 ${
-        isCurrent ? 'border-red-500/80' : 'border-white/10 hover:border-white/30'
-      } bg-black/50`}
-    >
-      <div className="relative h-16 w-full overflow-hidden">
-        <img
-          src={cover}
-          alt={station.title}
-          loading="lazy"
-          className="w-full h-full object-cover brightness-[0.72] group-hover/station:brightness-100 transition-all duration-500"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
-        <span className="absolute bottom-1.5 left-2 right-2 text-xs font-semibold text-white truncate">
-          {ne ? station.title_ne || station.title : station.title}
-        </span>
-      </div>
-      <div className="flex items-center justify-between px-2.5 py-2">
-        <span className="text-[11px] font-mono text-neutral-400">
-          {station.songs_count ?? 0} {ne ? 'गीत' : 'tracks'}
-        </span>
-        {isPlaying ? (
-          <Volume2 className="w-4 h-4 text-red-400 animate-pulse" />
-        ) : (
-          <Play className="w-4 h-4 fill-current text-neutral-400 group-hover/station:text-red-300 transition-colors" />
-        )}
-      </div>
-    </button>
-  );
-};
-
 interface Panel {
   key: string;
   icon: React.ElementType;
@@ -171,10 +126,10 @@ interface Panel {
 }
 
 /**
- * Four home surfaces (Trending, New Releases, Radio Worlds, Featured) laid out
- * as a wall of windows. Hovering / focusing / tapping a panel grows it open
- * with a smooth eased transition and reveals its contents; leaving collapses
- * it back to the original state.
+ * Five home surfaces (The Tea Shop, Festival Calendar, Trending, New Releases,
+ * Featured) laid out as a wall of windows. Hovering / focusing / tapping a
+ * panel grows it open with a smooth eased transition and reveals its contents;
+ * leaving collapses it back to the original state.
  *
  * Colours stay inside the app palette — crimson, gold and cream — and the
  * whole wall lives in a `pd-dark-zone` so the white copy stays legible on the
@@ -187,11 +142,46 @@ export const HomeShowcase: React.FC<HomeShowcaseProps> = ({
   featuredSongs,
   onExploreCatalog,
 }) => {
-  const { locale } = useI18n();
+  const { locale, t } = useI18n();
   const ne = locale === 'ne';
   const [active, setActive] = useState<number | null>(null);
 
   const panels: Panel[] = [
+    {
+      key: 'shop',
+      icon: Coffee,
+      eyebrow: ne ? 'चिया पसल' : 'THE TEA SHOP',
+      title: ne ? 'बजेको चिया पसल' : 'Bajeko Chiya Pasal',
+      caption: ne ? 'आजको विशेष चिया र चिया मेनु' : "Today's special and the tea menu",
+      countLabel: ne ? '६ चिया' : '6 brews',
+      image: stations.find((s) => s.slug === 'chiya-pasal')?.cover_image || FALLBACK,
+      accentText: 'text-red-400',
+      accentBg: 'bg-red-600',
+      glow: 'from-red-600/45',
+      content: (
+        <BajekoChiyaPasalSection
+          embedded
+          stations={stations}
+          featuredSongs={featuredSongs}
+          trendingSongs={trendingSongs}
+          newSongs={newSongs}
+          onExploreCatalog={onExploreCatalog}
+        />
+      ),
+    },
+    {
+      key: 'festival',
+      icon: CalendarDays,
+      eyebrow: ne ? 'चाडपर्व पात्रो' : 'FESTIVAL CALENDAR',
+      title: ne ? t.festival.titleNe : t.festival.title,
+      caption: ne ? 'आउँदो चाडका लागि मौसमी धुन' : 'Seasonal tunes for the festival ahead',
+      countLabel: ne ? 'चाडपर्व' : 'Festivals',
+      image: FESTIVAL_IMAGES.dashain?.url || FALLBACK,
+      accentText: 'text-amber-300',
+      accentBg: 'bg-amber-400',
+      glow: 'from-amber-400/35',
+      content: <FestiveSection embedded />,
+    },
     {
       key: 'trending',
       icon: Flame,
@@ -231,25 +221,6 @@ export const HomeShowcase: React.FC<HomeShowcaseProps> = ({
         </div>
       ),
       action: { label: ne ? 'सबै हेर्नुहोस्' : 'View all', onClick: onExploreCatalog },
-    },
-    {
-      key: 'radio',
-      icon: Radio,
-      eyebrow: ne ? 'स्टेसनहरू' : 'STATIONS',
-      title: ne ? 'विषयगत रेडियो संसार' : 'Themed Radio Worlds',
-      caption: ne ? 'चिया पसलदेखि पहाडी हावासम्मका माहोलहरू' : 'Ambient worlds from tea shops to mountain winds',
-      countLabel: ne ? `${stations.length} स्टेसन` : `${stations.length} stations`,
-      image: stations[0]?.cover_image || FALLBACK,
-      accentText: 'text-cream-200',
-      accentBg: 'bg-cream-300',
-      glow: 'from-cream-300/30',
-      content: (
-        <div className="grid grid-cols-2 gap-2">
-          {stations.map((station) => (
-            <StationTile key={station.slug} station={station} />
-          ))}
-        </div>
-      ),
     },
     {
       key: 'featured',
@@ -293,7 +264,7 @@ export const HomeShowcase: React.FC<HomeShowcaseProps> = ({
             <span>{ne ? 'अन्वेषण' : 'EXPLORE'}</span>
           </div>
           <h2 className="font-serif text-3xl sm:text-4xl font-black text-white drop-shadow-sm">
-            {ne ? 'एउटै भित्तामा चार संसार' : 'Four Worlds, One Wall'}
+            {ne ? 'एउटै भित्तामा पाँच संसार' : 'Five Worlds, One Wall'}
           </h2>
           <p className="text-sm text-neutral-400 font-nepali mt-2">
             {ne
