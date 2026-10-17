@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import { Hero } from '../components/Hero';
-import { StationCard } from '../components/StationCard';
-import { SongCard } from '../components/SongCard';
-import { NewReleases } from '../components/NewReleases';
+import { HomeShowcase } from '../components/HomeShowcase';
 import { Reveal } from '../components/motion/Reveal';
 import { Station, Song, Genre, GenreCategory } from '../types';
 import { useI18n } from '../context/I18nContext';
@@ -35,7 +33,7 @@ export const Home: React.FC<HomeProps> = ({
   onSelectDecade,
   onExploreCatalog,
 }) => {
-  const { locale, t } = useI18n();
+  const { locale } = useI18n();
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const genreGroups = groupGenresByCategory(genres, categories);
 
@@ -69,12 +67,18 @@ export const Home: React.FC<HomeProps> = ({
   return (
     <div className="space-y-16 pb-20">
       {/* 1. Hero with Integrated Vintage Radio Tuner */}
-      <Hero stations={stations} trendingSongs={trendingSongs} onExploreCatalog={onExploreCatalog} />
+      <Hero stations={stations} onExploreCatalog={onExploreCatalog} />
 
-      {/* 2. Grandfather's Tea Shop & Heritage Story Spotlight */}
+      {/* 2. Main content column (Showcase → Spotlight → Festive → Decades → …) */}
       <Reveal variant="up" delay={60} className="space-y-16 pb-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* 1.5. New Releases — full grid, directly below the Hero */}
-        <NewReleases songs={newSongs} onViewAll={onExploreCatalog} />
+        {/* 2. Interactive four-panel showcase: Trending · New Releases · Radio Worlds · Featured */}
+        <HomeShowcase
+          stations={stations}
+          trendingSongs={trendingSongs}
+          newSongs={newSongs}
+          featuredSongs={featuredSongs}
+          onExploreCatalog={onExploreCatalog}
+        />
 
         <section>
           <div className="relative rounded-3xl overflow-hidden border border-white/10 bg-black shadow-2xl p-6 md:p-10 pd-dark-zone">
@@ -123,61 +127,10 @@ export const Home: React.FC<HomeProps> = ({
           </div>
         </section>
 
-        {/* 3. Themed Radio Worlds Section */}
-        <section className="mt-10">
-          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
-            <div>
-              <div className="flex items-center gap-2 text-xs font-mono text-neutral-500 uppercase tracking-widest mb-1">
-                <span>{t.stations.heading}</span>
-              </div>
-              <h2 className="font-serif text-2xl font-black text-white drop-shadow-sm">{t.stations.heading}</h2>
-              <p className="text-xs text-neutral-500 font-nepali mt-1">{t.stations.subheading}</p>
-            </div>
-            <span className="text-xs font-mono text-neutral-600">{stations.length} stations</span>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-            {stations.map((st) => (
-              <StationCard key={st.slug} station={st} />
-            ))}
-          </div>
-        </section>
-
         {/* 3.5. Festive & Seasonal Festival Picker */}
         <FestiveSection />
 
-        {/* 4. Featured Verified Songs */}
-        <section className="mt-10">
-          <div className="flex items-center justify-between mb-8">
-            <div>
-              <div className="flex items-center gap-2 text-xs font-mono text-neutral-500 uppercase tracking-widest mb-1">
-                <span>FEATURED SONGS</span>
-              </div>
-              <h2 className="font-serif text-3xl font-black text-white drop-shadow-sm">
-                {locale === 'ne' ? 'विशेष कालजयी धुनहरू' : 'Featured Masterpieces'}
-              </h2>
-              <p className="text-xs text-neutral-500 font-nepali mt-1">
-                {locale === 'ne' ? 'प्रमाणित अभिलेख र आधिकारिक युट्युब इम्बेड सहित' : 'Curated classic recordings with verified metadata'}
-              </p>
-            </div>
-
-            <button
-              onClick={onExploreCatalog}
-              className="text-xs font-bold text-red-400 hover:text-red-300 underline font-mono flex items-center gap-1.5"
-            >
-              <span>View All ({featuredSongs.length}+)</span>
-              <span>→</span>
-            </button>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {featuredSongs.map((song) => (
-              <SongCard key={song.id} song={song} />
-            ))}
-          </div>
-        </section>
-
-        {/* 4.5 (removed) Most Trending chart now lives in the hero as Currently Trending */}
+        {/* 4. Featured chart now lives in the HomeShowcase wall above */}
 
         {/* 5. Browse by Decade */}
         <section className="mt-10">

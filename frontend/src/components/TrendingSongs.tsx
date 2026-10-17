@@ -27,15 +27,15 @@ export const TrendingSongs: React.FC<TrendingSongsProps> = ({ songs }) => {
   if (!songs.length) return null;
 
   return (
-    <section className="mt-10">
+    <section className="mt-8">
       <Reveal variant="up">
-        <div className="flex items-end justify-between gap-4 mb-8">
+        <div className="flex items-end justify-between gap-4 mb-5">
           <div>
             <div className="flex items-center gap-2 text-xs font-mono text-neutral-500 uppercase tracking-widest mb-1">
               <Flame className="w-3.5 h-3.5 text-red-500" />
               <span>CURRENTLY TRENDING</span>
             </div>
-            <h2 className="font-serif text-3xl font-black text-white drop-shadow-sm">
+            <h2 className="font-serif text-2xl font-black text-white drop-shadow-sm">
               {locale === 'ne' ? 'हाल लोकप्रिय धुनहरू' : 'Currently Trending'}
             </h2>
             <p className="text-xs text-neutral-500 font-nepali mt-1">
@@ -49,7 +49,7 @@ export const TrendingSongs: React.FC<TrendingSongsProps> = ({ songs }) => {
       </Reveal>
 
       <Reveal variant="up" delay={80}>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-2.5">
           {songs.map((song, index) => {
             const isCurrent = currentSong?.id === song.id;
             const isPlaying = isCurrent && status === 'playing';
@@ -63,7 +63,7 @@ export const TrendingSongs: React.FC<TrendingSongsProps> = ({ songs }) => {
               <button
                 key={song.id}
                 onClick={() => (isCurrent ? togglePlayPause() : playSong(song))}
-                className={`group w-full text-left flex items-center gap-4 p-3 rounded-2xl border transition-all duration-300 ease-out hover:-translate-y-0.5 ${
+                className={`group w-full text-left flex items-center gap-3 p-2.5 rounded-xl border transition-all duration-300 ease-out hover:-translate-y-0.5 ${
                   isCurrent
                     ? 'border-red-500 bg-red-600/10 shadow-glow-red'
                     : 'border-white/10 bg-black/60 backdrop-blur-md hover:border-white/25 hover:bg-white/[0.03]'
@@ -71,7 +71,7 @@ export const TrendingSongs: React.FC<TrendingSongsProps> = ({ songs }) => {
               >
                 {/* Rank */}
                 <span
-                  className={`w-7 text-center font-serif text-lg font-black tabular-nums flex-shrink-0 ${
+                  className={`w-6 text-center font-serif text-base font-black tabular-nums flex-shrink-0 ${
                     index < 3 ? 'text-red-500' : 'text-neutral-600'
                   }`}
                 >
@@ -79,7 +79,7 @@ export const TrendingSongs: React.FC<TrendingSongsProps> = ({ songs }) => {
                 </span>
 
                 {/* Artwork + hover play affordance */}
-                <div className="relative w-14 h-14 rounded-xl overflow-hidden flex-shrink-0 bg-neutral-800 pd-dark-zone">
+                <div className="relative w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-neutral-800 pd-dark-zone">
                   {thumbnail ? (
                     <img
                       src={thumbnail}

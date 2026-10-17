@@ -3,19 +3,17 @@ import { Play, Search, ShieldCheck, HeartHandshake } from 'lucide-react';
 import { useI18n } from '../context/I18nContext';
 import { usePlayer } from '../context/PlayerContext';
 import { useTheme } from '../context/ThemeContext';
-import { Station, Song } from '../types';
+import { Station } from '../types';
 import { RadioTuner } from './RadioTuner';
-import { TrendingSongs } from './TrendingSongs';
 import { Reveal } from './motion/Reveal';
 import { Roller } from './motion/Roller';
 
 interface HeroProps {
   stations: Station[];
-  trendingSongs: Song[];
   onExploreCatalog: () => void;
 }
 
-export const Hero: React.FC<HeroProps> = ({ stations, trendingSongs, onExploreCatalog }) => {
+export const Hero: React.FC<HeroProps> = ({ stations, onExploreCatalog }) => {
   const { locale, t } = useI18n();
   const { currentStation, playStation, status } = usePlayer();
   const { theme } = useTheme();
@@ -126,11 +124,6 @@ export const Hero: React.FC<HeroProps> = ({ stations, trendingSongs, onExploreCa
 
           {/* Radio Tuner / Station Cards */}
           <RadioTuner stations={stations} />
-
-          {/* Currently Trending — single merged chart inside the hero */}
-          <div className="max-w-6xl mx-auto px-1">
-            <TrendingSongs songs={trendingSongs} />
-          </div>
 
           {/* Roller ticker of station names across the hero footer */}
           <div className="mt-10 pt-6 border-t border-white/10 relative">
