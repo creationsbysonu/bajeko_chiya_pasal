@@ -206,13 +206,13 @@ const FestivalChip: React.FC<{
     <button
       onClick={() => onSelect(entry.slug)}
       aria-pressed={isActive}
-      className={`group/chip relative flex-shrink-0 w-44 text-left rounded-2xl border overflow-hidden transition-all duration-200 ease-out ${
+      className={`group/chip relative flex-shrink-0 w-52 text-left rounded-2xl border overflow-hidden transition-all duration-200 ease-out ${
         isActive
           ? `${tone.border} bg-white/8 shadow-lg scale-[1.02]`
           : 'border-white/8 bg-white/3 hover:bg-white/6 hover:border-white/20'
       } focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500`}
     >
-      <div className="relative h-16">
+      <div className="relative h-20">
         {img ? (
           <img
             src={img.url}
@@ -225,8 +225,8 @@ const FestivalChip: React.FC<{
           <div className={`absolute inset-0 bg-gradient-to-br ${tone.glow} to-black`} />
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-black/45" />
-        <span className="absolute top-2 left-2 text-xl leading-none drop-shadow">{entry.emoji}</span>
-        <span className={`absolute top-2 right-2 text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-full ${tone.pill}`}>
+        <span className="absolute top-2.5 left-2.5 text-2xl leading-none drop-shadow">{entry.emoji}</span>
+        <span className={`absolute top-2.5 right-2.5 text-[11px] font-mono font-bold px-1.5 py-0.5 rounded-full ${tone.pill}`}>
           {entry.is_active_window
             ? (ne ? 'अहिले' : 'Now')
             : entry.days_until_start <= 0
@@ -234,8 +234,8 @@ const FestivalChip: React.FC<{
               : `${entry.days_until_start}d`}
         </span>
       </div>
-      <div className="p-3">
-        <p className={`font-serif text-sm font-black leading-snug truncate ${isActive ? 'text-white' : 'text-neutral-200'}`}>
+      <div className="p-3.5">
+        <p className={`font-serif text-[15px] font-black leading-snug truncate ${isActive ? 'text-white' : 'text-neutral-200'}`}>
           {ne ? entry.name_ne || entry.name : entry.name}
         </p>
         <p className="text-[11px] font-mono text-neutral-500 mt-1 truncate">
@@ -483,7 +483,7 @@ export const FestiveSection: React.FC = () => {
                 <ChevronRight className="w-3.5 h-3.5" />
               </span>
             </div>
-            <div className="flex gap-3 overflow-x-auto overscroll-contain pb-3 px-1 pt-1 -mx-1 [scrollbar-width:thin]">
+            <div className="flex gap-3.5 overflow-x-auto overscroll-contain pb-3 px-1 pt-1 -mx-1 [scrollbar-width:thin]">
               {calendar.map((entry) => (
                 <FestivalChip
                   key={entry.slug}
