@@ -7,6 +7,7 @@ import { useI18n } from '../context/I18nContext';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { groupGenresByCategory } from '../utils/genreTaxonomy';
 import { FestiveSection } from '../components/FestiveSection';
+import { RecommendSongSection } from '../components/RecommendSongSection';
 
 interface HomeProps {
   stations: Station[];
@@ -232,6 +233,9 @@ export const Home: React.FC<HomeProps> = ({
             })}
           </div>
         </section>
+
+        {/* 7. Recommend a song — listener contributions */}
+        <RecommendSongSection />
       </Reveal>
     </div>
   );

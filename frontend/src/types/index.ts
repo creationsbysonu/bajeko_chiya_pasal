@@ -243,6 +243,41 @@ export interface FestivalPlaylist {
   results: FestivalSong[];
 }
 
+export interface SongRequestSummary {
+  id: number;
+  title: string;
+  artist: string;
+  festival_name?: string | null;
+  festival_name_ne?: string | null;
+  festival_emoji?: string | null;
+  status: string;
+  created_at: string;
+}
+
+export interface SongRequestTicket {
+  id: number;
+  title: string;
+  artist: string;
+  youtube_url: string;
+  festival?: number | null;
+  festival_name?: string | null;
+  festival_emoji?: string | null;
+  genre?: number | null;
+  note: string;
+  requester_name: string;
+  requester_email: string;
+  status: string;
+  admin_notes: string;
+  created_at: string;
+  resolved_at?: string | null;
+}
+
+export interface SongRequestListResponse {
+  count: number;
+  results: SongRequestTicket[];
+  available_statuses: string[];
+}
+
 export interface AuthPermissionSet {
   can_manage_catalog: boolean;
   can_review_takedowns: boolean;

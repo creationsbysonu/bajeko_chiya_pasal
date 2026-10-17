@@ -54,15 +54,20 @@ Files, in order:
 8. `supabase/migrations/0008_festival_calendar.sql` — `festival_dates`, every
    major Nepali festival, per-festival `mood_tags`, `get_festival_calendar()`,
    and the calendar-aware `get_festival_songs()`
-9. `supabase/seed.sql` — the full catalog (127 songs, 59 artists, 10 stations,
-   23 festivals, taxonomies)
+9. `supabase/migrations/0009_song_requests.sql` — the public **"Recommend a
+   song"** workflow: `song_requests` (RLS-locked), a validated/throttled
+   `submit_song_request()`, a contact-free `get_song_requests_recent()` feed,
+   and the admin moderation RPCs (`admin_song_requests`,
+   `admin_song_request_action`)
+10. `supabase/seed.sql` — the full catalog (163 songs, 88 artists, 10 stations,
+    23 festivals, taxonomies)
 
 > **Already deployed?** Run the new migrations once (`supabase db push` applies
-> `0007` + `0008`). Because `supabase/seed.sql` is only safe on an empty
+> `0007` + `0008` + `0009`). Because `supabase/seed.sql` is only safe on an empty
 > database, existing installs should instead paste the generated
 > **`supabase/deploy/upgrade_festive.sql`** into the SQL Editor — it bundles
-> `0007` + `0008` + just the festival rows, and is safe to re-run. Regenerate
-> it after changing the seed or migrations with
+> `0007` + `0008` + `0009` + just the festival rows, and is safe to re-run.
+> Regenerate it after changing the seed or migrations with
 > `cd supabase && npm run build:upgrade` (`npm run verify:upgrade` proves it
 > upgrades a pre-festival database).
 

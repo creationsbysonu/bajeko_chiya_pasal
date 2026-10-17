@@ -312,7 +312,7 @@ describe('api.ts end-to-end against PostgREST bridge', () => {
     expect(stations[0]).toHaveProperty('songs_count');
 
     const songs = await api.getSongs();
-    expect(songs.count).toBe(127);
+    expect(songs.count).toBe(163);
     expect(songs.results).toHaveLength(24);
     expect(songs.previous).toBeNull();
     expect(typeof songs.next).toBe('string');
@@ -404,6 +404,27 @@ describe('api.ts end-to-end against PostgREST bridge', () => {
     ).rejects.toThrow('Failed to submit notice');
   });
 
+  it('collects song recommendations from listeners', async () => {
+    const res = await api.submitSongRequest({
+      title: 'Contract Test Recommendation',
+      artist: 'Nobody',
+      youtube_url: 'https://www.youtube.com/watch?v=abcdefghijk',
+      festival_slug: 'dashain',
+      requester_name: 'Listener One',
+      requester_email: 'listener@example.com',
+    });
+    expect(typeof res.request_id).toBe('number');
+
+    const recent = await api.getRecentSongRequests(5);
+    expect(recent.some((r) => r.title === 'Contract Test Recommendation')).toBe(true);
+    // The public feed must never leak requester contact details.
+    expect((recent[0] as unknown as Record<string, unknown>).requester_email).toBeUndefined();
+
+    await expect(
+      api.submitSongRequest({ title: '', requester_name: 'X' }),
+    ).rejects.toThrow(/title/);
+  });
+
   it('rejects bad logins and non-allowlisted users', async () => {
     await expect(api.login(TEST_ADMIN.email, 'wrong-password')).rejects.toThrow(/Invalid login credentials/i);
 
@@ -422,8 +443,8 @@ describe('api.ts end-to-end against PostgREST bridge', () => {
     expect(me.email).toBe(TEST_ADMIN.email);
 
     const stats = await api.getAdminStats();
-    expect(stats.total_songs).toBe(127);
-    expect(stats.total_artists).toBe(59);
+    expect(stats.total_songs).toBe(163);
+    expect(stats.total_artists).toBe(88);
 
     const insights = await api.getAdminInsights(30);
     expect(insights.window_days).toBe(30);
@@ -436,6 +457,12 @@ describe('api.ts end-to-end against PostgREST bridge', () => {
     const audit = await api.getAdminAuditLogs();
     expect(audit.length).toBeGreaterThan(0);
     expect(audit.some((l) => l.action === 'TAKEDOWN_SUBMITTED')).toBe(true);
+
+    const queue = await api.getAdminSongRequests();
+    expect(queue.count).toBeGreaterThanOrEqual(1);
+    expect(queue.available_statuses).toContain('added');
+    const resolvedRequest = await api.handleSongRequestAction(queue.results[0].id, 'added', 'Queued');
+    expect(resolvedRequest.status).toBe('added');
   });
 
   it('performs admin catalog mutations through the RPC surface', async () => {

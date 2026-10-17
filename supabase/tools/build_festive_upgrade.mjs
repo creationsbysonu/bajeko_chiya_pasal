@@ -121,7 +121,8 @@ const upgradeSql = `-- Purano Dhun — one-shot festive upgrade for an already-l
 -- It is safe to re-run. It applies, in order:
 --   1. 0007_festival_features.sql  (festival taxonomy + RPCs)
 --   2. 0008_festival_calendar.sql  (dates, calendar RPC, playlist RPC)
---   3. festive_seed.sql            (festival artists/songs + links)
+--   3. 0009_song_requests.sql      (public "recommend a song" workflow)
+--   4. festive_seed.sql            (festival artists/songs + links)
 
 -- ===========================================================================
 -- 1. 0007_festival_features.sql
@@ -134,7 +135,12 @@ ${migration('0007_festival_features.sql')}
 ${migration('0008_festival_calendar.sql')}
 
 -- ===========================================================================
--- 3. festive_seed.sql
+-- 3. 0009_song_requests.sql
+-- ===========================================================================
+${migration('0009_song_requests.sql')}
+
+-- ===========================================================================
+-- 4. festive_seed.sql
 -- ===========================================================================
 ${festiveSeedSql}
 `;

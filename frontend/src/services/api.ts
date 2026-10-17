@@ -2,7 +2,8 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import {
   Artist, Genre, GenreCategory, Song, Station, FavoriteItem,
   AdminStats, AdminInsights, TakedownTicket, TakedownListResponse, StationQueueItem, AuditLogItem, AuthUser,
-  FestivalCategory, FestivalCalendarEntry, FestivalPlaylist
+  FestivalCategory, FestivalCalendarEntry, FestivalPlaylist,
+  SongRequestSummary, SongRequestListResponse
 } from '../types';
 
 // Supabase is both the database and the backend: every read/write goes through
@@ -233,6 +234,62 @@ export const api = {
       const message = error instanceof Error ? error.message : '';
       if (message.includes('Too many reports')) throw new Error(message);
       throw new Error('Failed to submit notice');
+    }
+  },
+
+  // Song recommendations ("Recommend a song")
+  async submitSongRequest(data: {
+    title: string;
+    artist?: string;
+    youtube_url?: string;
+    festival_slug?: string;
+    genre_id?: number;
+    note?: string;
+    requester_name: string;
+    requester_email?: string;
+  }): Promise<{ message: string; request_id: number }> {
+    try {
+      return await rpc('submit_song_request', {
+        p_title: data.title,
+        p_artist: data.artist ?? '',
+        p_youtube_url: data.youtube_url ?? '',
+        p_festival_slug: data.festival_slug ?? '',
+        p_genre_id: data.genre_id ?? null,
+        p_note: data.note ?? '',
+        p_requester_name: data.requester_name,
+        p_requester_email: data.requester_email ?? '',
+      }, { listener: true });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : '';
+      if (message.includes('Too many suggestions')) throw new Error(message);
+      if (message.includes(': ')) throw new Error(message);
+      throw new Error('Failed to submit suggestion');
+    }
+  },
+
+  async getRecentSongRequests(limit = 6): Promise<SongRequestSummary[]> {
+    try {
+      return await rpc('get_song_requests_recent', { p_limit: limit });
+    } catch {
+      return [];
+    }
+  },
+
+  async getAdminSongRequests(params: { status?: string; search?: string } = {}): Promise<SongRequestListResponse> {
+    try {
+      return await rpc('admin_song_requests', {
+        ...args({ p_status: params.status, p_search: params.search }),
+      });
+    } catch {
+      throw new Error('Failed to load suggestions');
+    }
+  },
+
+  async handleSongRequestAction(id: number, status: string, notes: string): Promise<{ id: number; status: string; admin_notes: string }> {
+    try {
+      return await rpc('admin_song_request_action', { p_id: id, p_status: status, p_admin_notes: notes });
+    } catch {
+      throw new Error('Failed to update suggestion');
     }
   },
 

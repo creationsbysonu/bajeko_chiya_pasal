@@ -88,9 +88,9 @@ try {
 }
 
 const songs = await q('select count(*)::int as n from public.songs');
-check('upgrade yields 127 songs', songs[0].n === 127, `got ${songs[0].n}`);
+check('upgrade yields 163 songs', songs[0].n === 163, `got ${songs[0].n}`);
 const artists = await q('select count(*)::int as n from public.artists');
-check('upgrade yields 59 artists', artists[0].n === 59, `got ${artists[0].n}`);
+check('upgrade yields 88 artists', artists[0].n === 88, `got ${artists[0].n}`);
 
 const festivals = (await q('select public.get_festival_categories() as f'))[0].f;
 check('upgrade ships 23 festivals', Array.isArray(festivals) && festivals.length === 23, `got ${festivals?.length}`);
@@ -107,10 +107,13 @@ check('chhath mix blends trending festive tracks', sources.has('festival') && so
 const sample = (chhath?.results ?? [])[0];
 check('playlist songs are playable', Boolean(sample?.provider_video_id), JSON.stringify(sample).slice(0, 120));
 
+const suggestion = (await q("select public.submit_song_request('Test Song', 'Someone', '', '', null, '', 'Tester', '') as x"))[0].x;
+check('upgrade adds the song request workflow', typeof suggestion?.request_id === 'number', JSON.stringify(suggestion));
+
 // 3. Idempotency: re-running the upgrade must be a no-op, not an error.
 await db.exec(readFileSync(join(supa, 'deploy', 'upgrade_festive.sql'), 'utf8'));
 const songs2 = await q('select count(*)::int as n from public.songs');
-check('upgrade is idempotent', songs2[0].n === 127, `got ${songs2[0].n}`);
+check('upgrade is idempotent', songs2[0].n === 163, `got ${songs2[0].n}`);
 
 await db.close();
 

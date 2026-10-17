@@ -210,6 +210,14 @@ html.dark {
   --c-amber-500: 245 158 11;
   --c-amber-950: 69 26 3;
 
+  /* --emerald (success / added states) ---------------------------------- */
+  --c-emerald-200: 167 243 208;
+  --c-emerald-300: 110 231 183;
+  --c-emerald-400: 52 211 153;
+  --c-emerald-500: 16 185 129;
+  --c-emerald-600: 5 150 105;
+  --c-emerald-950: 2 44 34;
+
   /* --editorial type + surfaces ---------------------------------------- */
   --c-cream-50: 255 255 255;
   --c-cream-100: 255 255 255;
@@ -262,6 +270,14 @@ html.light {
   --c-amber-400: 180 83 9;
   --c-amber-500: 146 64 14;
   --c-amber-950: 255 251 235;
+
+  /* Success green darkened for AA on paper; 950 is a pale tint. ---------- */
+  --c-emerald-200: 167 243 208;
+  --c-emerald-300: 4 120 87;
+  --c-emerald-400: 5 150 105;
+  --c-emerald-500: 5 150 105;
+  --c-emerald-600: 4 120 87;
+  --c-emerald-950: 2 44 34;
 
   --c-cream-50: 10 9 8;
   --c-cream-100: 24 21 17;
@@ -408,6 +424,12 @@ html.light .pd-dark-zone {
   --c-amber-300: 252 211 77;
   --c-amber-400: 251 191 36;
   --c-amber-500: 245 158 11;
+  --c-emerald-200: 167 243 208;
+  --c-emerald-300: 110 231 183;
+  --c-emerald-400: 52 211 153;
+  --c-emerald-500: 16 185 129;
+  --c-emerald-600: 5 150 105;
+  --c-emerald-950: 2 44 34;
   --c-ink-700: 38 38 38;
   --c-ink-800: 18 18 18;
   --c-ink-850: 10 10 10;
