@@ -31,6 +31,10 @@ jobs:
         working-directory: supabase
         run: npm run verify
 
+      - name: Verify the generated live-deploy bundle
+        working-directory: supabase
+        run: npm run verify:upgrade
+
   frontend-tests:
     name: Frontend tests + build (Vite)
     runs-on: ubuntu-latest
@@ -50,6 +54,10 @@ jobs:
       - name: Run test suite
         working-directory: frontend
         run: npm run test -- --run
+
+      - name: Lint
+        working-directory: frontend
+        run: npm run lint
 
       - name: Production build
         working-directory: frontend

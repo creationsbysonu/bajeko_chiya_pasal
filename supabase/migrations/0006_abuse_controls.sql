@@ -189,7 +189,6 @@ begin
         p_song::text,
         jsonb_build_object(
             'reason', p_reason,
-            'claimant_email', v_email,
             'ticket_id', v_ticket_id
         )
     );

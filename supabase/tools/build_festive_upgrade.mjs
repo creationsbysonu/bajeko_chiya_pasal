@@ -119,28 +119,34 @@ const upgradeSql = `-- Purano Dhun — one-shot festive upgrade for an already-l
 -- database that predates the festival feature fully up to date.
 --
 -- It is safe to re-run. It applies, in order:
---   1. 0007_festival_features.sql  (festival taxonomy + RPCs)
---   2. 0008_festival_calendar.sql  (dates, calendar RPC, playlist RPC)
---   3. 0009_song_requests.sql      (public "recommend a song" workflow)
---   4. festive_seed.sql            (festival artists/songs + links)
+--   1. 0006_abuse_controls.sql     (throttles + PII-safe audit notes)
+--   2. 0007_festival_features.sql  (festival taxonomy + RPCs)
+--   3. 0008_festival_calendar.sql  (dates, calendar RPC, playlist RPC)
+--   4. 0009_song_requests.sql      (public "recommend a song" workflow)
+--   5. festive_seed.sql            (festival artists/songs + links)
 
 -- ===========================================================================
--- 1. 0007_festival_features.sql
+-- 1. 0006_abuse_controls.sql
+-- ===========================================================================
+${migration('0006_abuse_controls.sql')}
+
+-- ===========================================================================
+-- 2. 0007_festival_features.sql
 -- ===========================================================================
 ${migration('0007_festival_features.sql')}
 
 -- ===========================================================================
--- 2. 0008_festival_calendar.sql
+-- 3. 0008_festival_calendar.sql
 -- ===========================================================================
 ${migration('0008_festival_calendar.sql')}
 
 -- ===========================================================================
--- 3. 0009_song_requests.sql
+-- 4. 0009_song_requests.sql
 -- ===========================================================================
 ${migration('0009_song_requests.sql')}
 
 -- ===========================================================================
--- 4. festive_seed.sql
+-- 5. festive_seed.sql
 -- ===========================================================================
 ${festiveSeedSql}
 `;

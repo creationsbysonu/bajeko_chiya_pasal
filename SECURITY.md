@@ -39,6 +39,10 @@ Purano Dhun takes security, privacy, and content rights seriously. The applicati
 ## 3. Audit Logging & Governance
 
 - All critical actions (`SONG_CREATED`, `SONG_UPDATED`, `SONG_UNPUBLISHED`, `TAKEDOWN_SUBMITTED`, moderation decisions, bulk operations, queue changes) are automatically recorded in the `audit_logs` table with timestamp, actor (admin email prefix or `public_reporter`), and target entity IDs. The audit log itself is admin-only (`admin_audit_logs()` checks the allowlist).
+- The `details` JSON in an audit row deliberately does **not** repeat the
+  requester/claimant email. Those live only on `song_requests` /
+  `takedown_requests`, which are RLS-locked and admin-only, so a single private
+  table is the source of truth for contact data instead of two.
 
 ---
 
@@ -66,9 +70,9 @@ public taxonomy leak, missing security headers). What deliberately remains:
    design there is no free fix. If this ever matters, move to a cookie-backed
    session key or per-IP quotas at an edge gateway.
 2. **No per-IP throttling inside SQL.** PostgREST does not portably expose the
-   client IP to a stored function, so the limits in §6 key off `auth.uid()` and
-   the claimant email instead. Per-IP quotas need an Edge Function / gateway in
-   front of the RPC surface.
+   client IP to a stored function, so the limits in `0006`/`0009` key off
+   `auth.uid()` and the claimant email instead. Per-IP quotas need an Edge
+   Function / gateway in front of the RPC surface.
 3. **`playback_events` still grows over time.** The flood guard caps it at
    ~120 rows/minute/listener, not overall — keep the monthly prune documented at
    the bottom of DEPLOY.md, or schedule it with `pg_cron`.
@@ -84,3 +88,11 @@ public taxonomy leak, missing security headers). What deliberately remains:
 5. **`service_role` bypasses all of this by design** (BYPASSRLS + full function
    access). It is only safe because it never ships to the browser — treat a leak
    of that key as a full compromise and rotate it immediately.
+6. **The public forms have no CAPTCHA.** `submit_takedown` and
+   `submit_song_request` are validated, identity-throttled and audit-logged, and
+   `submit_song_request` now refuses a submission carrying neither an email nor a
+   listener session, so a bare `anon` key cannot fill the queue. A determined
+   caller can still mint anonymous sessions cheaply, so for a public launch enable
+   Supabase Auth's rate limits and, optionally, a CAPTCHA (Turnstile / hCaptcha)
+   on `signInAnonymously` and the two forms. That is dashboard configuration, not
+   schema, which is why it is not in the migrations.

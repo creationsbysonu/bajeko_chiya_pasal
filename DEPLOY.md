@@ -63,13 +63,13 @@ Files, in order:
     23 festivals, taxonomies)
 
 > **Already deployed?** Run the new migrations once (`supabase db push` applies
-> `0007` + `0008` + `0009`). Because `supabase/seed.sql` is only safe on an empty
-> database, existing installs should instead paste the generated
+> `0006` + `0007` + `0008` + `0009`). Because `supabase/seed.sql` is only safe on
+> an empty database, existing installs should instead paste the generated
 > **`supabase/deploy/upgrade_festive.sql`** into the SQL Editor — it bundles
-> `0007` + `0008` + `0009` + just the festival rows, and is safe to re-run.
-> Regenerate it after changing the seed or migrations with
+> `0006` + `0007` + `0008` + `0009` + just the festival rows, and is safe to
+> re-run. Regenerate it after changing the seed or migrations with
 > `cd supabase && npm run build:upgrade` (`npm run verify:upgrade` proves it
-> upgrades a pre-festival database).
+> upgrades a pre-festival database, and CI runs it on every push).
 
 > `supabase/seed.sql` is idempotent only on an **empty** database; it pins ids.
 

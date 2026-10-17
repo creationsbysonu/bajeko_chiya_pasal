@@ -97,6 +97,15 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
   const [isQueueOpen, setIsQueueOpen] = useState<boolean>(false);
 
+  // Mirror volume/mute into refs so the one-time player-init effect (which only
+  // re-runs on track change) reads the *current* values instead of a stale
+  // render's closure. Without this, a volume/mute change made just before a
+  // track change would be applied from the old value.
+  const volumeRef = useRef<number>(volume);
+  const isMutedRef = useRef<boolean>(isMuted);
+  useEffect(() => { volumeRef.current = volume; }, [volume]);
+  useEffect(() => { isMutedRef.current = isMuted; }, [isMuted]);
+
   const consecutiveErrorsRef = useRef<number>(0);
   const ytPlayerRef = useRef<YTPlayerInstance | null>(null);
   const isApiReadyRef = useRef<boolean>(false);
@@ -109,11 +118,13 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const hiddenAtRef = useRef<number>(0);
   const actionsRef = useRef<{
     togglePlayPause: () => void;
+    toggleMute: () => void;
     nextTrack: () => void;
     prevTrack: () => void;
     seekTo: (seconds: number) => void;
   }>({
     togglePlayPause: () => undefined,
+    toggleMute: () => undefined,
     nextTrack: () => undefined,
     prevTrack: () => undefined,
     seekTo: () => undefined,
@@ -237,8 +248,8 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       if (ytPlayerRef.current && typeof ytPlayerRef.current.loadVideoById === 'function') {
         try {
           ytPlayerRef.current.loadVideoById(currentSong.provider_video_id);
-          ytPlayerRef.current.setVolume(volume);
-          if (isMuted) {
+          ytPlayerRef.current.setVolume(volumeRef.current);
+          if (isMutedRef.current) {
             ytPlayerRef.current.mute();
           } else {
             ytPlayerRef.current.unMute();
@@ -275,8 +286,8 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           },
           events: {
             onReady: (evt) => {
-              evt.target.setVolume(volume);
-              if (isMuted) {
+              evt.target.setVolume(volumeRef.current);
+              if (isMutedRef.current) {
                 evt.target.mute();
               } else {
                 evt.target.unMute();
@@ -308,7 +319,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 wantsPlaybackRef.current = false;
                 setStatus('ended');
                 api.logPlaybackEvent({ event_type: 'complete', song: currentSong.id, station: currentStation?.id });
-                nextTrack();
+                actionsRef.current.nextTrack();
               }
             },
             onError: (evt) => {
@@ -335,7 +346,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
               // Auto advance quickly to next song in station queue
               if (consecutiveErrorsRef.current <= 5 && queue.length > 0) {
                 setTimeout(() => {
-                  nextTrack();
+                  actionsRef.current.nextTrack();
                 }, 1500);
               } else {
                 setErrorMessage('Selected track could not be loaded. Please choose another station or song.');
@@ -349,6 +360,11 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     };
 
     initOrLoad();
+    // Deliberately keyed on the song id only: re-running on volume/mute/queue
+    // changes would reload the video and restart playback. Volume/mute are read
+    // through refs (above) and track advancement goes through actionsRef, so the
+    // closures stay current without extra dependencies.
+    // oxlint-disable-next-line react-hooks/exhaustive-deps
   }, [currentSong?.id]);
 
   const playSong = (song: Song, station?: Station, newQueue?: Song[]) => {
@@ -460,7 +476,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   // Keep actionsRef fresh so the one-time Media Session listeners below always
   // call the latest closures.
   useEffect(() => {
-    actionsRef.current = { togglePlayPause, nextTrack, prevTrack, seekTo };
+    actionsRef.current = { togglePlayPause, toggleMute, nextTrack, prevTrack, seekTo };
   });
 
   // ---------------------------------------------------------------------------
@@ -648,22 +664,22 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
       if (e.code === 'Space') {
         e.preventDefault();
-        togglePlayPause();
+        actionsRef.current.togglePlayPause();
       } else if (e.key === 'n' || e.key === 'N') {
         e.preventDefault();
-        nextTrack();
+        actionsRef.current.nextTrack();
       } else if (e.key === 'p' || e.key === 'P') {
         e.preventDefault();
-        prevTrack();
+        actionsRef.current.prevTrack();
       } else if (e.key === 'm' || e.key === 'M') {
         e.preventDefault();
-        toggleMute();
+        actionsRef.current.toggleMute();
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [togglePlayPause, nextTrack, prevTrack, toggleMute]);
+  }, []);
 
   return (
     <PlayerContext.Provider

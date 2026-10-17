@@ -110,7 +110,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, onCatal
   const [insightsBusy, setInsightsBusy] = useState(false);
 
 
-  const checkAuth = async () => {
+  async function checkAuth() {
     try {
       const user = await api.getCurrentUser();
       if (user.authenticated && user.is_staff) {
@@ -131,12 +131,15 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, onCatal
       setCurrentUser(null);
       setIsAuthenticated(false);
     }
-  };
+  }
 
   useEffect(() => {
     if (isOpen) {
       checkAuth();
     }
+    // Intentionally runs only when the modal opens; checkAuth is recreated each
+    // render (it closes over mutable state), so listing it would loop.
+    // oxlint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -243,7 +246,9 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, onCatal
     }
   };
 
-  const loadAdminData = async () => {
+  // A hoisted function declaration (not a const arrow) so `checkAuth`, which is
+  // defined above it, can call it without a temporal-dead-zone reference.
+  async function loadAdminData() {
     try {
       const [statsData, takedownData, auditData, stationsData, artistsData, genresData, categoriesData, requestData] = await Promise.all([
         api.getAdminStats(),
@@ -271,7 +276,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, onCatal
     }
     await loadSongs();
     await loadInsights();
-  };
+  }
 
   const handleTogglePublication = async (song: Song) => {
     const nextStatus = song.publication_status === 'published' ? 'taken_down' : 'published';
@@ -627,7 +632,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, onCatal
     e.preventDefault();
     if (!stationForm.title.trim()) return;
     try {
-      const created = await api.createAdminStation({
+      await api.createAdminStation({
         title: stationForm.title.trim(),
         title_ne: stationForm.title_ne.trim(),
         tagline: stationForm.tagline.trim(),
@@ -688,16 +693,6 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, onCatal
       onCatalogUpdated?.();
     } catch {
       alert('Failed to reorder featured songs.');
-    }
-  };
-
-  const handleToggleStationFeatured = async (station: Station) => {
-    try {
-      await api.updateAdminStation(station.id, { is_featured: !station.is_featured });
-      loadAdminData();
-      onCatalogUpdated?.();
-    } catch {
-      alert('Failed to update featured station.');
     }
   };
 

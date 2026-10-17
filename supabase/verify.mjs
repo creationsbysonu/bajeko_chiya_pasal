@@ -421,6 +421,17 @@ check('submit_song_request validates the YouTube link', badUrl?.includes('valid 
 const badFestival = await rpcError('submit_song_request', { p_title: 'T', p_requester_name: 'X', p_festival_slug: 'nope' });
 check('submit_song_request rejects unknown festival', badFestival?.includes('Unknown festival'), badFestival);
 
+// Without an email OR an (anonymous) session there is nothing to throttle on,
+// so the request is refused rather than left unbounded.
+const noIdentity = await rpcError('submit_song_request', { p_title: 'Valid Title', p_requester_name: 'X' });
+check('submit_song_request requires an email or session', noIdentity?.includes('requester_email'), noIdentity);
+
+const auditedEmail = await one(
+  `select (details ? 'requester_email') as has_email from public.audit_logs
+   where action = 'SONG_REQUEST_SUBMITTED' order by id desc limit 1`
+);
+check('song request audit omits requester email', auditedEmail?.has_email === false, JSON.stringify(auditedEmail));
+
 const anonQueue = await rpcError('admin_song_requests');
 check('anon admin_song_requests refused', anonQueue?.includes('Admin access required'), anonQueue);
 

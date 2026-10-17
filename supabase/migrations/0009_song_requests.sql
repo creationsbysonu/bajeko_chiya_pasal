@@ -113,6 +113,15 @@ begin
         raise exception 'genre_id: Unknown genre.';
     end if;
 
+    -- --- identity for throttling --------------------------------------------
+    -- The throttle below keys on the requester email or the (anonymous) listener
+    -- session. Without either, a caller could submit without limit, so demand one.
+    -- The website always creates an anonymous session, so only direct API abuse
+    -- with a bare anon key hits this.
+    if v_email = '' and v_uid is null then
+        raise exception 'requester_email: Add an email (or enable cookies) so suggestions can be rate-limited.';
+    end if;
+
     -- --- throttle: 8 suggestions/hour per email or listener session ---------
     select count(*) into v_recent
     from public.song_requests
@@ -147,8 +156,7 @@ begin
         v_request_id::text,
         jsonb_build_object(
             'title', left(btrim(p_title), 300),
-            'festival_slug', v_slug,
-            'requester_email', v_email
+            'festival_slug', v_slug
         )
     );
 

@@ -8,6 +8,27 @@ interface StationCardProps {
   station: Station;
 }
 
+// Cultural icon selector — declared at module scope (not during render) so React
+// treats it as a stable component rather than re-mounting a new one each render.
+const AmbientGlyph: React.FC<{ type: string; className?: string }> = ({ type, className }) => {
+  switch (type) {
+    case 'teashop_rain':
+      return <Coffee className={className} />;
+    case 'bus_highway':
+      return <Bus className={className} />;
+    case 'mountain_wind':
+      return <Mountain className={className} />;
+    case 'temple_bells':
+      return <Sun className={className} />;
+    case 'gentle_breeze':
+      return <Heart className={className} />;
+    case 'tape_hiss':
+      return <Flame className={className} />;
+    default:
+      return <Radio className={className} />;
+  }
+};
+
 export const StationCard: React.FC<StationCardProps> = ({ station }) => {
   const { locale, t } = useI18n();
   const { currentStation, playStation, status } = usePlayer();
@@ -15,27 +36,6 @@ export const StationCard: React.FC<StationCardProps> = ({ station }) => {
   const isCurrent = currentStation?.slug === station.slug;
   const isPlaying = isCurrent && status === 'playing';
 
-  // Cultural icon selector
-  const getAmbientIcon = (type: string) => {
-    switch (type) {
-      case 'teashop_rain':
-        return Coffee;
-      case 'bus_highway':
-        return Bus;
-      case 'mountain_wind':
-        return Mountain;
-      case 'temple_bells':
-        return Sun;
-      case 'gentle_breeze':
-        return Heart;
-      case 'tape_hiss':
-        return Flame;
-      default:
-        return Radio;
-    }
-  };
-
-  const AmbientIcon = getAmbientIcon(station.ambient_type);
   const coverUrl = station.cover_image || 'https://images.unsplash.com/photo-1544787219-7f47ccb76574?auto=format&fit=crop&w=1200&q=80';
 
   return (
@@ -59,7 +59,7 @@ export const StationCard: React.FC<StationCardProps> = ({ station }) => {
         {/* Ambient Badge */}
         <div className="absolute top-2.5 left-2.5 z-10">
           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/70 backdrop-blur-md text-xs font-mono text-neutral-400 border border-white/10 font-bold">
-            <AmbientIcon className="w-3 h-3 text-red-500" />
+            <AmbientGlyph type={station.ambient_type} className="w-3 h-3 text-red-500" />
             <span>{station.ambient_type.replace('_', ' ').toUpperCase()}</span>
           </span>
         </div>

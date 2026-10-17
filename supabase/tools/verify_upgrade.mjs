@@ -107,7 +107,7 @@ check('chhath mix blends trending festive tracks', sources.has('festival') && so
 const sample = (chhath?.results ?? [])[0];
 check('playlist songs are playable', Boolean(sample?.provider_video_id), JSON.stringify(sample).slice(0, 120));
 
-const suggestion = (await q("select public.submit_song_request('Test Song', 'Someone', '', '', null, '', 'Tester', '') as x"))[0].x;
+const suggestion = (await q("select public.submit_song_request('Test Song', 'Someone', '', '', null, '', 'Tester', 'tester@example.com') as x"))[0].x;
 check('upgrade adds the song request workflow', typeof suggestion?.request_id === 'number', JSON.stringify(suggestion));
 
 // 3. Idempotency: re-running the upgrade must be a no-op, not an error.
