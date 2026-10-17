@@ -101,13 +101,19 @@ export const BajekoChiyaPasalSection: React.FC<BajekoChiyaPasalSectionProps> = (
       <div className="relative z-10 p-5 sm:p-8 lg:p-10">
         {/* Shop board header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <Reveal variant="up" className="flex items-center gap-3.5">
-            <span className="grid place-items-center w-14 h-14 rounded-2xl bg-white/5 border border-red-500/20 shadow-lg flex-shrink-0">
-              <BrandMark size={34} />
+          <Reveal variant="up" className="flex items-center gap-4">
+            <span className="grid place-items-center w-16 h-16 rounded-2xl bg-white/5 border border-red-500/20 shadow-lg flex-shrink-0">
+              <BrandMark size={38} />
             </span>
-            <div>
-              <p className="text-[10px] font-mono uppercase tracking-[0.45em] text-gold-500/80">{cp.kicker}</p>
-              <h2 className={`text-2xl sm:text-3xl font-black text-white leading-tight ${ne ? 'font-nepali' : 'font-serif'}`}>
+            <div className="min-w-0">
+              <p className="text-[11px] font-mono uppercase tracking-[0.4em] text-red-400/90">
+                {cp.kicker}
+              </p>
+              <h2
+                className={`mt-1 text-3xl sm:text-4xl font-black text-white leading-[1.05] ${
+                  ne ? 'font-nepali' : 'font-serif tracking-tight'
+                }`}
+              >
                 {cp.heading}
               </h2>
             </div>
@@ -115,7 +121,7 @@ export const BajekoChiyaPasalSection: React.FC<BajekoChiyaPasalSectionProps> = (
 
           <Reveal variant="fade" delay={80}>
             <span
-              className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border text-xs font-bold font-mono uppercase tracking-wider ${
+              className={`inline-flex items-center gap-2 px-4 py-2 rounded-full border text-[11px] font-semibold font-mono uppercase tracking-[0.15em] ${
                 isOpen
                   ? 'bg-emerald-500/10 border-emerald-400/40 text-emerald-300'
                   : 'bg-white/5 border-white/15 text-neutral-400'
@@ -128,7 +134,7 @@ export const BajekoChiyaPasalSection: React.FC<BajekoChiyaPasalSectionProps> = (
           </Reveal>
         </div>
 
-        <p className={`mt-4 max-w-2xl text-sm text-cream-200/85 leading-relaxed ${ne ? 'font-nepali' : ''}`}>
+        <p className={`mt-5 max-w-2xl text-[15px] sm:text-base text-cream-200/80 leading-relaxed ${ne ? 'font-nepali' : ''}`}>
           {cp.intro}
         </p>
 
@@ -136,21 +142,21 @@ export const BajekoChiyaPasalSection: React.FC<BajekoChiyaPasalSectionProps> = (
         <div className="mt-6 grid gap-5 lg:grid-cols-[1.05fr_1fr]">
           {/* Today's special */}
           <Reveal variant="up" delay={120}>
-            <div className="h-full rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm p-4 sm:p-5 flex flex-col">
+            <div className="h-full rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm p-5 flex flex-col">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] font-mono uppercase tracking-[0.35em] text-red-400 font-bold">
+                <span className="text-[11px] font-mono uppercase tracking-[0.3em] text-red-400 font-semibold">
                   {cp.specialLabel}
                 </span>
                 {specialPlaying && (
-                  <span className="inline-flex items-center gap-1 text-[10px] font-mono uppercase tracking-wider text-emerald-300">
-                    <Volume2 className="w-3 h-3" /> {cp.nowPouring}
+                  <span className="inline-flex items-center gap-1.5 text-[11px] font-mono uppercase tracking-[0.15em] text-emerald-300">
+                    <Volume2 className="w-3.5 h-3.5" /> {cp.nowPouring}
                   </span>
                 )}
               </div>
 
               {special ? (
-                <div className="mt-3 flex items-center gap-4 flex-1">
-                  <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden border border-white/10 flex-shrink-0 bg-white/5">
+                <div className="mt-4 flex items-center gap-5 flex-1">
+                  <div className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-xl overflow-hidden border border-white/10 flex-shrink-0 bg-white/5 shadow-lg">
                     <img
                       src={specialArt}
                       alt={specialTitle}
@@ -159,16 +165,21 @@ export const BajekoChiyaPasalSection: React.FC<BajekoChiyaPasalSectionProps> = (
                     />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <h3 className={`text-base sm:text-lg font-bold text-white truncate ${ne ? 'font-nepali' : ''}`} title={specialTitle}>
+                    <h3
+                      className={`text-lg sm:text-xl font-bold text-white leading-snug truncate ${ne ? 'font-nepali' : 'font-serif'}`}
+                      title={specialTitle}
+                    >
                       {specialTitle}
                     </h3>
-                    <p className="text-xs text-neutral-400 truncate">{specialArtist || special.film_or_source}</p>
-                    <p className={`mt-1.5 text-[11px] text-gold-500/80 leading-snug ${ne ? 'font-nepali' : ''}`}>
+                    <p className="mt-1 text-[13px] text-neutral-400 truncate">
+                      {specialArtist || special.film_or_source}
+                    </p>
+                    <p className={`mt-2 text-xs text-cream-300/70 leading-relaxed ${ne ? 'font-nepali' : ''}`}>
                       {cp.specialHint}
                     </p>
                     <button
                       onClick={() => playSong(special)}
-                      className="mt-3 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-red-600 hover:bg-red-500 text-white text-xs font-bold tracking-wide shadow-glow-red border border-red-500/50 transition-all duration-200 ease-out hover:scale-105 active:scale-95"
+                      className="mt-4 inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-red-600 hover:bg-red-500 text-white text-[13px] font-semibold tracking-wide shadow-glow-red border border-red-500/50 transition-all duration-200 ease-out hover:scale-105 active:scale-95"
                     >
                       <Play className="w-3.5 h-3.5 fill-white" />
                       {cp.sipPlay}
@@ -176,28 +187,28 @@ export const BajekoChiyaPasalSection: React.FC<BajekoChiyaPasalSectionProps> = (
                   </div>
                 </div>
               ) : (
-                <p className={`mt-4 text-sm text-neutral-500 ${ne ? 'font-nepali' : ''}`}>{cp.specialEmpty}</p>
+                <p className={`mt-4 text-sm text-neutral-500 leading-relaxed ${ne ? 'font-nepali' : ''}`}>{cp.specialEmpty}</p>
               )}
             </div>
           </Reveal>
 
           {/* Tea menu */}
           <Reveal variant="up" delay={180}>
-            <div className="h-full rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm p-4 sm:p-5">
+            <div className="h-full rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm p-5">
               <div className="flex items-center justify-between mb-1">
-                <span className="text-[10px] font-mono uppercase tracking-[0.35em] text-gold-500/80 font-bold">
+                <span className="text-[11px] font-mono uppercase tracking-[0.3em] text-red-400 font-semibold">
                   {cp.menuLabel}
                 </span>
                 <button
                   onClick={onExploreCatalog}
-                  className="inline-flex items-center gap-1 text-[11px] font-mono text-neutral-400 hover:text-white transition-colors"
+                  className="inline-flex items-center gap-1 text-xs font-medium text-neutral-400 hover:text-white transition-colors"
                 >
-                  {cp.menuAll} <ArrowRight className="w-3 h-3" />
+                  {cp.menuAll} <ArrowRight className="w-3.5 h-3.5" />
                 </button>
               </div>
-              <p className={`text-[11px] text-neutral-500 mb-3 ${ne ? 'font-nepali' : ''}`}>{cp.menuHint}</p>
+              <p className={`text-xs text-neutral-500 mb-4 ${ne ? 'font-nepali' : ''}`}>{cp.menuHint}</p>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {BREWS.map((brew) => {
                   const station = stationFor(brew.station);
                   const playing = Boolean(station && currentStation?.slug === station.slug && status === 'playing');
@@ -206,21 +217,21 @@ export const BajekoChiyaPasalSection: React.FC<BajekoChiyaPasalSectionProps> = (
                       key={brew.id}
                       onClick={() => station && playStation(station)}
                       disabled={!station}
-                      className={`group text-left p-3 rounded-xl border transition-all duration-200 ease-out hover:-translate-y-0.5 disabled:opacity-40 disabled:cursor-not-allowed ${
+                      className={`group text-left p-3.5 rounded-xl border transition-all duration-200 ease-out hover:-translate-y-0.5 disabled:opacity-40 disabled:cursor-not-allowed ${
                         playing
                           ? 'bg-red-600/15 border-red-500/50'
-                          : 'bg-white/3 border-white/8 hover:border-gold-500/40 hover:bg-white/6'
+                          : 'bg-white/3 border-white/8 hover:border-red-500/40 hover:bg-white/6'
                       }`}
                     >
-                      <div className="flex items-center gap-2.5">
-                        <span className={`grid place-items-center w-8 h-8 rounded-lg flex-shrink-0 border ${playing ? 'bg-red-600/25 border-red-500/40' : 'bg-white/5 border-white/10'}`}>
-                          <brew.Icon className={`w-4 h-4 ${playing ? 'text-red-400' : 'text-gold-500'}`} />
+                      <div className="flex items-center gap-3">
+                        <span className={`grid place-items-center w-9 h-9 rounded-lg flex-shrink-0 border ${playing ? 'bg-red-600/25 border-red-500/40' : 'bg-white/5 border-white/10'}`}>
+                          <brew.Icon className={`w-[18px] h-[18px] ${playing ? 'text-red-400' : 'text-red-400/80'}`} />
                         </span>
                         <div className="min-w-0">
-                          <h4 className={`text-xs font-bold text-white truncate ${ne ? 'font-nepali' : ''}`}>
+                          <h4 className={`text-sm font-semibold text-white truncate ${ne ? 'font-nepali' : ''}`}>
                             {ne ? brew.ne : brew.en}
                           </h4>
-                          <p className={`text-[10px] text-neutral-500 truncate ${ne ? 'font-nepali' : ''}`}>
+                          <p className={`mt-0.5 text-xs text-neutral-500 truncate ${ne ? 'font-nepali' : ''}`}>
                             {ne ? brew.noteNe : brew.noteEn}
                           </p>
                         </div>
@@ -234,12 +245,12 @@ export const BajekoChiyaPasalSection: React.FC<BajekoChiyaPasalSectionProps> = (
         </div>
 
         {/* House rule */}
-        <div className="mt-5 pt-4 border-t border-white/8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-          <p className={`text-[11px] text-neutral-500 ${ne ? 'font-nepali' : ''}`}>
-            <span className="text-gold-500/80 font-mono uppercase tracking-wider mr-1.5">{cp.houseRule}</span>
+        <div className="mt-6 pt-5 border-t border-white/10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <p className={`text-xs text-neutral-500 leading-relaxed ${ne ? 'font-nepali' : ''}`}>
+            <span className="text-red-400 font-mono uppercase tracking-[0.2em] text-[11px] mr-2">{cp.houseRule}</span>
             {cp.houseRuleText}
           </p>
-          <p className={`text-[11px] text-red-400/80 font-mono ${ne ? 'font-nepali' : ''}`}>{cp.firstSip}</p>
+          <p className={`text-xs text-red-400/80 font-mono tracking-wide ${ne ? 'font-nepali' : ''}`}>{cp.firstSip}</p>
         </div>
       </div>
     </section>
