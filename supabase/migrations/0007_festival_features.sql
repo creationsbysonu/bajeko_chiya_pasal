@@ -12,19 +12,22 @@ create table if not exists public.festival_categories (
     slug            text not null unique,
     name            text not null,
     name_ne         text not null default '',
-    emoji           text not null default '🎑',
     description     text not null default '',
     display_order   integer not null default 0,
     is_active       boolean not null default true,
     created_at      timestamptz not null default now()
 );
 
+-- Festival art is drawn with the custom SVG glyph set on the client
+-- (frontend/src/components/FestivalGlyph.tsx). The old emoji column is retired;
+-- this drops it from databases created before the glyph set existed.
+alter table public.festival_categories drop column if exists emoji;
+
 create index if not exists idx_festival_categories_display_order on public.festival_categories (display_order);
 create index if not exists idx_festival_categories_is_active on public.festival_categories (is_active);
 
 comment on table public.festival_categories is 'Seasonal festival catalog (Dashain, Tihar, Teej, ...).';
 comment on column public.festival_categories.slug is 'URL-safe festival identifier.';
-comment on column public.festival_categories.emoji is 'Colourful festival emoji used on cards.';
 
 -- ---------------------------------------------------------------------------
 -- Link songs to festivals (nullable; songs can live without a festival tag).
@@ -40,34 +43,34 @@ create index if not exists idx_songs_festival_id on public.songs (festival_id);
 -- ---------------------------------------------------------------------------
 -- Existing note: 'special' genre_categories row already describes "Festive & Seasonal".
 -- We add a granular festival-level catalog for the UX section.
-insert into public.festival_categories (id, slug, name, name_ne, emoji, description, display_order, is_active)
+insert into public.festival_categories (id, slug, name, name_ne, description, display_order, is_active)
 values
     -- Dashain (the biggest Nepali festival)
-    (1, 'dashain', 'Dashain', 'दशैं', '🪁',
+    (1, 'dashain', 'Dashain', 'दशैं',
      'मालश्रीको धुन, पिङ-चङ्गा, देउसी-भैलोको उल्लास।', 1, true),
 
     -- Tihar (festival of lights, deusi bhailo)
-    (2, 'tihar', 'Tihar', 'तिहार', '🪔',
+    (2, 'tihar', 'Tihar', 'तिहार',
      'लक्ष्मी पूजा, दीपमाला, भैलो बङ्गो, देउसी.', 2, true),
 
     -- Teej (women-centric monsoon festival)
-    (3, 'teej', 'Teej', 'तीज', '💐',
+    (3, 'teej', 'Teej', 'तीज',
      'तोली भरा, मेँझ्वरेटी, धुमधामका लोक ताल।', 3, true),
 
     -- Chitrabhan (Nepali New Year)
-    (4, 'chitrabhan', 'Chitrabhan', 'चित्रबहिन', '🎉',
+    (4, 'chitrabhan', 'Chitrabhan', 'चित्रबहिन',
      'Nepali New Year melodies and seasonal songs.', 4, true),
 
     -- Sonam Lhosar (Tamang New Year)
-    (5, 'sonam-lhosar', 'Sonam Lhosar', 'सोनम ल्होसर', '🏔️',
+    (5, 'sonam-lhosar', 'Sonam Lhosar', 'सोनम ल्होसर',
      'Tamang New Year, lokal and folk sounds.', 5, true),
 
     -- Buddha Jayanti (Buddhist festival)
-    (6, 'buddha-jayanti', 'Buddha Jayanti', 'बुद्ध जयंती', '☸️',
+    (6, 'buddha-jayanti', 'Buddha Jayanti', 'बुद्ध जयंती',
      'Peaceful melodies, chants, and Buddhist heritage songs.', 6, true),
 
     -- Maha Shivaratri (Hindu holy night)
-    (7, 'maha-shivaratri', 'Maha Shivaratri', 'महा शिवरात्रि', '🔱',
+    (7, 'maha-shivaratri', 'Maha Shivaratri', 'महा शिवरात्रि',
      'Devotional and meditative Shiva-related songs.', 7, true)
 on conflict (id) do nothing;
 

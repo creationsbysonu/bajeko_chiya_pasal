@@ -187,7 +187,6 @@ export interface FestivalCategory {
   slug: string;
   name: string;
   name_ne: string;
-  emoji: string;
   description: string;
   display_order: number;
   is_active: boolean;
@@ -249,7 +248,7 @@ export interface SongRequestSummary {
   artist: string;
   festival_name?: string | null;
   festival_name_ne?: string | null;
-  festival_emoji?: string | null;
+  festival_slug?: string | null;
   status: string;
   created_at: string;
 }
@@ -261,7 +260,7 @@ export interface SongRequestTicket {
   youtube_url: string;
   festival?: number | null;
   festival_name?: string | null;
-  festival_emoji?: string | null;
+  festival_slug?: string | null;
   genre?: number | null;
   note: string;
   requester_name: string;

@@ -7,7 +7,7 @@ An original, production-oriented Nepali music discovery and radio platform inspi
 
 ---
 
-## 📻 Core Highlights & Features
+## Core Highlights & Features
 
 - **Themed Radio Worlds (१० मौलिक सांगीतिक परिवेशहरू)**:
   1. **Purano Radio (पुरानो रेडियो)**: Golden era Radio Nepal classics (Narayan Gopal, Tara Devi, Aruna Lama).
@@ -53,7 +53,7 @@ An original, production-oriented Nepali music discovery and radio platform inspi
 
 ---
 
-## 🛠️ Architecture & Tech Stack
+## Architecture & Tech Stack
 
 | Layer | Technology |
 |---|---|
@@ -69,7 +69,7 @@ replaced: see **[DEPLOY.md](DEPLOY.md)** for the Supabase + Vercel setup.
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ### 1. Frontend
 
@@ -104,7 +104,7 @@ npm run verify    # applies migrations + seed to in-process Postgres, runs
 
 ---
 
-## ☁️ Production deployment
+## Production deployment
 
 Push to GitHub, then follow **[DEPLOY.md](DEPLOY.md)**:
 
@@ -120,7 +120,7 @@ documented at the bottom of DEPLOY.md.
 
 ---
 
-## 🔑 Administrative Access
+## Administrative Access
 
 Admins sign in through the **Admin Portal** with a Supabase Auth account that
 appears in the `public.admins` allowlist (DEPLOY.md §4). Every `admin_*` RPC
@@ -129,7 +129,7 @@ access is denied to browser roles by row-level security.
 
 ---
 
-## 📂 Project Structure
+## Project Structure
 
 ```
 purano-dhun/

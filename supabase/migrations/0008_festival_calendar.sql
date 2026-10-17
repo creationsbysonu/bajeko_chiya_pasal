@@ -52,44 +52,44 @@ comment on column public.festival_categories.mood_tags is 'Theme tags used to fi
 -- Fix the mislabelled row: id 4 is Nepali New Year, not Chaitra Dashain.
 -- ---------------------------------------------------------------------------
 update public.festival_categories
-set name = 'Nepali New Year', name_ne = 'नयाँ वर्ष', emoji = '🎉'
+set name = 'Nepali New Year', name_ne = 'नयाँ वर्ष'
 where id = 4;
 
 -- ---------------------------------------------------------------------------
 -- Remaining major festivals
 -- ---------------------------------------------------------------------------
-insert into public.festival_categories (id, slug, name, name_ne, emoji, description, display_order, is_active) values
-    (8,  'chhath',              'Chhath',               'छठ पर्व',            '🌅',
+insert into public.festival_categories (id, slug, name, name_ne, description, display_order, is_active) values
+    (8,  'chhath',              'Chhath',               'छठ पर्व',
      'सूर्य देवताको उपासना, नदी किनारको अर्घ्य र तराईको उल्लास।', 8, true),
-    (9,  'maghe-sankranti',     'Maghe Sankranti',      'माघे संक्रान्ति',     '🌾',
+    (9,  'maghe-sankranti',     'Maghe Sankranti',      'माघे संक्रान्ति',
      'तिल-चाकु, घ्यू-तरुल र छुवाछूतमुक्त सामाजिक सद्भावको पर्व।', 9, true),
-    (10, 'holi',                'Holi (Fagu Purnima)',  'होली (फागु पूर्णिमा)', '🌈',
+    (10, 'holi',                'Holi (Fagu Purnima)',  'होली (फागु पूर्णिमा)',
      'रङ खेल्ने, फागु गाउने र वसन्तलाई स्वागत गर्ने चाड।', 10, true),
-    (11, 'ram-navami',          'Ram Navami',           'राम नवमी',           '🏹',
+    (11, 'ram-navami',          'Ram Navami',           'राम नवमी',
      'मर्यादा पुरुषोत्तम श्रीरामको जन्मोत्सव र भजन-कीर्तन।', 11, true),
-    (12, 'janai-purnima',       'Janai Purnima',        'जनै पूर्णिमा',        '🧵',
+    (12, 'janai-purnima',       'Janai Purnima',        'जनै पूर्णिमा',
      'जनै फेर्ने र रक्षाबन्धन बाँध्ने पवित्र पूर्णिमा।', 12, true),
-    (13, 'krishna-janmashtami', 'Krishna Janmashtami',  'कृष्ण जन्माष्टमी',    '🦚',
+    (13, 'krishna-janmashtami', 'Krishna Janmashtami',  'कृष्ण जन्माष्टमी',
      'वासुदेव श्रीकृष्णको जन्मरात र मुरली-भजनको माधुरी।', 13, true),
-    (14, 'gaura-parva',         'Gaura Parva',          'गौरा पर्व',          '🙏',
+    (14, 'gaura-parva',         'Gaura Parva',          'गौरा पर्व',
      'सुदूरपश्चिमको देउडा खेल, गौरा-महेश्वरको आराधना।', 14, true),
-    (15, 'gai-jatra',           'Gai Jatra',            'गाईजात्रा',          '🐄',
+    (15, 'gai-jatra',           'Gai Jatra',            'गाईजात्रा',
      'स्वर्गीय आत्माको सम्झना, हास्य-व्यङ्ग्य र नेवाः संस्कृति।', 15, true),
-    (16, 'indra-jatra',         'Indra Jatra',          'इन्द्र जात्रा',       '🎭',
+    (16, 'indra-jatra',         'Indra Jatra',          'इन्द्र जात्रा',
      'कुमारी जात्रा, लखे नाच र काठमाडौंको ऐतिहासिक महोत्सव।', 16, true),
-    (17, 'bisket-jatra',        'Bisket Jatra',         'बिस्केट जात्रा',      '🎪',
+    (17, 'bisket-jatra',        'Bisket Jatra',         'बिस्केट जात्रा',
      'भक्तपुरको रथ तान्ने ऐतिहासिक जात्रा र नयाँ वर्षको जश्न।', 17, true),
-    (18, 'tamu-lhosar',         'Tamu Lhosar',          'तमु ल्होसार',        '🏔️',
+    (18, 'tamu-lhosar',         'Tamu Lhosar',          'तमु ल्होसार',
      'गुरुङ समुदायको नयाँ वर्ष, मादल-ढोल र मौलिक सेलो।', 18, true),
-    (19, 'gyalpo-lhosar',       'Gyalpo Lhosar',        'ग्याल्पो ल्होसार',   '🐎',
+    (19, 'gyalpo-lhosar',       'Gyalpo Lhosar',        'ग्याल्पो ल्होसार',
      'शेर्पा तथा हिमाली समुदायको नयाँ वर्ष, ताशी देलेक।', 19, true),
-    (20, 'yomari-punhi',        'Yomari Punhi',         'योमरी पुन्ही',        '🥟',
+    (20, 'yomari-punhi',        'Yomari Punhi',         'योमरी पुन्ही',
      'योमरी खाने र धान भित्र्याउने नेवाः कृषक पर्व।', 20, true),
-    (21, 'christmas',           'Christmas',            'क्रिसमस',           '🎄',
+    (21, 'christmas',           'Christmas',            'क्रिसमस',
      'नेपाली इसाई समुदायको आराधना र सद्भावको पर्व।', 21, true),
-    (22, 'eid',                 'Eid',                  'ईद',               '🌙',
+    (22, 'eid',                 'Eid',                  'ईद',
      'मुस्लिम समुदायको ईद-उल-फित्र र ईद-उल-अजहाको आनन्द।', 22, true),
-    (23, 'udhauli-ubhauli',     'Udhauli / Ubhauli',    'उधौली / उभौली',     '🌱',
+    (23, 'udhauli-ubhauli',     'Udhauli / Ubhauli',    'उधौली / उभौली',
      'किरात समुदायको सकेला नाच र प्रकृति-पूजा।', 23, true)
 on conflict (id) do nothing;
 
@@ -218,7 +218,7 @@ set search_path = public, pg_temp
 as $$
     with base as (
         select
-            fc.id, fc.slug, fc.name, fc.name_ne, fc.emoji, fc.description,
+            fc.id, fc.slug, fc.name, fc.name_ne, fc.description,
             fc.display_order, fc.mood_tags,
             (select count(*) from public.songs s
               where s.festival_id = fc.id and s.publication_status = 'published') as song_count
@@ -249,7 +249,7 @@ as $$
         jsonb_agg(
             jsonb_build_object(
                 'id', b.id, 'slug', b.slug, 'name', b.name, 'name_ne', b.name_ne,
-                'emoji', b.emoji, 'description', b.description,
+                'description', b.description,
                 'display_order', b.display_order, 'mood_tags', to_jsonb(b.mood_tags),
                 'song_count', b.song_count,
                 'start_date', o.start_date, 'end_date', o.end_date,

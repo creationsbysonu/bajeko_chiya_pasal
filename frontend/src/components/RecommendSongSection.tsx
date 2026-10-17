@@ -5,8 +5,9 @@ import { useI18n } from '../context/I18nContext';
 import { FestivalCategory, Genre, SongRequestSummary } from '../types';
 import {
   Send, CheckCircle2, Loader2, Link2, User, Mail, Tag, CalendarDays,
-  ListMusic, Sparkles, Music2, AlertCircle, ChevronDown,
+  ListMusic, ShieldCheck, Music2, AlertCircle, ChevronDown,
 } from 'lucide-react';
+import { FestivalGlyph } from './FestivalGlyph';
 
 /** Loose YouTube URL check that mirrors the server-side validation. */
 const YOUTUBE_RE = /^https?:\/\/(www\.|m\.|music\.)?(youtube\.com|youtu\.be)\//i;
@@ -310,7 +311,7 @@ export const RecommendSongSection: React.FC = () => {
                 </div>
 
                 <p className="text-[11px] text-neutral-600 font-nepali flex items-center gap-1.5">
-                  <Sparkles className="w-3 h-3 text-red-400/70 flex-shrink-0" />
+                  <ShieldCheck className="w-3 h-3 text-red-400/70 flex-shrink-0" />
                   {s.consent}
                 </p>
 
@@ -351,8 +352,8 @@ export const RecommendSongSection: React.FC = () => {
                       key={r.id}
                       className="flex items-start gap-3 p-3 rounded-xl bg-white/[0.02] border border-white/8"
                     >
-                      <div className="w-9 h-9 rounded-lg bg-white/5 flex items-center justify-center text-base flex-shrink-0">
-                        {r.festival_emoji || '🎵'}
+                      <div className="w-9 h-9 rounded-lg bg-white/5 flex items-center justify-center flex-shrink-0 text-neutral-300">
+                        {r.festival_slug ? <FestivalGlyph slug={r.festival_slug} className="w-4 h-4" /> : <Music2 className="w-4 h-4" />}
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-medium text-white truncate font-nepali">{r.title}</p>

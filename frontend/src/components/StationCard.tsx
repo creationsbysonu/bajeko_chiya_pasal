@@ -2,7 +2,7 @@ import React from 'react';
 import { Station } from '../types';
 import { useI18n } from '../context/I18nContext';
 import { usePlayer } from '../context/PlayerContext';
-import { Play, Volume2, Sparkles, Coffee, Bus, Mountain, Flame, Heart, Radio, Sun } from 'lucide-react';
+import { Play, Volume2, Coffee, Bus, Mountain, Flame, Heart, Radio, Sun } from 'lucide-react';
 
 interface StationCardProps {
   station: Station;
@@ -107,7 +107,7 @@ export const StationCard: React.FC<StationCardProps> = ({ station }) => {
         {/* Action Button Footer */}
         <div className="pt-3 border-t border-white/10 flex items-center justify-between">
           <div className="flex items-center gap-1.5 text-xs text-white/50 font-mono">
-            <Sparkles className="w-3 h-3 text-red-500" />
+            <Radio className="w-3 h-3 text-red-500" />
             <span>CONTINUOUS</span>
           </div>
 

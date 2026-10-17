@@ -416,7 +416,10 @@ describe('api.ts end-to-end against PostgREST bridge', () => {
     expect(typeof res.request_id).toBe('number');
 
     const recent = await api.getRecentSongRequests(5);
-    expect(recent.some((r) => r.title === 'Contract Test Recommendation')).toBe(true);
+    const mine = recent.find((r) => r.title === 'Contract Test Recommendation');
+    expect(mine).toBeDefined();
+    // The feed carries the festival slug (not an emoji) so the client can draw its glyph.
+    expect(mine?.festival_slug).toBe('dashain');
     // The public feed must never leak requester contact details.
     expect((recent[0] as unknown as Record<string, unknown>).requester_email).toBeUndefined();
 

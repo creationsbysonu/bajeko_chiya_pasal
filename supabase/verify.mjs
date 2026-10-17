@@ -265,7 +265,7 @@ check('get_featured stations + songs', Array.isArray(featured?.stations) && feat
 
 const festivals = await rpc('get_festival_categories');
 check('get_festival_categories returns seeded festivals', Array.isArray(festivals) && festivals.length === 23, `got ${festivals?.length}`);
-check('get_festival_categories shape', festivals?.[0]?.slug === 'dashain' && festivals?.[0]?.name_ne !== undefined && festivals?.[0]?.emoji !== undefined, JSON.stringify(festivals?.[0]).slice(0, 140));
+check('get_festival_categories shape', festivals?.[0]?.slug === 'dashain' && festivals?.[0]?.name_ne !== undefined && festivals?.[0]?.description !== undefined, JSON.stringify(festivals?.[0]).slice(0, 140));
 
 const dashain = await rpc('get_festival_songs', { p_festival_slug: 'dashain', p_limit: 24 });
 const dashainIds = (dashain?.results ?? []).map((s) => s.id);

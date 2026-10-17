@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Station } from '../types';
 import { useI18n } from '../context/I18nContext';
 import { usePlayer } from '../context/PlayerContext';
-import { Play, Pause, Sparkles, Shuffle } from 'lucide-react';
+import { Play, Pause, Radio, Shuffle } from 'lucide-react';
 
 interface RadioTunerProps {
   stations: Station[];
@@ -84,7 +84,7 @@ export const RadioTuner: React.FC<RadioTunerProps> = ({ stations }) => {
             <div className="flex items-center gap-2">
               {isSuggested && (
                 <div className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/60 backdrop-blur-md border border-white/10 text-xs font-mono tracking-widest text-red-300 font-bold">
-                  <Sparkles className="w-3 h-3" />
+                  <Radio className="w-3 h-3" />
                   {ne ? 'सुझाव' : 'SUGGESTED'}
                 </div>
               )}
@@ -113,7 +113,7 @@ export const RadioTuner: React.FC<RadioTunerProps> = ({ stations }) => {
             <div className="max-w-xl space-y-2">
               {isSuggested && (
                 <span className="inline-flex items-center gap-1.5 text-xs font-mono uppercase tracking-widest text-red-400">
-                  <Sparkles className="w-3 h-3" />
+                  <Radio className="w-3 h-3" />
                   {ne ? 'तपाईंका लागि सुझाव' : 'Picked for you today'}
                 </span>
               )}

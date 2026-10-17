@@ -4,8 +4,9 @@ import { api } from '../services/api';
 import { FestivalCalendarEntry, FestivalSong, Song } from '../types';
 import { useI18n } from '../context/I18nContext';
 import { usePlayer } from '../context/PlayerContext';
-import { Play, Pause, Music, CalendarDays, Sparkles, ChevronRight, Flame, Camera } from 'lucide-react';
+import { Play, Pause, Music, Music2, CalendarDays, ChevronRight, Flame, Camera } from 'lucide-react';
 import { festivalImage } from '../utils/festivalImagery';
+import { FestivalGlyph } from './FestivalGlyph';
 
 /* --------------------------------------------------------------------------- */
 /* Helpers                                                                     */
@@ -225,7 +226,9 @@ const FestivalChip: React.FC<{
           <div className={`absolute inset-0 bg-gradient-to-br ${tone.glow} to-black`} />
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-black/45" />
-        <span className="absolute top-2.5 left-2.5 text-2xl leading-none drop-shadow">{entry.emoji}</span>
+        <span className="absolute top-2.5 left-2.5 flex items-center justify-center w-8 h-8 rounded-full bg-black/45 backdrop-blur-sm border border-white/15 text-white/90">
+          <FestivalGlyph slug={entry.slug} className="w-4 h-4" />
+        </span>
         <span className={`absolute top-2.5 right-2.5 text-[11px] font-mono font-bold px-1.5 py-0.5 rounded-full ${tone.pill}`}>
           {entry.is_active_window
             ? (ne ? 'अहिले' : 'Now')
@@ -360,19 +363,18 @@ export const FestiveSection: React.FC = () => {
               ) : (
                 <div className={`absolute inset-0 bg-gradient-to-br ${tone.glow} via-black/60 to-black/80`} />
               )}
-              <span
-                aria-hidden
-                className="pointer-events-none absolute -right-6 -bottom-10 text-[10rem] leading-none opacity-[0.07] select-none"
-              >
-                {current.emoji}
-              </span>
+              <FestivalGlyph
+                slug={current.slug}
+                strokeWidth={0.8}
+                className="pointer-events-none absolute -right-8 -bottom-10 w-56 h-56 text-white opacity-[0.06] select-none"
+              />
 
               <div className="relative grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] p-6 sm:p-8">
                 {/* Left: identity + countdown + CTA */}
                 <div className="flex flex-col">
                   <div className="flex items-center gap-3">
-                    <span className="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-3xl flex-shrink-0">
-                      {current.emoji}
+                    <span className={`w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center flex-shrink-0 ${tone.text}`}>
+                      <FestivalGlyph slug={current.slug} className="w-7 h-7" />
                     </span>
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
@@ -405,7 +407,7 @@ export const FestiveSection: React.FC = () => {
 
                   {vibeWindow && (
                     <div className="mt-5 flex items-start gap-2.5 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-3.5">
-                      <Sparkles className="w-4 h-4 text-amber-300 flex-shrink-0 mt-0.5" />
+                      <Music2 className="w-4 h-4 text-amber-300 flex-shrink-0 mt-0.5" />
                       <div>
                         <p className="text-xs font-bold text-amber-200 uppercase tracking-wider font-mono">
                           {t.festival.getInMood}

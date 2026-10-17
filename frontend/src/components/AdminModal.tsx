@@ -3,6 +3,7 @@ import { X, Lock, LogOut, AlertTriangle, ShieldCheck, FileText, Database, Plus, 
 import { api } from '../services/api';
 import { AdminStats, TakedownTicket, AuditLogItem, Song, Station, Artist, AuthUser, Genre, GenreCategory, StationQueueItem, AdminInsights, SongRequestTicket } from '../types';
 import { resolveCategories, categoryLabel } from '../utils/genreTaxonomy';
+import { FestivalGlyph } from './FestivalGlyph';
 
 
 interface AdminModalProps {
@@ -2878,9 +2879,10 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, onCatal
                             <span className="text-xs font-mono text-red-500 font-bold">
                               REQUEST #{req.id} • {req.status.replace('_', ' ').toUpperCase()}
                             </span>
-                            {req.festival_emoji && (
-                              <span className="text-xs px-2.5 py-0.5 rounded-full font-mono bg-neutral-900 text-neutral-300 border border-white/10">
-                                {req.festival_emoji} {req.festival_name}
+                            {req.festival_name && (
+                              <span className="inline-flex items-center gap-1.5 text-xs px-2.5 py-0.5 rounded-full font-mono bg-neutral-900 text-neutral-300 border border-white/10">
+                                {req.festival_slug && <FestivalGlyph slug={req.festival_slug} className="w-3.5 h-3.5" />}
+                                {req.festival_name}
                               </span>
                             )}
                           </div>

@@ -6,7 +6,6 @@ import {
   Play,
   Pause,
   Flame,
-  Sparkles,
   Radio,
   Star,
   Music,
@@ -214,7 +213,7 @@ export const HomeShowcase: React.FC<HomeShowcaseProps> = ({
     },
     {
       key: 'new',
-      icon: Sparkles,
+      icon: Music,
       eyebrow: ne ? 'नयाँ आगमन' : 'FRESH ARRIVALS',
       title: ne ? 'नयाँ रिलिजहरू' : 'New Releases',
       caption: ne ? 'भर्खरै राखिएका ताजा धुनहरू' : 'The latest recordings added to the archive',

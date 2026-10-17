@@ -1,7 +1,7 @@
 import React from 'react';
 import { usePlayer } from '../context/PlayerContext';
 import { useI18n } from '../context/I18nContext';
-import { X, Play, ListMusic, History, Sparkles } from 'lucide-react';
+import { X, Play, ListMusic, History, Music2 } from 'lucide-react';
 import { Song } from '../types';
 
 export const QueueDrawer: React.FC = () => {
@@ -51,7 +51,7 @@ export const QueueDrawer: React.FC = () => {
           {currentSong && (
             <div>
               <div className="flex items-center gap-2 text-xs font-mono text-neutral-500 uppercase tracking-widest mb-2">
-                <Sparkles className="w-3.5 h-3.5 text-red-500" />
+                <Music2 className="w-3.5 h-3.5 text-red-500" />
                 <span>{t.player.nowPlaying}</span>
               </div>
               <div className="p-3.5 rounded-2xl bg-neutral-950 border border-red-500/40 flex items-center gap-3.5 shadow-glow-red">

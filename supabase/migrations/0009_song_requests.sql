@@ -180,7 +180,7 @@ as $$
                 'artist', sr.artist,
                 'festival_name', fc.name,
                 'festival_name_ne', fc.name_ne,
-                'festival_emoji', fc.emoji,
+                'festival_slug', fc.slug,
                 'status', sr.status,
                 'created_at', sr.created_at
             ) as payload
@@ -227,7 +227,7 @@ begin
                     'youtube_url', sr.youtube_url,
                     'festival', sr.festival_id,
                     'festival_name', fc.name,
-                    'festival_emoji', fc.emoji,
+                    'festival_slug', fc.slug,
                     'genre', sr.genre_id,
                     'note', sr.note,
                     'requester_name', sr.requester_name,
