@@ -1,239 +1,446 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Reveal } from './motion/Reveal';
 import { api } from '../services/api';
-import { FestivalCategory, FestivalSong } from '../types';
+import { FestivalCalendarEntry, FestivalSong, Song } from '../types';
 import { useI18n } from '../context/I18nContext';
-import { Play, Music } from 'lucide-react';
+import { usePlayer } from '../context/PlayerContext';
+import { Play, Pause, Music, CalendarDays, Sparkles, ChevronRight } from 'lucide-react';
 
-interface FestivalCardProps {
-  festival: FestivalCategory;
-  isActive: boolean;
-  count: number;
-  onSelect: (slug: string) => void;
+/* --------------------------------------------------------------------------- */
+/* Helpers                                                                     */
+/* --------------------------------------------------------------------------- */
+
+/** A Date built from a `YYYY-MM-DD` string without the UTC-midnight shift. */
+const parseDate = (value: string): Date => {
+  const [y, m, d] = value.split('-').map(Number);
+  return new Date(y || 1970, (m || 1) - 1, d || 1);
+};
+
+const formatDate = (value: string, locale: string): string =>
+  parseDate(value).toLocaleDateString(locale === 'ne' ? 'ne-NP' : 'en-GB', {
+    month: 'short',
+    day: 'numeric',
+  });
+
+/**
+ * Festival songs come from a lighter RPC payload than catalog songs; widen them
+ * to the `Song` shape the player expects (only playback-critical fields matter).
+ */
+const toPlayableSong = (song: FestivalSong): Song => ({
+  id: song.id,
+  title: song.title,
+  title_ne: song.title_ne,
+  romanized_title: song.title,
+  artist: 0,
+  artist_name: song.artist_name,
+  artist_name_ne: song.artist_name_ne,
+  primary_genre_name: song.primary_genre_name,
+  primary_genre_category: song.primary_genre_category,
+  mood_tags: song.mood_tags ?? [],
+  decade: '',
+  duration_seconds: song.duration_seconds,
+  artwork_url: song.artwork_url,
+  playback_provider: song.playback_provider ?? 'youtube',
+  provider_video_id: song.provider_video_id ?? '',
+  provider_url: song.provider_url,
+  language: '',
+  attribution: '',
+  metadata_verification_status: 'verified',
+  publication_status: 'published',
+  play_count: song.play_count ?? 0,
+  release_year: song.release_year,
+  created_at: '',
+});
+
+const artworkFor = (song: FestivalSong): string | null =>
+  song.artwork_url ||
+  (song.provider_video_id ? `https://img.youtube.com/vi/${song.provider_video_id}/hqdefault.jpg` : null);
+
+type Tone = 'active' | 'imminent' | 'later';
+
+interface Countdown {
+  tone: Tone;
+  label: string;
+  detail: string;
 }
 
-const FestivalCard: React.FC<FestivalCardProps> = ({ festival, isActive, count, onSelect }) => {
+const countdownFor = (entry: FestivalCalendarEntry, locale: string, t: ReturnType<typeof useI18n>['t']): Countdown => {
+  const ne = locale === 'ne';
+  if (entry.is_active_window) {
+    const left = Math.max(entry.days_until_end, 0);
+    const detail = left <= 0
+      ? (ne ? 'आज अन्तिम दिन' : 'Ends today')
+      : `${left} ${left === 1 ? t.festival.dayLeft : t.festival.daysLeft}`;
+    return { tone: 'active', label: t.festival.happeningNow, detail };
+  }
+  const days = entry.days_until_start;
+  const when = formatDate(entry.start_date, locale);
+  if (days <= 0) return { tone: 'active', label: t.festival.happeningNow, detail: when };
+  if (days === 1) return { tone: 'imminent', label: t.festival.tomorrow, detail: when };
+  const label = `${days} ${days === 1 ? t.festival.dayToGo : t.festival.daysToGo}`;
+  return { tone: days <= 20 ? 'imminent' : 'later', label, detail: when };
+};
+
+const TONE_STYLES: Record<Tone, { pill: string; text: string; border: string; glow: string }> = {
+  active: {
+    pill: 'bg-red-600 text-white',
+    text: 'text-red-300',
+    border: 'border-red-500/50',
+    glow: 'from-red-600/30',
+  },
+  imminent: {
+    pill: 'bg-amber-500 text-black',
+    text: 'text-amber-300',
+    border: 'border-amber-500/45',
+    glow: 'from-amber-500/25',
+  },
+  later: {
+    pill: 'bg-white/10 text-neutral-200',
+    text: 'text-cream-200',
+    border: 'border-white/10',
+    glow: 'from-cream-300/10',
+  },
+};
+
+/* --------------------------------------------------------------------------- */
+/* Playable song row                                                           */
+/* --------------------------------------------------------------------------- */
+
+const FestiveSongRow: React.FC<{ song: FestivalSong; index: number }> = ({ song, index }) => {
   const { locale } = useI18n();
+  const { currentSong, status, playSong, togglePlayPause } = usePlayer();
+  const ne = locale === 'ne';
+  const isCurrent = currentSong?.id === song.id;
+  const isPlaying = isCurrent && status === 'playing';
+  const thumb = artworkFor(song);
+
+  const handlePlay = (event: React.MouseEvent) => {
+    event.stopPropagation();
+    if (isCurrent) togglePlayPause();
+    else playSong(toPlayableSong(song));
+  };
+
   return (
     <button
-      onClick={() => onSelect(festival.slug)}
-      className={`
-        group relative flex flex-col items-start gap-2.5 p-5 rounded-2xl border
-        transition-all duration-200 ease-out
-        ${isActive
-          ? 'border-red-500/60 bg-red-600/10 shadow-lg shadow-red-600/8 scale-[1.02]'
-          : 'border-white/8 bg-white/3 hover:bg-white/6 hover:scale-[1.03]'
-        }
-        focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2
-      `}
-      aria-pressed={isActive}
+      onClick={handlePlay}
+      aria-label={ne ? song.title_ne || song.title : song.title}
+      className={`group/row w-full text-left flex items-center gap-3 p-2.5 rounded-xl border transition-colors duration-200 ${
+        isCurrent
+          ? 'border-red-500/70 bg-red-600/15'
+          : 'border-transparent hover:border-white/10 hover:bg-white/5'
+      }`}
     >
-      <div className={`flex items-center gap-2.5 text-2xl ${isActive ? 'text-red-500' : 'text-white/80 group-hover:text-white/90'}`}>
-        <span className="text-xl">{festival.emoji}</span>
-        <span className="font-serif text-lg font-black tracking-tight text-white truncate max-w-[140px]">
-          {locale === 'ne' ? festival.name_ne : festival.name}
-        </span>
+      <span
+        className={`w-6 text-center font-serif text-base font-black tabular-nums flex-shrink-0 ${
+          index < 3 ? 'text-red-400' : 'text-neutral-500'
+        }`}
+      >
+        {index + 1}
+      </span>
+
+      <div className="relative w-11 h-11 rounded-lg overflow-hidden flex-shrink-0 bg-neutral-800">
+        {thumb ? (
+          <img src={thumb} alt={song.title} loading="lazy" className="w-full h-full object-cover" />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-neutral-500">
+            <Music className="w-4 h-4" />
+          </div>
+        )}
+        <div className="absolute inset-0 flex items-center justify-center bg-black/45 opacity-0 group-hover/row:opacity-100 transition-opacity duration-200">
+          {isPlaying ? (
+            <Pause className="w-4 h-4 fill-white text-white" />
+          ) : (
+            <Play className="w-4 h-4 fill-white text-white translate-x-0.5" />
+          )}
+        </div>
+        {isPlaying && (
+          <span className="absolute bottom-1 right-1 w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+        )}
       </div>
-      <p className="text-xs leading-relaxed text-white/40 font-nepali font-medium line-clamp-2">
-        {locale === 'ne' ? festival.description : festival.description}
-      </p>
-      <div className="flex items-center gap-2 mt-1">
-        <Music className="w-3.5 h-3.5 text-red-500/70 group-hover:text-red-500/90 transition-colors" />
-        <span className="text-xs font-mono text-white/40 tabular-nums">
-          {count} tune{count !== 1 ? 's' : ''}
-        </span>
+
+      <div className="min-w-0 flex-1">
+        <p className="text-[13px] font-semibold text-white truncate group-hover/row:text-red-300 transition-colors duration-150">
+          {ne ? song.title_ne || song.title : song.title}
+        </p>
+        <p className="text-xs text-neutral-400 font-nepali truncate">
+          {ne ? song.artist_name_ne || song.artist_name : song.artist_name}
+        </p>
       </div>
-      <Play
-        className={`absolute right-4 bottom-4 w-4 h-4 text-white/5 group-hover:text-white/30 transition-all ${isActive ? 'text-red-500/80' : ''}`}
-        aria-hidden
-      />
+
+      <span className="hidden sm:block text-[11px] font-mono text-neutral-500 tabular-nums flex-shrink-0 max-w-[120px] truncate">
+        {song.primary_genre_name || song.release_year || ''}
+      </span>
     </button>
   );
 };
 
-interface FestivalRowProps {
-  songs: FestivalSong[];
-  festivalName: string;
-  festivalNameNe: string;
-  locale: string;
-}
+/* --------------------------------------------------------------------------- */
+/* Festival chip (calendar rail)                                               */
+/* --------------------------------------------------------------------------- */
 
-const FestivalRow: React.FC<FestivalRowProps> = ({ songs, festivalName, festivalNameNe, locale }) => {
+const FestivalChip: React.FC<{
+  entry: FestivalCalendarEntry;
+  isActive: boolean;
+  onSelect: (slug: string) => void;
+}> = ({ entry, isActive, onSelect }) => {
+  const { locale, t } = useI18n();
+  const ne = locale === 'ne';
+  const status = countdownFor(entry, locale, t);
+  const tone = TONE_STYLES[status.tone];
+
   return (
-    <div className="pt-6 border-t border-white/8">
-      <h3 className="font-serif text-xl font-black text-white mb-4">
-        {locale === 'ne' ? festivalNameNe : festivalName}
-      </h3>
-      {songs.length === 0 ? (
-        <div className="py-10 text-center text-white/30">
-          <p>No festive songs found for this festival yet.</p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
-          {songs.map((song) => (
-            <div
-              key={song.id}
-              className="rounded-xl bg-white/3 border border-white/8 p-3 h-full group hover:bg-white/4 hover:border-white/12 transition-all duration-200 cursor-pointer"
-            >
-              <div className="flex items-center gap-2.5 mb-2">
-                <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-sm transition-transform duration-200 group-hover:scale-110">
-                  <Music className="w-4 h-4 text-red-500" />
-                </div>
-                <span className="font-serif text-xs font-bold text-white truncate flex-1">
-                  {song.title_ne || song.title}
-                </span>
-              </div>
-              <p className="text-[11px] text-white/30 font-mono font-bold leading-tight">
-                {song.artist_name}
-              </p>
-              <p className="text-[11px] text-white/20 font-mono font-bold mt-0.5">
-                {song.primary_genre_name ? `${song.primary_genre_name} · ${song.release_year ?? ''}` : 'Featured'}
-              </p>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-};
-
-/** Compact song list inside a festival card for the Home page. */
-interface FestivalNewListItemProps {
-  song: FestivalSong;
-}
-
-const FestivalNewListItem: React.FC<FestivalNewListItemProps> = ({ song }) => {
-  const { locale } = useI18n();
-  return (
-    <div className="rounded-xl bg-white/3 border border-white/8 p-3 h-full group hover:bg-white/4 hover:border-white/12 transition-all duration-200 cursor-pointer">
-      <div className="flex items-center gap-2.5 mb-2">
-        <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-sm transition-transform duration-200 group-hover:scale-110">
-          <Music className="w-4 h-4 text-red-500" />
-        </div>
-        <span className="font-serif text-xs font-bold text-white truncate flex-1">
-          {song.title_ne || song.title}
+    <button
+      onClick={() => onSelect(entry.slug)}
+      aria-pressed={isActive}
+      className={`group/chip relative flex-shrink-0 w-44 text-left rounded-2xl border p-3.5 transition-all duration-200 ease-out ${
+        isActive
+          ? `${tone.border} bg-white/8 shadow-lg scale-[1.02]`
+          : 'border-white/8 bg-white/3 hover:bg-white/6 hover:border-white/20'
+      } focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500`}
+    >
+      <div className="flex items-center justify-between gap-2 mb-2">
+        <span className="text-xl leading-none">{entry.emoji}</span>
+        <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-full ${tone.pill}`}>
+          {entry.is_active_window
+            ? (ne ? 'अहिले' : 'Now')
+            : entry.days_until_start <= 0
+              ? '•'
+              : `${entry.days_until_start}d`}
         </span>
       </div>
-      <p className="text-[11px] text-white/30 font-mono font-bold leading-tight">
-        {song.artist_name}
+      <p className={`font-serif text-sm font-black leading-snug truncate ${isActive ? 'text-white' : 'text-neutral-200'}`}>
+        {ne ? entry.name_ne || entry.name : entry.name}
       </p>
-      <p className="text-[11px] text-white/20 font-mono font-bold mt-0.5">
-        {song.primary_genre_name ? `${song.primary_genre_name} · ${song.release_year ?? ''}` : 'Featured'}
+      <p className="text-[11px] font-mono text-neutral-500 mt-1 truncate">
+        {status.detail} · {entry.song_count} {ne ? t.festival.tracksLabelNe : t.festival.tracksLabel}
       </p>
-    </div>
+    </button>
   );
 };
 
+/* --------------------------------------------------------------------------- */
+/* Section                                                                     */
+/* --------------------------------------------------------------------------- */
 
-/** Interactive festival catalog section on the Home page */
+/** Calendar-aware festive catalog: spotlights the next festival and the songs to vibe to before it. */
 export const FestiveSection: React.FC = () => {
   const { locale, t } = useI18n();
-  const [categories, setCategories] = useState<FestivalCategory[]>([]);
+  const { playSong } = usePlayer();
+  const ne = locale === 'ne';
+
+  const [calendar, setCalendar] = useState<FestivalCalendarEntry[]>([]);
   const [selectedSlug, setSelectedSlug] = useState<string | null>(null);
-  const [songs, setSongs] = useState<FestivalSong[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [playlist, setPlaylist] = useState<FestivalSong[]>([]);
+  const [loadingCalendar, setLoadingCalendar] = useState(true);
+  const [loadingSongs, setLoadingSongs] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
-    api.getFestivalCategories()
+    api.getFestivalCalendar()
       .then((data) => {
-        if (!cancelled) setCategories(data);
+        if (cancelled) return;
+        setCalendar(data);
+        // Default to the festival that is happening now or is soonest.
+        setSelectedSlug(data[0]?.slug ?? null);
       })
       .catch(console.error)
       .finally(() => {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) setLoadingCalendar(false);
       });
     return () => {
       cancelled = true;
     };
   }, []);
 
-  // Fetch songs for the selected festival
   useEffect(() => {
     if (!selectedSlug) {
-      setSongs([]);
+      setPlaylist([]);
       return;
     }
     let cancelled = false;
-    setLoading(true);
-    api.getFestivalSongs(selectedSlug, 18)
+    setLoadingSongs(true);
+    api.getFestivalSongs(selectedSlug, 24)
       .then((data) => {
-        if (!cancelled) setSongs(data.results);
+        if (!cancelled) setPlaylist(data.results);
       })
       .catch(console.error)
       .finally(() => {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) setLoadingSongs(false);
       });
     return () => {
       cancelled = true;
     };
   }, [selectedSlug]);
 
-  const selectedCategory = useMemo(
-    () => categories.find((c) => c.slug === selectedSlug) ?? null,
-    [categories, selectedSlug]
+  const current = useMemo(
+    () => calendar.find((c) => c.slug === selectedSlug) ?? calendar[0] ?? null,
+    [calendar, selectedSlug]
   );
 
-  const handleSelect = (slug: string) => {
-    setSelectedSlug((prev) => (prev === slug ? null : slug));
+  const status = current ? countdownFor(current, locale, t) : null;
+  const tone = status ? TONE_STYLES[status.tone] : TONE_STYLES.later;
+  const vibeWindow = Boolean(current && (current.is_active_window || current.is_imminent));
+
+  const playMix = () => {
+    if (!playlist.length) return;
+    const [first, ...rest] = playlist.map(toPlayableSong);
+    playSong(first, undefined, rest);
   };
 
   return (
     <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
-      {/* Section header + intro */}
-      <Reveal variant="up" className="text-center mb-12">
-        <div className="inline-flex items-center gap-2 text-xs font-mono text-white/30 uppercase tracking-[0.3em] mb-2">
-          <span>🎉</span>
-          <span>{t.festival.title}</span>
+      {/* Section header */}
+      <Reveal variant="up" className="text-center mb-10">
+        <div className="inline-flex items-center gap-2 text-xs font-mono text-neutral-400 uppercase tracking-[0.3em] mb-2">
+          <CalendarDays className="w-3.5 h-3.5 text-red-400" />
+          <span>{t.festival.calendarLabel}</span>
         </div>
         <h2 className="font-serif text-3xl font-black text-white">
-          {locale === 'ne' ? t.festival.titleNe : t.festival.title}
+          {ne ? t.festival.titleNe : t.festival.title}
         </h2>
-        <p className="text-white/40 mt-3 max-w-xl mx-auto text-sm leading-relaxed font-nepali">
-          {locale === 'ne'
-            ? t.festival.subtitleNe
-            : t.festival.subtitle}
+        <p className="text-neutral-400 mt-3 max-w-2xl mx-auto text-sm leading-relaxed font-nepali">
+          {ne ? t.festival.subtitleNe : t.festival.subtitle}
         </p>
       </Reveal>
 
-      {/* Festival chooser — horizontal scroll of category cards */}
-      <Reveal variant="up" delay={60} className="flex gap-4 overflow-x-auto pb-4 px-1 py-4 -mx-4">
-        {loading ? (
-          <div className="flex gap-4 min-w-max">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="flex-shrink-0 w-56 h-24 rounded-2xl bg-white/5 animate-pulse" />
-            ))}
-          </div>
-        ) : categories.length === 0 ? (
-          <div className="text-white/30">No festivals configured yet.</div>
-        ) : (
-          categories.map((cat) => (
-            <FestivalCard
-              key={cat.slug}
-              festival={cat}
-              isActive={selectedSlug === cat.slug}
-              count={songs.length}
-              onSelect={handleSelect}
-            />
-          ))
-        )}
-      </Reveal>
+      {loadingCalendar ? (
+        <div className="space-y-4">
+          <div className="h-64 rounded-3xl bg-white/5 animate-pulse" />
+          <div className="h-24 rounded-2xl bg-white/5 animate-pulse" />
+        </div>
+      ) : current && status ? (
+        <>
+          {/* Spotlight: the next festival and its mood-ready mix */}
+          <Reveal variant="up" delay={40}>
+            <div
+              className={`relative overflow-hidden rounded-3xl border ${tone.border} bg-gradient-to-br ${tone.glow} via-black/60 to-black/80 pd-dark-zone`}
+            >
+              <span
+                aria-hidden
+                className="pointer-events-none absolute -right-6 -bottom-10 text-[10rem] leading-none opacity-[0.07] select-none"
+              >
+                {current.emoji}
+              </span>
 
-      {/* Songs row for the selected festival */}
-      {!loading && selectedCategory && (
-        <Reveal variant="up" delay={100} className="mt-8">
-          <FestivalRow
-            songs={songs}
-            festivalName={selectedCategory.name}
-            festivalNameNe={selectedCategory.name_ne}
-            locale={locale}
-          />
-        </Reveal>
-      )}
+              <div className="relative grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] p-6 sm:p-8">
+                {/* Left: identity + countdown + CTA */}
+                <div className="flex flex-col">
+                  <div className="flex items-center gap-3">
+                    <span className="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-3xl flex-shrink-0">
+                      {current.emoji}
+                    </span>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className={`inline-flex items-center gap-1.5 text-[11px] font-mono font-bold uppercase tracking-widest px-2.5 py-1 rounded-full ${tone.pill}`}>
+                          {status.tone === 'active' && <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />}
+                          {status.label}
+                        </span>
+                      </div>
+                      <h3 className="font-serif text-2xl sm:text-3xl font-black text-white leading-tight mt-2">
+                        {ne ? current.name_ne || current.name : current.name}
+                      </h3>
+                    </div>
+                  </div>
 
-      {!loading && (selectedSlug === null || (songs.length === 0 && selectedCategory)) && (
-        <div className="mt-8 text-center text-sm text-white/20">
-          {t.festival.noSongs}
+                  <p className="text-sm text-neutral-300 font-nepali leading-relaxed mt-4">
+                    {current.description}
+                  </p>
+
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-4 text-[11px] font-mono text-neutral-400">
+                    <span className="inline-flex items-center gap-1.5">
+                      <CalendarDays className="w-3.5 h-3.5" />
+                      {formatDate(current.start_date, locale)}
+                      {current.end_date !== current.start_date ? ` – ${formatDate(current.end_date, locale)}` : ''}
+                    </span>
+                    <span className="tabular-nums">{status.detail}</span>
+                    {current.is_estimated && (
+                      <span className="text-amber-400/80">≈ {t.festival.estimated}</span>
+                    )}
+                  </div>
+
+                  {vibeWindow && (
+                    <div className="mt-5 flex items-start gap-2.5 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-3.5">
+                      <Sparkles className="w-4 h-4 text-amber-300 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <p className="text-xs font-bold text-amber-200 uppercase tracking-wider font-mono">
+                          {t.festival.getInMood}
+                        </p>
+                        <p className="text-xs text-amber-100/80 font-nepali mt-0.5">{t.festival.vibeHint}</p>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="mt-auto pt-6 flex items-center gap-4">
+                    <button
+                      onClick={playMix}
+                      disabled={!playlist.length}
+                      className="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-red-600 hover:bg-red-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold text-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400"
+                    >
+                      <Play className="w-4 h-4 fill-current" />
+                      {t.festival.listenNow}
+                    </button>
+                    <span className="text-xs font-mono text-neutral-400 tabular-nums">
+                      {current.song_count} {ne ? t.festival.dedicatedLabelNe : t.festival.dedicatedLabel}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Right: the playlist for this festival */}
+                <div className="relative">
+                  <div className="max-h-[360px] overflow-y-auto overscroll-contain pr-1 [scrollbar-width:thin]">
+                    {loadingSongs ? (
+                      <div className="space-y-1.5">
+                        {Array.from({ length: 6 }).map((_, i) => (
+                          <div key={i} className="h-16 rounded-xl bg-white/5 animate-pulse" />
+                        ))}
+                      </div>
+                    ) : playlist.length === 0 ? (
+                      <div className="flex h-full min-h-[180px] items-center justify-center text-center text-sm text-neutral-400">
+                        {ne ? t.festival.noSongsNe : t.festival.noSongs}
+                      </div>
+                    ) : (
+                      <div className="space-y-1">
+                        {playlist.map((song, i) => (
+                          <FestiveSongRow key={song.id} song={song} index={i} />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  {playlist.length > 6 && (
+                    <div className="pointer-events-none absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-black/80 to-transparent" />
+                  )}
+                </div>
+              </div>
+            </div>
+          </Reveal>
+
+          {/* Calendar rail: every major festival, soonest first */}
+          <Reveal variant="up" delay={90} className="mt-10">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-serif text-lg font-black text-white flex items-center gap-2">
+                <CalendarDays className="w-4 h-4 text-red-400" />
+                {t.festival.calendarLabel}
+              </h3>
+              <span className="hidden sm:inline-flex items-center gap-1 text-[11px] font-mono uppercase tracking-widest text-neutral-500">
+                {ne ? 'आगामी पहिले' : 'Soonest first'}
+                <ChevronRight className="w-3.5 h-3.5" />
+              </span>
+            </div>
+            <div className="flex gap-3 overflow-x-auto overscroll-contain pb-3 px-1 pt-1 -mx-1 [scrollbar-width:thin]">
+              {calendar.map((entry) => (
+                <FestivalChip
+                  key={entry.slug}
+                  entry={entry}
+                  isActive={entry.slug === selectedSlug}
+                  onSelect={setSelectedSlug}
+                />
+              ))}
+            </div>
+          </Reveal>
+        </>
+      ) : (
+        <div className="text-center text-sm text-neutral-500 py-12">
+          {ne ? t.festival.noSongsNe : t.festival.noSongs}
         </div>
       )}
     </section>

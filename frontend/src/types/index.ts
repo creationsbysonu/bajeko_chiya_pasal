@@ -191,6 +191,7 @@ export interface FestivalCategory {
   description: string;
   display_order: number;
   is_active: boolean;
+  mood_tags?: string[];
 }
 
 export interface FestivalSong {
@@ -208,11 +209,36 @@ export interface FestivalSong {
   play_count: number;
   is_featured?: boolean;
   featured_order?: number;
+  playback_provider?: string;
+  provider_video_id?: string;
+  provider_url?: string;
 }
 
 export interface Festival {
   festival: FestivalCategory;
   songs: FestivalSong[];
+}
+
+/** A festival plus its next occurrence window, for the calendar-aware section. */
+export interface FestivalCalendarEntry extends FestivalCategory {
+  song_count: number;
+  start_date: string;
+  end_date: string;
+  /** Days from today until the festival starts (negative once it is underway). */
+  days_until_start: number;
+  /** Days from today until the festival ends. */
+  days_until_end: number;
+  is_active_window: boolean;
+  /** Starts within 20 days — the "get in the mood" window. */
+  is_imminent: boolean;
+  /** True when the date was rolled forward a year because next year's gazette is not seeded yet. */
+  is_estimated: boolean;
+}
+
+export interface FestivalPlaylist {
+  count: number;
+  dedicated_count: number;
+  results: FestivalSong[];
 }
 
 export interface AuthPermissionSet {

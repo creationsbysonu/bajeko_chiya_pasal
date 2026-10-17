@@ -2,7 +2,7 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import {
   Artist, Genre, GenreCategory, Song, Station, FavoriteItem,
   AdminStats, AdminInsights, TakedownTicket, TakedownListResponse, StationQueueItem, AuditLogItem, AuthUser,
-  FestivalCategory, FestivalSong
+  FestivalCategory, FestivalCalendarEntry, FestivalPlaylist
 } from '../types';
 
 // Supabase is both the database and the backend: every read/write goes through
@@ -558,8 +558,12 @@ export const api = {
     return rpc<FestivalCategory[]>('get_festival_categories', args({}));
   },
 
-  async getFestivalSongs(slug: string, limit = 24): Promise<{ count: number; results: FestivalSong[] }> {
-    return rpc<{ count: number; results: FestivalSong[] }>('get_festival_songs', args({ p_festival_slug: slug, p_limit: limit }));
+  async getFestivalCalendar(): Promise<FestivalCalendarEntry[]> {
+    return rpc<FestivalCalendarEntry[]>('get_festival_calendar', args({}));
+  },
+
+  async getFestivalSongs(slug: string, limit = 24): Promise<FestivalPlaylist> {
+    return rpc<FestivalPlaylist>('get_festival_songs', args({ p_festival_slug: slug, p_limit: limit }));
   },
 
   // Auth (Supabase Auth; admins are the public.admins allowlist)

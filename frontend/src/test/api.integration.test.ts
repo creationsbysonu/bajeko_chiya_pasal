@@ -312,7 +312,7 @@ describe('api.ts end-to-end against PostgREST bridge', () => {
     expect(stations[0]).toHaveProperty('songs_count');
 
     const songs = await api.getSongs();
-    expect(songs.count).toBe(95);
+    expect(songs.count).toBe(127);
     expect(songs.results).toHaveLength(24);
     expect(songs.previous).toBeNull();
     expect(typeof songs.next).toBe('string');
@@ -321,6 +321,22 @@ describe('api.ts end-to-end against PostgREST bridge', () => {
 
     const page2 = await api.getSongs({ page: 2 });
     expect(page2.previous).not.toBeNull();
+  });
+
+  it('serves the festival calendar with upcoming-first countdowns', async () => {
+    const calendar = await api.getFestivalCalendar();
+    expect(calendar.length).toBe(23);
+    const first = calendar[0];
+    expect(first).toHaveProperty('start_date');
+    expect(typeof first.days_until_start).toBe('number');
+    // The soonest festival is the one happening now or starting within 20 days.
+    expect(first.is_active_window || first.days_until_start <= 20).toBe(true);
+    expect(calendar.some((f) => f.is_imminent)).toBe(true);
+
+    const playlist = await api.getFestivalSongs('chhath');
+    expect(playlist.dedicated_count).toBeGreaterThanOrEqual(2);
+    expect(playlist.results.length).toBeGreaterThanOrEqual(2);
+    expect(playlist.results.every((s) => typeof s.provider_video_id === 'string' && s.provider_video_id.length > 0)).toBe(true);
   });
 
   it('filters, orders, and aggregates taxonomy', async () => {
@@ -406,8 +422,8 @@ describe('api.ts end-to-end against PostgREST bridge', () => {
     expect(me.email).toBe(TEST_ADMIN.email);
 
     const stats = await api.getAdminStats();
-    expect(stats.total_songs).toBe(95);
-    expect(stats.total_artists).toBe(34);
+    expect(stats.total_songs).toBe(127);
+    expect(stats.total_artists).toBe(59);
 
     const insights = await api.getAdminInsights(30);
     expect(insights.window_days).toBe(30);
