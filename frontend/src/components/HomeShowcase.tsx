@@ -13,7 +13,6 @@ import {
   ArrowRight,
   ChevronDown,
 } from 'lucide-react';
-import { BajekoChiyaPasalSection } from './BajekoChiyaPasalSection';
 import { FestiveSection } from './FestiveSection';
 import { FESTIVAL_IMAGES } from '../utils/festivalImagery';
 
@@ -146,6 +145,13 @@ export const HomeShowcase: React.FC<HomeShowcaseProps> = ({
   const ne = locale === 'ne';
   const [active, setActive] = useState<number | null>(null);
 
+  // Tea shop songs - filter by primary_genre_category
+  const teaShopSongs = [
+    ...featuredSongs.filter((s) => s.primary_genre_category === 'tea-shop'),
+    ...newSongs.filter((s) => s.primary_genre_category === 'tea-shop'),
+    ...trendingSongs.filter((s) => s.primary_genre_category === 'tea-shop'),
+  ].filter((song, index, self) => self.findIndex((s) => s.id === song.id) === index);
+
   const panels: Panel[] = [
     {
       key: 'shop',
@@ -159,14 +165,11 @@ export const HomeShowcase: React.FC<HomeShowcaseProps> = ({
       accentBg: 'bg-red-600',
       glow: 'from-red-600/45',
       content: (
-        <BajekoChiyaPasalSection
-          embedded
-          stations={stations}
-          featuredSongs={featuredSongs}
-          trendingSongs={trendingSongs}
-          newSongs={newSongs}
-          onExploreCatalog={onExploreCatalog}
-        />
+        <div className="space-y-1.5">
+          {teaShopSongs.slice(0, 10).map((song) => (
+            <SongRow key={song.id} song={song} />
+          ))}
+        </div>
       ),
     },
     {
