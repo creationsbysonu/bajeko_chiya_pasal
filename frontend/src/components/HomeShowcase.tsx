@@ -305,13 +305,6 @@ export const HomeShowcase: React.FC<HomeShowcaseProps> = ({
               onMouseLeave={() => clear(i)}
               onFocus={() => setActive(i)}
               onBlur={() => clear(i)}
-              onClick={() => setActive((cur) => (cur === i ? null : i))}
-              onKeyDown={(event) => {
-                if (event.key === 'Enter' || event.key === ' ') {
-                  event.preventDefault();
-                  setActive((cur) => (cur === i ? null : i));
-                }
-              }}
               style={{ flexGrow: isActive ? 5 : 1 }}
               className={`group/panel relative overflow-hidden rounded-3xl cursor-pointer outline-none select-none
                 pd-dark-zone
