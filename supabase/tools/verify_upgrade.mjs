@@ -88,9 +88,9 @@ try {
 }
 
 const songs = await q('select count(*)::int as n from public.songs');
-check('upgrade yields 301 songs', songs[0].n === 301, `got ${songs[0].n}`);
+check('upgrade yields 349 songs', songs[0].n === 349, `got ${songs[0].n}`);
 const artists = await q('select count(*)::int as n from public.artists');
-check('upgrade yields 177 artists', artists[0].n === 177, `got ${artists[0].n}`);
+check('upgrade yields 185 artists', artists[0].n === 185, `got ${artists[0].n}`);
 
 const festivals = (await q('select public.get_festival_categories() as f'))[0].f;
 check('upgrade ships 23 festivals', Array.isArray(festivals) && festivals.length === 23, `got ${festivals?.length}`);
@@ -110,10 +110,87 @@ check('playlist songs are playable', Boolean(sample?.provider_video_id), JSON.st
 const suggestion = (await q("select public.submit_song_request('Test Song', 'Someone', '', '', null, '', 'Tester', 'tester@example.com') as x"))[0].x;
 check('upgrade adds the song request workflow', typeof suggestion?.request_id === 'number', JSON.stringify(suggestion));
 
+const rockQueue = await q(`
+  select s.provider_video_id, ss.position
+  from public.station_songs ss
+  join public.songs s on s.id = ss.song_id
+  join public.stations st on st.id = ss.station_id
+  where st.slug = 'nepali-rock'
+  order by ss.position
+`);
+check('upgrade replaces the nepali-rock queue', rockQueue.length === 24, `got ${rockQueue.length}`);
+const requestedRockHead = [
+  'cHDPcQK2Ygg', 'WwNk-zjdAqc', 'YpxsqLS-Xu4', '8tosNlV5wVU', 'nN99o3BFSXg',
+  'FW1Fkalkc-M', 'vuGgf_7LDyU', 'YaQifvlDt8s', '6vjP-SxGO30', 'dE_Sc4Rj6HA',
+  'GxXCJYIarTE', '-qGN3auLEi0', 'HTq6PY7ev2c', '4ponFx3EJ2s', 'wqlwwQiyZTU',
+  'jwDHDuxKU28', 'ZM24fBfCnms', 'mbeeEo09A5A', '_6ayqmBvjJI',
+];
+check(
+  'nepali-rock queue keeps the requested 19 at the front',
+  JSON.stringify(rockQueue.slice(0, 19).map((r) => r.provider_video_id)) === JSON.stringify(requestedRockHead),
+  JSON.stringify(rockQueue.slice(0, 5).map((r) => r.provider_video_id))
+);
+check(
+  'nepali-rock queue starts with Bhool Ma Bhulyo',
+  rockQueue[0]?.provider_video_id === 'cHDPcQK2Ygg' && rockQueue[0]?.position === 0,
+  JSON.stringify(rockQueue[0])
+);
+check(
+  'nepali-rock queue is playable',
+  rockQueue.every((row) => row.provider_video_id) &&
+    new Set(rockQueue.map((row) => row.provider_video_id)).size === rockQueue.length,
+  JSON.stringify(rockQueue.map((row) => row.provider_video_id))
+);
+
+const groove = await q(`
+  select count(*)::int as n
+  from public.songs s
+  join public.artists a on a.id = s.artist_id
+  where a.display_name = 'Gorkha Groove'
+`);
+check('upgrade adds the 29 Gorkha Groove covers', groove[0].n === 29, `got ${groove[0].n}`);
+
+const grooveQueues = await q(`
+  select st.slug, count(*)::int as n
+  from public.station_songs ss
+  join public.stations st on st.id = ss.station_id
+  join public.songs s on s.id = ss.song_id
+  join public.artists a on a.id = s.artist_id
+  where a.display_name = 'Gorkha Groove'
+  group by st.slug
+  order by st.slug
+`);
+const expectedGroove = {
+  biraha: 8,
+  'himalayan-acoustic': 1,
+  'lok-dohori': 5,
+  'nepali-rock': 5,
+  'purano-radio': 5,
+  'prem-geet': 5,
+};
+const grooveMap = {};
+for (const slug of Object.keys(expectedGroove).sort()) {
+  const row = grooveQueues.find((r) => r.slug === slug);
+  grooveMap[slug] = row ? row.n : 0;
+}
+check(
+  'covers are split across the six stations',
+  JSON.stringify(grooveMap) === JSON.stringify(Object.fromEntries(Object.entries(expectedGroove).sort())),
+  JSON.stringify(grooveMap)
+);
+
 // 3. Idempotency: re-running the upgrade must be a no-op, not an error.
 await db.exec(readFileSync(join(supa, 'deploy', 'upgrade_festive.sql'), 'utf8'));
 const songs2 = await q('select count(*)::int as n from public.songs');
-check('upgrade is idempotent', songs2[0].n === 301, `got ${songs2[0].n}`);
+check('upgrade is idempotent', songs2[0].n === 349, `got ${songs2[0].n}`);
+const groove2 = await q(`
+  select count(*)::int as n
+  from public.station_songs ss
+  join public.songs s on s.id = ss.song_id
+  join public.artists a on a.id = s.artist_id
+  where a.display_name = 'Gorkha Groove'
+`);
+check('re-running the upgrade does not duplicate queue links', groove2[0].n === 29, `got ${groove2[0].n}`);
 
 await db.close();
 

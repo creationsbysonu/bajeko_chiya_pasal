@@ -63,15 +63,25 @@ Files, in order:
     **Bajeko Chiya Pasal** playlist: verified embeddable YouTube ids, missing
     performers, and the `chiya-pasal` station queue order. Idempotent, so it is
     safe to paste into an existing database.
-11. `supabase/seed.sql` — the full catalog (301 songs, 177 artists, 10 stations,
+11. `supabase/migrations/0011_nepali_rock_playlist.sql` — the 19-track
+    **Nepali Rock** station queue (Robin N' Looza, Cobweb, 1974 AD, The Uglyz,
+    The Axe Band, Albatross, Nepathya, Karma Band, Mantra Band, Shadows, Mukti
+    & Revival), replacing the previous station picks. Idempotent, so it is safe
+    to paste into an existing database.
+12. `supabase/migrations/0012_gorkha_groove_covers.sql` — the 29 Gorkha Groove
+    covers from the "Nepali Rock Songs" playlist, each placed on the station it
+    fits (biraha 8, nepali-rock 5, prem-geet 5, lok-dohori 5, purano-radio 5,
+    himalayan-acoustic 1). Idempotent, so it is safe to paste into an existing
+    database.
+13. `supabase/seed.sql` — the full catalog (349 songs, 185 artists, 10 stations,
    23 festivals, taxonomies)
 
 > **Already deployed?** Run the new migrations once (`supabase db push` applies
-> `0006` through `0010`). Because `supabase/seed.sql` is only safe on an empty
+> `0006` through `0012`). Because `supabase/seed.sql` is only safe on an empty
 > database, existing installs should instead paste the generated
 > **`supabase/deploy/upgrade_festive.sql`** into the SQL Editor — it bundles
-> `0006` + `0007` + `0008` + `0009` + `0010` + just the festival rows, and is
-> safe to re-run. Regenerate it after changing the seed or migrations with
+> `0006` + `0007` + `0008` + `0009` + `0010` + `0011` + `0012` + just the festival
+> rows, and is safe to re-run. Regenerate it after changing the seed or migrations with
 > `cd supabase && npm run build:upgrade` (`npm run verify:upgrade` proves it
 > upgrades a pre-festival database, and CI runs it on every push).
 

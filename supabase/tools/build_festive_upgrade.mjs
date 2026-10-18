@@ -138,6 +138,8 @@ const upgradeSql = `-- Bajeko Chiya Pasal — one-shot festive upgrade for an al
 --   4. 0009_song_requests.sql      (public "recommend a song" workflow)
 --   5. festive_seed.sql            (festival artists/songs + links)
 --   6. 0010_chiya_pasal_playlist.sql (the curated tea-shop playlist)
+--   7. 0011_nepali_rock_playlist.sql (the Nepali Rock station queue)
+--   8. 0012_gorkha_groove_covers.sql (Gorkha Groove cover tracks)
 
 -- ===========================================================================
 -- 1. 0006_abuse_controls.sql
@@ -168,6 +170,16 @@ ${festiveSeedSql}
 -- 6. 0010_chiya_pasal_playlist.sql
 -- ===========================================================================
 ${migration('0010_chiya_pasal_playlist.sql')}
+
+-- ===========================================================================
+-- 7. 0011_nepali_rock_playlist.sql
+-- ===========================================================================
+${migration('0011_nepali_rock_playlist.sql')}
+
+-- ===========================================================================
+-- 8. 0012_gorkha_groove_covers.sql
+-- ===========================================================================
+${migration('0012_gorkha_groove_covers.sql')}
 `;
 
 writeFileSync(join(deploy, 'upgrade_festive.sql'), upgradeSql);

@@ -1117,3 +1117,313 @@ begin
 end $$;
 
 commit;
+
+-- =====================================================
+-- Bajeko Chiya Pasal — Nepali Rock playlist
+-- Copied from supabase/migrations/0011_nepali_rock_playlist.sql.
+-- Keep the two blocks in sync: the migration upgrades existing databases,
+-- this copy installs the playlist on a fresh seed.
+-- =====================================================
+
+do $$
+declare
+  v_station_id bigint;
+  v_genre_id bigint;
+begin
+  if not exists (select 1 from public.songs limit 1) then
+    raise notice 'nepali rock: catalog is empty - seed.sql installs this playlist';
+    return;
+  end if;
+
+  -- Seeded catalogs use explicit ids, so keep the identity sequences ahead.
+  perform setval(
+    pg_get_serial_sequence('public.artists', 'id'),
+    coalesce((select max(id) from public.artists), 1)
+  );
+  perform setval(
+    pg_get_serial_sequence('public.songs', 'id'),
+    coalesce((select max(id) from public.songs), 1)
+  );
+
+  select id into v_genre_id from public.genres where slug = 'nepali-rock' limit 1;
+
+  -- Performers behind the playlist that are not already in the catalog.
+  insert into public.artists (display_name, display_name_ne, biography, verification_status, created_at, updated_at)
+  select v.display_name, v.display_name_ne, v.biography, 'verified', now(), now()
+  from (values
+    ('Robin N'' Looza', 'रोबिन एन लुजा', 'Kathmandu rock vocalist and frontman of Robin & The New Revolution.'),
+    ('Cobweb', 'कोबवेब', 'Kathmandu alternative rock band formed in the 1990s.'),
+    ('Rojan N. Pradhan', 'रोजन एन. प्रधान', 'Nepali rock singer and songwriter.'),
+    ('Karma Band', 'कर्मा ब्यान्ड', 'Nepali rock band of the independent 2000s scene.'),
+    ('Mantra Band', 'मन्त्र ब्यान्ड', 'Nepali rock band known for the anthem Sanskriti.'),
+    ('Shadows', 'स्याडोज', 'Nepali rock band behind the online favourite Prakriti.'),
+    ('Mukti & Revival', 'मुक्ति एन्ड रिभाइभल', 'Nepali rock outfit behind Nahera Malai.')
+  ) as v(display_name, display_name_ne, biography)
+  where not exists (
+    select 1 from public.artists a
+    where lower(a.display_name) = lower(v.display_name)
+  );
+
+  insert into public.songs (
+    title, title_ne, romanized_title, artist_id, featured_artists, composer,
+    lyricist, album, film_or_source, release_year, language, primary_genre_id,
+    mood_tags, decade, duration_seconds, artwork_url, playback_provider,
+    provider_video_id, provider_url, source_url, attribution,
+    metadata_verification_status, publication_status, play_count, is_featured,
+    featured_order, created_at, updated_at
+  )
+  select
+    v.title, v.title_ne, v.romanized_title, a.id, '', '', '',
+    v.album, '', v.release_year, 'Nepali', v_genre_id,
+    v.mood_tags::jsonb, v.decade, v.duration_seconds,
+    'https://img.youtube.com/vi/' || v.video_id || '/hqdefault.jpg',
+    'youtube', v.video_id,
+    'https://www.youtube.com/watch?v=' || v.video_id,
+    'https://www.youtube.com/watch?v=' || v.video_id,
+    v.attribution, 'verified', 'published', 0, false, 0, now(), now()
+  from (values
+    ('Bhool Ma Bhulyo', 'भूलमा भुल्यो', 'Bhool Ma Bhulyo', 'Robin N'' Looza', '', 2011, '2010s', 204, 'cHDPcQK2Ygg', 'Jackey Niraula', '["rock", "heartbreak", "nostalgic"]'),
+    ('Mercedes Benz', 'मर्सिडिज बेन्ज', 'Mercedes Benz', 'Cobweb', '', 2019, '2010s', 322, 'WwNk-zjdAqc', 'Cobweb Official', '["rock", "alternative", "satire"]'),
+    ('Nepali Ho', 'नेपाली हो', 'Nepali Ho', '1974 AD', '', 2015, '2010s', 333, 'YpxsqLS-Xu4', '1974 AD', '["rock", "anthem", "patriotic"]'),
+    ('Aaudai Jadai (Karaoke)', 'आउँदै जाँदै (कराओके)', 'Aaudai Jadai Karaoke', 'The Uglyz', '', 2022, '2020s', 250, '8tosNlV5wVU', 'The Uglyz', '["rock", "karaoke", "romantic"]'),
+    ('Saas Hau Timi', 'सास हौ तिमी', 'Saas Hau Timi', 'Rojan N. Pradhan', '', 2014, '2010s', 288, 'nN99o3BFSXg', 'Rojan Pradhan', '["rock", "romantic", "melodic"]'),
+    ('Hidchu Sadhai', 'हिँड्छु सधैं', 'Hidchu Sadhai', 'Cobweb', '', 2012, '2010s', 299, 'FW1Fkalkc-M', 'optimist cool', '["rock", "journey", "reflective"]'),
+    ('Sanjha Ko Bela', 'साँझको बेला', 'Sanjha Ko Bela', '1974 AD', '', 2015, '2010s', 230, 'vuGgf_7LDyU', '1974 AD', '["rock", "evening", "romantic"]'),
+    ('Lukna Deu', 'लुक्न देउ', 'Lukna Deu', 'The Axe Band', 'A Decade', 2014, '2010s', 281, 'YaQifvlDt8s', 'Budha Subba Digital', '["rock", "emotional", "melodic"]'),
+    ('Timro Maya', 'तिम्रो माया', 'Timro Maya', 'Cobweb', '', 2019, '2010s', 367, '6vjP-SxGO30', 'Cobweb Official', '["rock", "romantic", "anthemic"]'),
+    ('Parelima', 'परेलीमा', 'Parelima', '1974 AD', '', 2019, '2010s', 235, 'dE_Sc4Rj6HA', '1974 AD', '["rock", "nostalgic", "melodic"]'),
+    ('Maya', 'माया', 'Maya', 'The Uglyz', '', 2017, '2010s', 227, 'GxXCJYIarTE', 'The Uglyz', '["rock", "romantic", "evergreen"]'),
+    ('Kaha Hola Ghar Bara', 'कहाँ होला घर बारा', 'Kaha Hola Ghar Bara', 'Karma Band', '', 2008, '2000s', 226, '-qGN3auLEi0', 'easy0123', '["rock", "longing", "folk-rock"]'),
+    ('Sanskriti', 'संस्कृति', 'Sanskriti', 'Mantra Band', '', 2017, '2010s', 326, 'HTq6PY7ev2c', 'Half Past Music', '["rock", "anthem", "cultural"]'),
+    ('Prakriti', 'प्रकृति', 'Prakriti', 'Shadows', '', 2013, '2010s', 299, '4ponFx3EJ2s', 'Nishan Bhattarai', '["rock", "nature", "indie"]'),
+    ('Sambodhan', 'सम्बोधन', 'Sambodhan', '1974 AD', '', 2015, '2010s', 291, 'wqlwwQiyZTU', '1974 AD', '["rock", "emotional", "poetic"]'),
+    ('Timi Bhane (Studio)', 'तिमी भने (स्टुडियो)', 'Timi Bhane Studio', 'Albatross', '', 2015, '2010s', 324, 'jwDHDuxKU28', 'Nepali Music', '["rock", "romantic", "melodic"]'),
+    ('Nahera Malai', 'नहेर मलाई', 'Nahera Malai', 'Mukti & Revival', '', 2017, '2010s', 223, 'ZM24fBfCnms', 'Ek Music', '["rock", "heartbreak", "alternative"]'),
+    ('Sa Karnali', 'स कर्णाली', 'Sa Karnali', 'Nepathya', '', 2015, '2010s', 226, 'mbeeEo09A5A', 'Nepathya', '["rock", "folk-rock", "river"]'),
+    ('Maryo Ni Maryo', 'मर्यो नि मर्यो', 'Maryo Ni Maryo', 'Cobweb', '', 2011, '2010s', 298, '_6ayqmBvjJI', 'imghale2', '["rock", "dark", "alternative"]')
+  ) as v(
+    title, title_ne, romanized_title, artist_name, album, release_year, decade,
+    duration_seconds, video_id, attribution, mood_tags
+  )
+  join lateral (
+    select a2.id
+    from public.artists a2
+    where lower(a2.display_name) = lower(v.artist_name)
+    order by a2.id
+    limit 1
+  ) a on true
+  where not exists (
+    select 1 from public.songs s where s.provider_video_id = v.video_id
+  );
+
+  perform setval(pg_get_serial_sequence('public.songs', 'id'), (select max(id) from public.songs));
+
+  select id into v_station_id from public.stations where slug = 'nepali-rock';
+  if v_station_id is null then
+    raise notice 'nepali rock: nepali-rock station missing, skipping queue wiring';
+    return;
+  end if;
+
+  -- The station queue becomes exactly this set, in this order.
+  delete from public.station_songs where station_id = v_station_id;
+
+  insert into public.station_songs (station_id, song_id, position)
+  select v_station_id, s.id, v.position
+  from (values
+    ('cHDPcQK2Ygg', 0), ('WwNk-zjdAqc', 1), ('YpxsqLS-Xu4', 2),
+    ('8tosNlV5wVU', 3), ('nN99o3BFSXg', 4), ('FW1Fkalkc-M', 5),
+    ('vuGgf_7LDyU', 6), ('YaQifvlDt8s', 7), ('6vjP-SxGO30', 8),
+    ('dE_Sc4Rj6HA', 9), ('GxXCJYIarTE', 10), ('-qGN3auLEi0', 11),
+    ('HTq6PY7ev2c', 12), ('4ponFx3EJ2s', 13), ('wqlwwQiyZTU', 14),
+    ('jwDHDuxKU28', 15), ('ZM24fBfCnms', 16), ('mbeeEo09A5A', 17),
+    ('_6ayqmBvjJI', 18)
+  ) as v(video_id, position)
+  join lateral (
+    select s2.id
+    from public.songs s2
+    where s2.provider_video_id = v.video_id
+    order by s2.id
+    limit 1
+  ) s on true
+  on conflict (station_id, song_id) do update set position = excluded.position;
+end $$;
+
+-- =====================================================
+-- Bajeko Chiya Pasal — Gorkha Groove covers
+-- Copied from supabase/migrations/0012_gorkha_groove_covers.sql.
+-- Keep the two blocks in sync: the migration upgrades existing databases,
+-- this copy installs the tracks on a fresh seed.
+-- =====================================================
+
+do $$
+declare
+  v_artist_id bigint;
+begin
+  if not exists (select 1 from public.songs limit 1) then
+    raise notice 'gorkha covers: catalog is empty - seed.sql installs these tracks';
+    return;
+  end if;
+
+  perform setval(
+    pg_get_serial_sequence('public.artists', 'id'),
+    coalesce((select max(id) from public.artists), 1)
+  );
+  perform setval(
+    pg_get_serial_sequence('public.songs', 'id'),
+    coalesce((select max(id) from public.songs), 1)
+  );
+
+  select id into v_artist_id
+  from public.artists
+  where lower(display_name) = 'gorkha groove'
+  order by id
+  limit 1;
+
+  if v_artist_id is null then
+    insert into public.artists (display_name, display_name_ne, biography, verification_status, created_at, updated_at)
+    values (
+      'Gorkha Groove', 'गोर्खा ग्रुभ',
+      'Kathmandu-based band known for acoustic, blues and folk covers of classic Nepali songs.',
+      'verified', now(), now()
+    )
+    returning id into v_artist_id;
+  end if;
+
+  insert into public.songs (
+    title, title_ne, romanized_title, artist_id, featured_artists, composer,
+    lyricist, album, film_or_source, release_year, language, primary_genre_id,
+    mood_tags, decade, duration_seconds, artwork_url, playback_provider,
+    provider_video_id, provider_url, source_url, attribution,
+    metadata_verification_status, publication_status, play_count, is_featured,
+    featured_order, created_at, updated_at
+  )
+  select
+    v.title, v.title_ne, v.romanized_title, v_artist_id, '', '', '',
+    'Gorkha Groove Covers', '', 2026, 'Nepali',
+    (select g.id from public.genres g where g.slug = v.genre_slug limit 1),
+    v.mood_tags::jsonb, '2020s', v.duration_seconds,
+    'https://img.youtube.com/vi/' || v.video_id || '/hqdefault.jpg',
+    'youtube', v.video_id,
+    'https://www.youtube.com/watch?v=' || v.video_id,
+    'https://www.youtube.com/watch?v=' || v.video_id,
+    'Gorkha Groove', 'verified', 'published', 0, false, 0, now(), now()
+  from (values
+    ('biraha', 'lBuu8RaIknQ', 0, 'Bhagyamani Timi Hau E Sanu (Cover)', 'भाग्यमानी तिमी हौ ए सानु (कभर)', 'Bhagyamani Timi Hau E Sanu Cover', 'acoustic-indie', '["cover", "gorkha-groove", "blues", "heartbreak"]', 300),
+    ('biraha', 'oekXvWhse1o', 1, 'Rani Ghataima (Cover)', 'रानी घाटैमा (कभर)', 'Rani Ghataima Cover', 'acoustic-indie', '["cover", "gorkha-groove", "blues", "heartbreak"]', 305),
+    ('prem-geet', 'IxWqbYDaJjM', 2, 'Dharanako Bajarama (Lofi Cover)', 'धरानको बजारमा (लोफि कभर)', 'Dharanako Bajarama Lofi Cover', 'acoustic-indie', '["cover", "gorkha-groove", "lofi", "romantic"]', 254),
+    ('lok-dohori', 'FUE7ydySquY', 3, 'Seti Khola Sang Sangai Tarchhu Hai (Guitar Cover)', 'सेती खोला सँग सँगै तर्छु है (गिटार कभर)', 'Seti Khola Sang Sangai Tarchhu Hai Guitar Cover', 'lok-dohori', '["cover", "gorkha-groove", "folk", "romantic"]', 176),
+    ('lok-dohori', '6KnWHi6YL4Q', 4, 'Seti Khola Sang Sangai Tarchhu Hai (Acoustic Cover)', 'सेती खोला सँग सँगै तर्छु है (एकौस्टिक कभर)', 'Seti Khola Sang Sangai Tarchhu Hai Acoustic Cover', 'lok-dohori', '["cover", "gorkha-groove", "folk", "acoustic"]', 188),
+    ('biraha', '7ihpVW7dd8E', 5, 'Bhijyo Sirani Raatma (Soulful Cover)', 'भीज्यो सिरानी रातमा (सोलफुल कभर)', 'Bhijyo Sirani Raatma Soulful Cover', 'adhunik-geet', '["cover", "gorkha-groove", "blues", "sad"]', 224),
+    ('nepali-rock', 'JTBi5D-CUWY', 6, 'Halla Chalechha (Blues Cover)', 'हल्ला चलेछ (ब्लुज कभर)', 'Halla Chalechha Blues Cover', 'nepali-rock', '["cover", "gorkha-groove", "blues", "rock"]', 301),
+    ('nepali-rock', 's7anD2kysvk', 7, 'Lahana Le Jurayo Ki (AI Cover)', 'लहाना ले जुरायो कि (एआई कभर)', 'Lahana Le Jurayo Ki AI Cover', 'nepali-rock', '["cover", "gorkha-groove", "rock", "ai-cover"]', 222),
+    ('purano-radio', 'fpg7jHsUKoI', 8, 'Kusume Rumal (Blues Cover)', 'कुसुमे रुमाल (ब्लुज कभर)', 'Kusume Rumal Blues Cover', 'adhunik-geet', '["cover", "gorkha-groove", "blues", "nostalgic"]', 248),
+    ('biraha', 'CTXpba34uds', 9, 'Samjhana Cha Chodi Jane Lai (Blues Cover)', 'सम्झन छ छोडी जाने लाई (ब्लुज कभर)', 'Samjhana Cha Chodi Jane Lai Blues Cover', 'adhunik-geet', '["cover", "gorkha-groove", "blues", "heartbreak"]', 231),
+    ('purano-radio', 'ImJPbKSFdW0', 10, 'Phoolpati Bhakera Manakamana (Cover)', 'फूलपाती भाकेर मनाकामना (कभर)', 'Phoolpati Bhakera Manakamana Cover', 'adhunik-geet', '["cover", "gorkha-groove", "evergreen", "nostalgic"]', 290),
+    ('prem-geet', 'Nk0V7jGxqXk', 11, 'Dharan Ko Bajarma (Maya Dharani) (Folk Pop Cover)', 'धरानको बजारमा (माया धरानी) (कभर)', 'Dharan Ko Bajarma Maya Dharani Cover', 'adhunik-geet', '["cover", "gorkha-groove", "romantic", "folk"]', 248),
+    ('biraha', 'eKBAl_pvczA', 12, 'Bhijyo Sirani Raatma (Sarangi Cover)', 'भीज्यो सिरानी रातमा (सारङ्गी कभर)', 'Bhijyo Sirani Raatma Sarangi Cover', 'adhunik-geet', '["cover", "gorkha-groove", "sarangi", "sad"]', 286),
+    ('lok-dohori', 'svhOhTMmDWI', 13, 'Lali Joban Janchha Ki Hajur (Folk Fusion Cover)', 'लाली जोबन जान्छ कि हजुर (कभर)', 'Lali Joban Janchha Ki Hajur Cover', 'lok-dohori', '["cover", "gorkha-groove", "folk", "fusion"]', 455),
+    ('biraha', 'S8roUVDvPCA', 14, 'Yo Jindagile K Garyo K Garyo (Blues Cover)', 'यो जिन्दगिले के गर्यो के गर्यो (ब्लुज कभर)', 'Yo Jindagile K Garyo K Garyo Blues Cover', 'adhunik-geet', '["cover", "gorkha-groove", "blues", "emotional"]', 310),
+    ('biraha', 'BQtFPJ-vpqs', 15, 'Biratako Chino (Emotional Cover)', 'वीरताको चिनो (कभर)', 'Biratako Chino Cover', 'adhunik-geet', '["cover", "gorkha-groove", "emotional", "ai-cover"]', 318),
+    ('lok-dohori', 'Q_TgclGrhS4', 16, 'Sora Barse Umerai Ma (Acoustic Blues Cover)', 'सोरा बर्षे उमेरैमा (कभर)', 'Sora Barse Umerai Ma Cover', 'lok-dohori', '["cover", "gorkha-groove", "folk", "acoustic"]', 219),
+    ('biraha', 'vbFJ5mAa8f0', 17, 'Ghumti Nira Late Bhayo (Blues Cover)', 'घुम्ती निरा लाते भयो (ब्लुज कभर)', 'Ghumti Nira Late Bhayo Blues Cover', 'adhunik-geet', '["cover", "gorkha-groove", "blues", "sad"]', 255),
+    ('nepali-rock', '3qW_x7ANhOI', 18, 'Jun Ta Lagyo Tara Le (Blues Rock Cover)', 'जुन तालाग्यो तराले (ब्लुज रक कभर)', 'Jun Ta Lagyo Tara Le Blues Rock Cover', 'nepali-rock', '["cover", "gorkha-groove", "blues", "rock"]', 215),
+    ('nepali-rock', 'tzs0O4Qn3ew', 19, 'Lahana Le Jurayo Ki (Blues Rock Cover)', 'लहाना ले जुरायो कि (ब्लुज रक कभर)', 'Lahana Le Jurayo Ki Blues Rock Cover', 'nepali-rock', '["cover", "gorkha-groove", "blues", "rock"]', 263),
+    ('purano-radio', 'J96sPD0IkRg', 20, 'Banma Fulyo Phool (Blues Cover)', 'बनमा फुल्यो फूल (ब्लुज कभर)', 'Banma Fulyo Phool Blues Cover', 'adhunik-geet', '["cover", "gorkha-groove", "blues", "evergreen"]', 302),
+    ('purano-radio', 'TpQd5h_EoCA', 21, 'Bagaichama Najau Timi (Cover)', 'बगैँचामा नजाऊ तिमी (कभर)', 'Bagaichama Najau Timi Cover', 'film-songs', '["cover", "gorkha-groove", "film", "nostalgic"]', 200),
+    ('himalayan-acoustic', 'MaeBUEYg_XU', 22, 'Tungna Ko Dhun Ma (Lonely Soul Cover)', 'टुङनाको धुनमा (कभर)', 'Tungna Ko Dhun Ma Cover', 'lok-dohori', '["cover", "gorkha-groove", "folk", "mountain"]', 328),
+    ('purano-radio', 'c_-fxzm07PU', 23, 'Hamro Chitwan (Revival Cover)', 'हाम्रो चितवन (कभर)', 'Hamro Chitwan Cover', 'adhunik-geet', '["cover", "gorkha-groove", "nostalgic", "revival"]', 334),
+    ('prem-geet', 'vsSWsxzcbfI', 24, 'Sanu Ma (Acoustic Cover)', 'सानु म (एकौस्टिक कभर)', 'Sanu Ma Acoustic Cover', 'acoustic-indie', '["cover", "gorkha-groove", "acoustic", "romantic"]', 227),
+    ('prem-geet', 'AReSPr9GrTk', 25, 'Tara Antim Palt Bhetna Aau (Slowed + Reverb)', 'तर अन्तिम पल्ट भेट्न आउ (कभर)', 'Tara Antim Palt Bhetna Aau Cover', 'adhunik-geet', '["cover", "gorkha-groove", "romantic", "slowed-reverb"]', 265),
+    ('lok-dohori', 'J4ubxi_Tp4c', 26, 'Muglin Pari Tarera Gandaki (Acoustic Cover)', 'मुग्लिन पारि तरेरा गण्डकी (एकौस्टिक कभर)', 'Muglin Pari Tarera Gandaki Cover', 'lok-dohori', '["cover", "gorkha-groove", "folk", "acoustic"]', 286),
+    ('prem-geet', 'CYbj17AHO3Q', 27, 'Purano Hudaina Maya (Acoustic Blues Cover)', 'पुरानो हुदैन माया (कभर)', 'Purano Hudaina Maya Cover', 'acoustic-indie', '["cover", "gorkha-groove", "acoustic", "romantic"]', 299),
+    ('nepali-rock', 'IG783p38HuY', 28, 'Kisan Ko Rahar (Rock Blues Cover)', 'किसानको रहर (रक ब्लुज कभर)', 'Kisan Ko Rahar Cover', 'nepali-rock', '["cover", "gorkha-groove", "rock", "poem"]', 350)
+  ) as v(
+    station_slug, video_id, sort_order, title, title_ne, romanized_title,
+    genre_slug, mood_tags, duration_seconds
+  )
+  where not exists (
+    select 1 from public.songs s where s.provider_video_id = v.video_id
+  );
+
+  perform setval(pg_get_serial_sequence('public.songs', 'id'), (select max(id) from public.songs));
+
+  -- Drop any links from an earlier run of this migration, then append each
+  -- cover after the station's existing picks so the order stays stable.
+  delete from public.station_songs ss
+  using public.stations st, (values
+    ('biraha', 'lBuu8RaIknQ'), ('biraha', 'oekXvWhse1o'),
+    ('biraha', '7ihpVW7dd8E'), ('biraha', 'CTXpba34uds'),
+    ('biraha', 'eKBAl_pvczA'), ('biraha', 'S8roUVDvPCA'),
+    ('biraha', 'BQtFPJ-vpqs'), ('biraha', 'vbFJ5mAa8f0'),
+    ('nepali-rock', 'JTBi5D-CUWY'), ('nepali-rock', 's7anD2kysvk'),
+    ('nepali-rock', '3qW_x7ANhOI'), ('nepali-rock', 'tzs0O4Qn3ew'),
+    ('nepali-rock', 'IG783p38HuY'),
+    ('prem-geet', 'IxWqbYDaJjM'), ('prem-geet', 'Nk0V7jGxqXk'),
+    ('prem-geet', 'vsSWsxzcbfI'), ('prem-geet', 'AReSPr9GrTk'),
+    ('prem-geet', 'CYbj17AHO3Q'),
+    ('lok-dohori', 'FUE7ydySquY'), ('lok-dohori', '6KnWHi6YL4Q'),
+    ('lok-dohori', 'svhOhTMmDWI'), ('lok-dohori', 'Q_TgclGrhS4'),
+    ('lok-dohori', 'J4ubxi_Tp4c'),
+    ('purano-radio', 'fpg7jHsUKoI'), ('purano-radio', 'ImJPbKSFdW0'),
+    ('purano-radio', 'J96sPD0IkRg'), ('purano-radio', 'TpQd5h_EoCA'),
+    ('purano-radio', 'c_-fxzm07PU'),
+    ('himalayan-acoustic', 'MaeBUEYg_XU')
+  ) as v(station_slug, video_id)
+  where ss.station_id = st.id
+    and st.slug = v.station_slug
+    and exists (
+      select 1 from public.songs s
+      where s.id = ss.song_id and s.provider_video_id = v.video_id
+    );
+
+  with station_map as (
+    select st.id as station_id, st.slug as station_slug
+    from public.stations st
+    where st.slug in (
+      'biraha', 'nepali-rock', 'prem-geet', 'lok-dohori',
+      'purano-radio', 'himalayan-acoustic'
+    )
+  ),
+  resolved as (
+    select v.station_slug, v.sort_order, s2.id as song_id
+    from (values
+      ('biraha', 'lBuu8RaIknQ', 0), ('biraha', 'oekXvWhse1o', 1),
+      ('biraha', '7ihpVW7dd8E', 5), ('biraha', 'CTXpba34uds', 9),
+      ('biraha', 'eKBAl_pvczA', 12), ('biraha', 'S8roUVDvPCA', 14),
+      ('biraha', 'BQtFPJ-vpqs', 15), ('biraha', 'vbFJ5mAa8f0', 17),
+      ('nepali-rock', 'JTBi5D-CUWY', 6), ('nepali-rock', 's7anD2kysvk', 7),
+      ('nepali-rock', '3qW_x7ANhOI', 18), ('nepali-rock', 'tzs0O4Qn3ew', 19),
+      ('nepali-rock', 'IG783p38HuY', 28),
+      ('prem-geet', 'IxWqbYDaJjM', 2), ('prem-geet', 'Nk0V7jGxqXk', 11),
+      ('prem-geet', 'vsSWsxzcbfI', 24), ('prem-geet', 'AReSPr9GrTk', 25),
+      ('prem-geet', 'CYbj17AHO3Q', 27),
+      ('lok-dohori', 'FUE7ydySquY', 3), ('lok-dohori', '6KnWHi6YL4Q', 4),
+      ('lok-dohori', 'svhOhTMmDWI', 13), ('lok-dohori', 'Q_TgclGrhS4', 16),
+      ('lok-dohori', 'J4ubxi_Tp4c', 26),
+      ('purano-radio', 'fpg7jHsUKoI', 8), ('purano-radio', 'ImJPbKSFdW0', 10),
+      ('purano-radio', 'J96sPD0IkRg', 20), ('purano-radio', 'TpQd5h_EoCA', 21),
+      ('purano-radio', 'c_-fxzm07PU', 23),
+      ('himalayan-acoustic', 'MaeBUEYg_XU', 22)
+    ) as v(station_slug, video_id, sort_order)
+    join lateral (
+      select s3.id
+      from public.songs s3
+      where s3.provider_video_id = v.video_id
+      order by s3.id
+      limit 1
+    ) s2 on true
+  ),
+  base as (
+    select m.station_id, coalesce(max(ss.position) + 1, 0) as start_pos
+    from station_map m
+    left join public.station_songs ss on ss.station_id = m.station_id
+    group by m.station_id
+  )
+  insert into public.station_songs (station_id, song_id, position)
+  select m.station_id, r.song_id,
+         b.start_pos + row_number() over (partition by m.station_id order by r.sort_order) - 1
+  from resolved r
+  join station_map m on m.station_slug = r.station_slug
+  join base b on b.station_id = m.station_id
+  on conflict (station_id, song_id) do update set position = excluded.position;
+end $$;
