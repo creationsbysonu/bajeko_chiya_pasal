@@ -191,19 +191,20 @@ export const HomeShowcase: React.FC<HomeShowcaseProps> = ({
       icon: Coffee,
       eyebrow: ne ? 'चिया पसल' : 'THE TEA SHOP',
       title: ne ? 'बजेको चिया पसल' : 'Bajeko Chiya Pasal',
-      caption: ne ? 'आजको विशेष चिया र चिया मेनु' : "Today's special and the tea menu",
+      caption: ne ? 'चिया पसलका कालजयी गीत' : 'Timeless picks from the tea shop',
       countLabel: `${shopSongs.length} ${ne ? 'गीत' : 'songs'}`,
       image: stations.find((s) => s.slug === 'chiya-pasal')?.cover_image || FALLBACK,
       accentText: 'text-red-400',
       accentBg: 'bg-red-600',
       glow: 'from-red-600/45',
       content: (
-        <div className="space-y-1.5">
+        <div className="space-y-1">
           {shopSongs.map((song) => (
             <SongRow key={song.id} song={song} />
           ))}
         </div>
       ),
+      action: { label: ne ? 'सबै हेर्नुहोस्' : 'View all', onClick: onExploreCatalog },
     },
     {
       key: 'festival',

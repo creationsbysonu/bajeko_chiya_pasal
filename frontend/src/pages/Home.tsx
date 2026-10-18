@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Hero } from '../components/Hero';
 import { HomeShowcase } from '../components/HomeShowcase';
+import { RadioWorlds } from '../components/RadioWorlds';
 import { RecentlyPlayedSection } from '../components/RecentlyPlayedSection';
 import { Reveal } from '../components/motion/Reveal';
 import { Station, Song, Genre, GenreCategory } from '../types';
 import { useI18n } from '../context/I18nContext';
 import { ChevronDown, ChevronUp, ArrowUp } from 'lucide-react';
-import { groupGenresByCategory, resolveCategories } from '../utils/genreTaxonomy';
+import { resolveCategories } from '../utils/genreTaxonomy';
 import { RecommendSongSection } from '../components/RecommendSongSection';
 
 interface HomeProps {
@@ -99,6 +100,9 @@ export const Home: React.FC<HomeProps> = ({
           teaShopSongs={teaShopSongs}
           onExploreCatalog={onExploreCatalog}
         />
+
+        {/* 2b. The ten radio worlds (categories), right after the five groups */}
+        <RadioWorlds stations={stations} />
 
         {/* 3. Recently Played - user's listening history */}
         <RecentlyPlayedSection />

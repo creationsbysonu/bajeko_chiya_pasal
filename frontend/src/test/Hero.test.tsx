@@ -51,80 +51,35 @@ const renderHero = () =>
     </I18nProvider>
   );
 
-describe('Hero vibe picker', () => {
+describe('Hero', () => {
   beforeEach(() => {
     localStorage.setItem('bajeko_chiya_pasal_locale', 'en');
     getStationDetail.mockClear();
   });
 
-  it('offers every radio world as a playable option', () => {
+  it('leads with the shop identity and both calls to action', () => {
     renderHero();
 
-    STATIONS.forEach((entry) => {
-      expect(
-        screen.getByRole('button', { name: new RegExp(entry.title) })
-      ).toBeInTheDocument();
-    });
-    expect(screen.getByText('Choose your vibe')).toBeInTheDocument();
+    expect(screen.getByText('BAJEKO CHIYA PASAL')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Tune into Radio/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Explore Catalog/ })).toBeInTheDocument();
   });
 
-  it('marks Bajeko Chiya Pasal as the house default', () => {
-    renderHero();
-    expect(screen.getByText('House default')).toBeInTheDocument();
-  });
-
-  it('tunes the chosen vibe', async () => {
+  it('starts Bajeko Chiya Pasal (the house default) from the CTA', async () => {
     renderHero();
 
     await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: /Bus Yatra/ }));
+      fireEvent.click(screen.getByRole('button', { name: /Tune into Radio/ }));
     });
-    expect(getStationDetail).toHaveBeenCalledWith('bus-yatra');
+
+    expect(getStationDetail).toHaveBeenCalledWith('chiya-pasal');
   });
 
-  it('paints the tuned card with its own station colour', async () => {
+  it('shows every world in the station ticker', () => {
     renderHero();
 
-    await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: /Bus Yatra/ }));
-    });
-
-    const tuned = screen.getByRole('button', { name: /Bus Yatra/ });
-    expect(tuned).toHaveAttribute('aria-pressed', 'true');
-    // glow uses the station's theme color from the catalog
-    expect(tuned.getAttribute('style')).toContain('#B96B4A');
-    expect(screen.getByText('TUNED')).toBeInTheDocument();
-    // every card keeps its tagline visible for hover/readability
     STATIONS.forEach((entry) => {
-      const card = screen.getByRole('button', { name: new RegExp(entry.title) });
-      expect(card.getAttribute('title')).toContain(entry.title);
-    });
-  });
-
-  it('keeps the photo cards legible in the day theme', () => {
-    const { container } = renderHero();
-
-    const cards = container.querySelectorAll('button[aria-pressed]');
-    expect(cards).toHaveLength(STATIONS.length);
-    cards.forEach((card) => {
-      // photographic panels opt out of the day palette (white copy on a
-      // dark scrim) and keep a literal dark surface under the photo
-      expect(card.className).toContain('pd-dark-zone');
-      expect(card.className).toContain('bg-black');
-      expect(card.className).not.toContain('bg-white');
-    });
-  });
-
-  it('shows each world\u2019s cover art behind the words', () => {
-    const { container } = renderHero();
-
-    // scoped to the vibe cards — RadioTuner renders its own imagery
-    const covers = container.querySelectorAll('button[aria-pressed] img');
-    expect(covers).toHaveLength(STATIONS.length);
-    covers.forEach((cover) => {
-      expect(cover).toHaveAttribute('alt', '');
-      expect(cover).toHaveAttribute('aria-hidden', 'true');
-      expect(cover.getAttribute('src')).toContain('images.unsplash.com');
+      expect(screen.getAllByText(entry.title).length).toBeGreaterThan(0);
     });
   });
 });
