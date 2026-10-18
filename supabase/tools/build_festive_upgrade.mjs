@@ -38,6 +38,14 @@ let i = 0;
 while (i < seed.length) {
   const line = seed[i];
   const t = line.trim();
+
+  // The curated playlist block appended to the seed is a self-contained
+  // migration (0010) and must not leak into the pre-festival base seed.
+  if (t === '-- Bajeko Chiya Pasal — curated tea-shop playlist') {
+    baseLines.push('commit;'); // the base seed ends here; the playlist is 0010
+    break;
+  }
+
   const isArtistInsert = /^insert into public\.artists\s*\(/i.test(t);
   const isSongInsert = /^insert into public\.songs\s*\(/i.test(t);
 
@@ -50,9 +58,12 @@ while (i < seed.length) {
       if (done) break;
     }
     const header = block[0];
+    // Only id-prefixed rows belong to the pinned festival seed. Later blocks
+    // (e.g. the chiya-pasal playlist in 0010) use INSERT … SELECT with value
+    // tuples that also start with "(" but carry no explicit id.
     const rows = block.slice(1)
       .map((b) => b.trim())
-      .filter((b) => b.startsWith('('))
+      .filter((b) => /^\(\d+,/.test(b))
       .map((b) => b.replace(/[;,]\s*$/, ''));
     const threshold = isArtistInsert ? 28 : 1001;
     const baseRows = rows.filter((r) => idOf(r) < threshold);
@@ -94,11 +105,13 @@ begin;
 insert into public.artists (${ARTIST_COLS}) values
 ${formatRows(festiveArtists)}
 on conflict (id) do nothing;
+select setval(pg_get_serial_sequence('public.artists', 'id'), (select max(id) from public.artists));
 
 -- Festive songs (1001-1061)
 insert into public.songs (${SONG_COLS}) values
 ${formatRows(festiveSongs)}
 on conflict (id) do nothing;
+select setval(pg_get_serial_sequence('public.songs', 'id'), (select max(id) from public.songs));
 
 -- Tag songs with their festival
 ${festivalUpdates.join('\n\n')}
@@ -124,6 +137,7 @@ const upgradeSql = `-- Bajeko Chiya Pasal — one-shot festive upgrade for an al
 --   3. 0008_festival_calendar.sql  (dates, calendar RPC, playlist RPC)
 --   4. 0009_song_requests.sql      (public "recommend a song" workflow)
 --   5. festive_seed.sql            (festival artists/songs + links)
+--   6. 0010_chiya_pasal_playlist.sql (the curated tea-shop playlist)
 
 -- ===========================================================================
 -- 1. 0006_abuse_controls.sql
@@ -149,6 +163,11 @@ ${migration('0009_song_requests.sql')}
 -- 5. festive_seed.sql
 -- ===========================================================================
 ${festiveSeedSql}
+
+-- ===========================================================================
+-- 6. 0010_chiya_pasal_playlist.sql
+-- ===========================================================================
+${migration('0010_chiya_pasal_playlist.sql')}
 `;
 
 writeFileSync(join(deploy, 'upgrade_festive.sql'), upgradeSql);

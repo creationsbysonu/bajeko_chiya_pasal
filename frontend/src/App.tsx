@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { I18nProvider } from './context/I18nContext';
-import { PlayerProvider } from './context/PlayerContext';
+import { PlayerProvider, usePlayer } from './context/PlayerContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { Navigation } from './components/Navigation';
 import { Player } from './components/Player';
@@ -18,11 +18,14 @@ import { Station, Song, Genre, GenreCategory } from './types';
 import { api } from './services/api';
 
 function MainApp() {
+  const { currentStation, playStation } = usePlayer();
+  const defaultTunedRef = useRef(false);
   const [currentTab, setCurrentTab] = useState('home');
   const [stations, setStations] = useState<Station[]>([]);
   const [featuredSongs, setFeaturedSongs] = useState<Song[]>([]);
   const [newSongs, setNewSongs] = useState<Song[]>([]);
   const [trendingSongs, setTrendingSongs] = useState<Song[]>([]);
+  const [teaShopSongs, setTeaShopSongs] = useState<Song[]>([]);
   const [genres, setGenres] = useState<Genre[]>([]);
   const [categories, setCategories] = useState<GenreCategory[]>([]);
   const [decades, setDecades] = useState<{ decade: string; count: number }[]>([]);
@@ -38,7 +41,7 @@ function MainApp() {
 
   const loadData = async () => {
     try {
-      const [stationsData, featuredData, genresData, decadesData, categoriesData, newSongsData, trendingData] = await Promise.all([
+      const [stationsData, featuredData, genresData, decadesData, categoriesData, newSongsData, trendingData, chiyaStation] = await Promise.all([
         api.getStations(),
         api.getFeatured(),
         api.getGenres(),
@@ -46,6 +49,7 @@ function MainApp() {
         api.getGenreCategories().catch(() => [] as GenreCategory[]),
         api.getSongs({ ordering: '-created_at' }).catch(() => ({ count: 0, next: null, previous: null, results: [] as Song[] })),
         api.getSongs({ ordering: '-play_count' }).catch(() => ({ count: 0, next: null, previous: null, results: [] as Song[] })),
+        api.getStationDetail('chiya-pasal').catch(() => null),
       ]);
       setStations(stationsData);
       setFeaturedSongs(featuredData.songs);
@@ -54,6 +58,11 @@ function MainApp() {
       setGenres(genresData);
       setDecades(decadesData);
       setCategories(categoriesData);
+      setTeaShopSongs(
+        (chiyaStation?.station_songs ?? [])
+          .map((entry) => entry.song)
+          .filter((song) => song?.publication_status === 'published')
+      );
     } catch (err) {
       console.error('Failed to load initial data', err);
     }
@@ -62,6 +71,19 @@ function MainApp() {
   useEffect(() => {
     loadData();
   }, []);
+
+  // The site is named after the tea shop, so it opens tuned to that world with
+  // the curated playlist already loaded. Browsers may block the first unmuted
+  // autoplay attempt; the station, queue and track stay selected so a single
+  // tap starts the music.
+  useEffect(() => {
+    if (defaultTunedRef.current || stations.length === 0) return;
+    defaultTunedRef.current = true;
+    if (currentStation) return;
+
+    const houseDefault = stations.find((s) => s.slug === 'chiya-pasal');
+    if (houseDefault) void playStation(houseDefault);
+  }, [stations, currentStation, playStation]);
 
   const handleSelectGenre = (genreSlug: string) => {
     setSelectedGenreFilter(genreSlug);
@@ -99,6 +121,7 @@ function MainApp() {
             featuredSongs={featuredSongs}
             newSongs={newSongs}
             trendingSongs={trendingSongs}
+            teaShopSongs={teaShopSongs}
             genres={genres}
             categories={categories}
             decades={decades}

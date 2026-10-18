@@ -1,5 +1,5 @@
 import React from 'react';
-import { Play, Search } from 'lucide-react';
+import { Play, Search, Radio } from 'lucide-react';
 import { useI18n } from '../context/I18nContext';
 import { usePlayer } from '../context/PlayerContext';
 import { Station } from '../types';
@@ -14,18 +14,21 @@ interface HeroProps {
 
 export const Hero: React.FC<HeroProps> = ({ stations, onExploreCatalog }) => {
   const { locale, t } = useI18n();
-  const { currentStation, playStation, status } = usePlayer();
+  const { currentStation, playStation, togglePlayPause, status } = usePlayer();
 
   const stationNames = stations.map((s) => ({
     text: locale === 'ne' ? s.title_ne || s.title : s.title,
     slug: s.slug,
   }));
 
+  // The site is named after the tea shop, so its world is the house default:
+  // it is preselected everywhere and is what "Tune into Radio" starts.
+  const houseDefault =
+    stations.find((s) => s.slug === 'chiya-pasal') || stations[0];
+
   const handleStartDefaultRadio = () => {
-    if (stations.length > 0) {
-      const stationToPlay = currentStation || stations[0];
-      playStation(stationToPlay);
-    }
+    const stationToPlay = currentStation || houseDefault;
+    if (stationToPlay) playStation(stationToPlay);
   };
 
   return (
@@ -119,6 +122,68 @@ export const Hero: React.FC<HeroProps> = ({ stations, onExploreCatalog }) => {
               </Reveal>
             )}
           </div>
+
+          {/* Vibe picker — every radio world, one tap to switch */}
+          {stations.length > 0 && (
+            <Reveal variant="up" delay={340} className="mt-8 max-w-5xl mx-auto">
+              <div className="flex items-center justify-center gap-2 text-[11px] font-mono uppercase tracking-[0.3em] text-neutral-500 mb-3">
+                <Radio className="w-3.5 h-3.5 text-red-500" />
+                <span>{t.hero.vibeLabel}</span>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
+                {stations.map((station) => {
+                  const isActive = currentStation?.slug === station.slug;
+                  const isDefault = houseDefault?.slug === station.slug;
+                  const label = locale === 'ne' ? station.title_ne || station.title : station.title;
+                  const tagline = locale === 'ne' ? station.tagline_ne || station.tagline : station.tagline;
+
+                  return (
+                    <button
+                      key={station.slug}
+                      onClick={() => {
+                        if (isActive) togglePlayPause();
+                        else playStation(station);
+                      }}
+                      aria-pressed={isActive}
+                      title={tagline}
+                      className={`group/vibe relative text-left p-2.5 rounded-xl border transition-all duration-200 ease-out hover:-translate-y-0.5 active:scale-[0.98] ${
+                        isActive
+                          ? 'border-red-500/60 bg-red-600/10 shadow-glow-red'
+                          : 'border-white/8 bg-white/3 hover:border-white/20 hover:bg-white/5'
+                      }`}
+                    >
+                      <span className="flex items-center gap-1.5 min-w-0">
+                        <span
+                          className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                          style={{ backgroundColor: station.theme_color || '#ef4444' }}
+                          aria-hidden="true"
+                        />
+                        <span className="truncate text-xs font-semibold text-white">{label}</span>
+                        {isActive && (
+                          <span className="ml-auto flex-shrink-0 text-[9px] font-mono font-bold uppercase tracking-wider text-red-400">
+                            {status === 'playing' ? 'ON AIR' : 'TUNED'}
+                          </span>
+                        )}
+                      </span>
+                      <span className="mt-0.5 block truncate text-[10px] text-neutral-500 font-nepali">
+                        {tagline}
+                      </span>
+                      {isDefault && (
+                        <span className="mt-1 inline-flex items-center rounded-full bg-red-600/15 border border-red-500/30 px-1.5 py-0.5 text-[9px] font-mono uppercase tracking-wider text-red-300">
+                          {t.hero.defaultBadge}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <p className="text-center text-[11px] text-neutral-500 font-nepali mt-3">
+                {t.hero.vibeHint}
+              </p>
+            </Reveal>
+          )}
 
           {/* Radio Tuner / Station Cards */}
           <RadioTuner stations={stations} />

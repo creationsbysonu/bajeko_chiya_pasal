@@ -219,12 +219,36 @@ const stationDetail = await rpc('get_station_detail', { p_slug: 'purano-radio' }
 check('get_station_detail includes queue', Array.isArray(stationDetail?.station_songs) && stationDetail.station_songs.length > 0, JSON.stringify(stationDetail?.station_songs?.length));
 check('get_station_detail song payload', stationDetail?.station_songs?.[0]?.song?.artist_name !== undefined);
 
+const chiyaStation = await rpc('get_station_detail', { p_slug: 'chiya-pasal' });
+const chiyaSongs = chiyaStation?.station_songs ?? [];
+check('chiya-pasal playlist is seeded', chiyaSongs.length >= 22, `got ${chiyaSongs.length}`);
+check(
+  'chiya-pasal playlist starts with the curated 22',
+  chiyaSongs.slice(0, 22).every((entry, i) => entry.position === i && entry.song?.provider_video_id),
+  JSON.stringify(chiyaSongs.slice(0, 3).map((e) => [e.position, e.song?.provider_video_id]))
+);
+const curatedChiya = chiyaSongs.slice(0, 22).map((entry) => entry.song?.provider_video_id);
+check(
+  'curated chiya-pasal playlist has no duplicate videos',
+  new Set(curatedChiya).size === curatedChiya.length,
+  JSON.stringify(curatedChiya)
+);
+check(
+  'curated chiya-pasal playlist is tagged for the card',
+  chiyaSongs.slice(0, 22).every(
+    (entry) =>
+      (entry.song?.mood_tags ?? []).includes('tea-shop') &&
+      Boolean(entry.song?.provider_video_id)
+  ),
+  JSON.stringify(chiyaSongs.slice(0, 22).map((e) => [e.song?.title, e.song?.mood_tags]))
+);
+
 const station404 = await rpcError('get_station_detail', { p_slug: 'nope' });
 check('get_station_detail 404 message', station404?.includes('Station not found'), station404);
 
 const songs = await rpc('get_songs');
 check('get_songs paginates at 24', songs?.results?.length === 24, `got ${songs?.results?.length}`);
-check('get_songs count matches seed', songs?.count === 286, `got ${songs?.count}`);
+check('get_songs count matches seed', songs?.count === 301, `got ${songs?.count}`);
 check('get_songs DRF envelope', typeof songs?.next === 'string' && songs?.previous === null, JSON.stringify({ next: songs?.next, previous: songs?.previous }));
 
 const songsPage2 = await rpc('get_songs', { p_page: 2 });
@@ -238,7 +262,7 @@ check('get_songs romanized search finds rows', (romanized?.count ?? 0) >= 0, JSO
 const genreFiltered = await rpc('get_songs', { p_genre: 'lok-dohori' });
 check('get_songs genre filter', genreFiltered?.count >= 0, JSON.stringify(genreFiltered?.count));
 const ordered = await rpc('get_songs', { p_ordering: 'bogus' });
-check('get_songs unknown ordering falls back', ordered?.count === 286);
+check('get_songs unknown ordering falls back', ordered?.count === 301);
 
 const songDetail = await rpc('get_song_detail', { p_id: songs.results[0].id });
 check('get_song_detail shape', songDetail?.title === songs.results[0].title);
@@ -252,7 +276,7 @@ const categories = await rpc('get_genre_categories');
 check('get_genre_categories with counts', categories?.length === 5 && categories[0].genres_count !== undefined, `got ${categories?.length}`);
 
 const artists = await rpc('get_artists');
-check('get_artists returns all', artists?.length === 163, `got ${artists?.length}`);
+check('get_artists returns all', artists?.length === 177, `got ${artists?.length}`);
 
 const decades = await rpc('get_decades');
 check('get_decades shape', Array.isArray(decades) && decades.every((d) => d.decade && typeof d.count === 'number'));
@@ -477,14 +501,14 @@ check('admin_current_user admin payload', me?.authenticated === true && me?.is_s
 console.log('\n== admin catalog ==');
 
 const stats = await rpc('admin_stats', {}, adminAs);
-check('admin_stats totals', stats?.total_songs === 286 && stats?.total_artists === 163, JSON.stringify({ songs: stats?.total_songs, artists: stats?.total_artists }));
-check('admin_stats breakdowns', stats?.status_breakdown?.published === 286 && typeof stats?.language_breakdown === 'object', JSON.stringify(stats?.status_breakdown));
+check('admin_stats totals', stats?.total_songs === 301 && stats?.total_artists === 177, JSON.stringify({ songs: stats?.total_songs, artists: stats?.total_artists }));
+check('admin_stats breakdowns', stats?.status_breakdown?.published === 301 && typeof stats?.language_breakdown === 'object', JSON.stringify(stats?.status_breakdown));
 
 const insights = await rpc('admin_insights', { p_days: 30 }, adminAs);
 check('admin_insights shape', insights?.window_days === 30 && Array.isArray(insights?.top_songs) && typeof insights?.completion_rate === 'number', JSON.stringify(insights).slice(0, 120));
 
 const adminSongs = await rpc('admin_songs', {}, adminAs);
-check('admin_songs includes unpublished + pagination', adminSongs?.count === 286 && adminSongs?.page === 1 && adminSongs?.page_size === 25, JSON.stringify({ c: adminSongs?.count }));
+check('admin_songs includes unpublished + pagination', adminSongs?.count === 301 && adminSongs?.page === 1 && adminSongs?.page_size === 25, JSON.stringify({ c: adminSongs?.count }));
 
 const adminSearch = await rpc('admin_songs', { p_search: 'Mayalu' }, adminAs);
 check('admin_songs search', (adminSearch?.count ?? 0) >= 0);

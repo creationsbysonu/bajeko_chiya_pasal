@@ -16,36 +16,13 @@ import {
 import { FestiveSection } from './FestiveSection';
 import { FESTIVAL_IMAGES } from '../utils/festivalImagery';
 
-const RECENTLY_PLAYED_KEY = 'bajeko_chiya_pasal_recently_played';
-const MAX_RECENT_SONGS = 20;
-
-/** Load recently played songs from localStorage */
-const loadRecentlyPlayed = (): Song[] => {
-  try {
-    const stored = localStorage.getItem(RECENTLY_PLAYED_KEY);
-    return stored ? JSON.parse(stored) : [];
-  } catch {
-    return [];
-  }
-};
-
-/** Save a song to recently played (most recent first, deduplicated) */
-const saveToRecentlyPlayed = (song: Song): void => {
-  try {
-    const recent = loadRecentlyPlayed();
-    const filtered = recent.filter((s) => s.id !== song.id);
-    const updated = [song, ...filtered].slice(0, MAX_RECENT_SONGS);
-    localStorage.setItem(RECENTLY_PLAYED_KEY, JSON.stringify(updated));
-  } catch {
-    // localStorage might be full or unavailable
-  }
-};
-
 interface HomeShowcaseProps {
   stations: Station[];
   trendingSongs: Song[];
   newSongs: Song[];
   featuredSongs: Song[];
+  /** Curated "Bajeko Chiya Pasal" queue (chiya-pasal station). */
+  teaShopSongs?: Song[];
   onExploreCatalog: () => void;
 }
 
@@ -164,15 +141,16 @@ export const HomeShowcase: React.FC<HomeShowcaseProps> = ({
   trendingSongs,
   newSongs,
   featuredSongs,
+  teaShopSongs,
   onExploreCatalog,
 }) => {
   const { locale, t } = useI18n();
   const ne = locale === 'ne';
   const [active, setActive] = useState<number | null>(null);
 
-  // Tea shop songs - curated mix of classic, romantic, and nostalgic songs
-  // These are timeless melodies perfect for a tea shop atmosphere
-  const teaShopSongs = [
+  // The shop card plays the curated chiya-pasal station queue. When the queue
+  // is unavailable (offline / RPC failure) fall back to a genre-based mix.
+  const fallbackTeaShopSongs = [
     ...featuredSongs.filter((s) =>
       ['popular', 'folk'].includes(s.primary_genre_category || '')
     ),
@@ -185,13 +163,27 @@ export const HomeShowcase: React.FC<HomeShowcaseProps> = ({
   ]
     .filter((song, index, self) => self.findIndex((s) => s.id === song.id) === index)
     .sort((a, b) => {
-      // Prioritize featured songs
+      // Prioritize featured songs, then by play count
       if (a.is_featured && !b.is_featured) return -1;
       if (!a.is_featured && b.is_featured) return 1;
-      // Then by play count
       return (b.play_count || 0) - (a.play_count || 0);
     })
     .slice(0, 20);
+
+  // The migration tags every curated track with `tea-shop`, which keeps the
+  // card focused on the playlist even though the station queue also holds its
+  // older picks.
+  const dedupe = (songs: Song[]) =>
+    songs.filter((song, index, self) => self.findIndex((s) => s.id === song.id) === index);
+  const stationSongs = teaShopSongs ?? [];
+  const curatedStationSongs = stationSongs.filter((song) =>
+    (song.mood_tags ?? []).includes('tea-shop')
+  );
+  const shopSongs = curatedStationSongs.length
+    ? dedupe(curatedStationSongs)
+    : stationSongs.length
+      ? dedupe(stationSongs)
+      : fallbackTeaShopSongs;
 
   const panels: Panel[] = [
     {
@@ -200,14 +192,14 @@ export const HomeShowcase: React.FC<HomeShowcaseProps> = ({
       eyebrow: ne ? 'चिया पसल' : 'THE TEA SHOP',
       title: ne ? 'बजेको चिया पसल' : 'Bajeko Chiya Pasal',
       caption: ne ? 'आजको विशेष चिया र चिया मेनु' : "Today's special and the tea menu",
-      countLabel: `${teaShopSongs.length} ${ne ? 'गीत' : 'songs'}`,
+      countLabel: `${shopSongs.length} ${ne ? 'गीत' : 'songs'}`,
       image: stations.find((s) => s.slug === 'chiya-pasal')?.cover_image || FALLBACK,
       accentText: 'text-red-400',
       accentBg: 'bg-red-600',
       glow: 'from-red-600/45',
       content: (
         <div className="space-y-1.5">
-          {teaShopSongs.slice(0, 10).map((song) => (
+          {shopSongs.map((song) => (
             <SongRow key={song.id} song={song} />
           ))}
         </div>

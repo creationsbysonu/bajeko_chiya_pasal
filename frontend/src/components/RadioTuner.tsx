@@ -11,13 +11,10 @@ interface RadioTunerProps {
 export const RadioTuner: React.FC<RadioTunerProps> = ({ stations }) => {
   const { locale } = useI18n();
   const { currentStation, playStation, togglePlayPause, status } = usePlayer();
-  // Fixed at mount, stable across renders, but gives a fresh random pick on
-  // every visit so the stage never shows the same static world twice.
-  const [seed, setSeed] = useState(() => Math.random());
+  // The house world is the stage default; "Surprise me" moves it elsewhere.
+  const [suggestedSlug, setSuggestedSlug] = useState('chiya-pasal');
 
-  const suggestion = stations.length
-    ? stations[Math.floor(seed * stations.length) % stations.length]
-    : undefined;
+  const suggestion = stations.find((s) => s.slug === suggestedSlug) || stations[0];
 
   const activeStation = currentStation || suggestion;
   const isPlaying = status === 'playing' && currentStation?.slug === activeStation?.slug;
@@ -40,7 +37,9 @@ export const RadioTuner: React.FC<RadioTunerProps> = ({ stations }) => {
       playStation(stations[Math.floor(Math.random() * stations.length)]);
     } else {
       // Idle — just offer a different suggestion.
-      setSeed(Math.random());
+      const others = stations.filter((s) => s.slug !== suggestion?.slug);
+      const next = others[Math.floor(Math.random() * others.length)];
+      if (next) setSuggestedSlug(next.slug);
     }
   };
 

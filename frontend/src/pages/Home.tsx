@@ -14,6 +14,8 @@ interface HomeProps {
   featuredSongs: Song[];
   newSongs: Song[];
   trendingSongs: Song[];
+  /** Curated queue of the chiya-pasal station, shown in the tea-shop card. */
+  teaShopSongs?: Song[];
   genres: Genre[];
   categories?: GenreCategory[];
   decades: { decade: string; count: number }[];
@@ -27,6 +29,7 @@ export const Home: React.FC<HomeProps> = ({
   featuredSongs,
   newSongs,
   trendingSongs,
+  teaShopSongs,
   genres,
   categories,
   decades,
@@ -93,6 +96,7 @@ export const Home: React.FC<HomeProps> = ({
           trendingSongs={trendingSongs}
           newSongs={newSongs}
           featuredSongs={featuredSongs}
+          teaShopSongs={teaShopSongs}
           onExploreCatalog={onExploreCatalog}
         />
 

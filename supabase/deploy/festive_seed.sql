@@ -144,6 +144,7 @@ insert into public.artists (id, display_name, display_name_ne, biography, biogra
     (162, 'Dharma Darshan Bhajan', '', 'Dharma Darshan Bhajan — festival artist featured on Bajeko Chiya Pasal.', '', '', 'verified', '2026-10-17T12:00:00.000000', '2026-10-17T12:00:00.000000'),
     (163, 'Swati Mishra', '', 'Swati Mishra — festival artist featured on Bajeko Chiya Pasal.', '', '', 'verified', '2026-10-17T12:00:00.000000', '2026-10-17T12:00:00.000000')
 on conflict (id) do nothing;
+select setval(pg_get_serial_sequence('public.artists', 'id'), (select max(id) from public.artists));
 
 -- Festive songs (1001-1061)
 insert into public.songs (id, title, title_ne, romanized_title, artist_id, featured_artists, composer, lyricist, album, film_or_source, release_year, language, primary_genre_id, mood_tags, decade, duration_seconds, artwork_url, playback_provider, provider_video_id, provider_url, source_url, attribution, metadata_verification_status, publication_status, play_count, is_featured, featured_order, created_at, updated_at) values
@@ -368,6 +369,7 @@ insert into public.songs (id, title, title_ne, romanized_title, artist_id, featu
     (1219, 'Baanjhi Kewdwa Dhaile Thaadh', '', 'Baanjhi Kewdwa Dhaile Thaadh', 36, '', '', '', '', '', 2008, 'Hindi', 13, '["festive", "chhath", "devotional", "sun"]'::jsonb, '2000s', NULL, 'https://img.youtube.com/vi/MEnyozGodAU/hqdefault.jpg', 'youtube', 'MEnyozGodAU', 'https://www.youtube.com/watch?v=MEnyozGodAU', 'https://www.youtube.com/watch?v=MEnyozGodAU', 'T-Series Bhakti Sagar', 'verified', 'published', 29170, false, 0, '2026-10-17T12:00:00.000000', '2026-10-17T12:00:00.000000'),
     (1220, 'Nimiya Ke Dadh Maiya', '', 'Nimiya Ke Dadh Maiya', 163, '', '', '', '', '', 2022, 'Hindi', 13, '["festive", "chhath", "devotional", "sun"]'::jsonb, '2020s', NULL, 'https://img.youtube.com/vi/MJ4Sn-_Mkk0/hqdefault.jpg', 'youtube', 'MJ4Sn-_Mkk0', 'https://www.youtube.com/watch?v=MJ4Sn-_Mkk0', 'https://www.youtube.com/watch?v=MJ4Sn-_Mkk0', 'Swati Mishra Bhakti', 'verified', 'published', 22946, false, 0, '2026-10-17T12:00:00.000000', '2026-10-17T12:00:00.000000')
 on conflict (id) do nothing;
+select setval(pg_get_serial_sequence('public.songs', 'id'), (select max(id) from public.songs));
 
 -- Tag songs with their festival
 update public.songs

@@ -108,7 +108,7 @@ npm run verify    # applies migrations + seed to in-process Postgres, runs
 
 Push to GitHub, then follow **[DEPLOY.md](DEPLOY.md)**:
 
-1. **Supabase** — create project, run the 6 migrations + seed, enable
+1. **Supabase** — create project, run the migrations + seed, enable
    anonymous sign-ins, create/allowlist the admin user.
 2. **Vercel** — import repo, root directory `frontend`, set
    `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY`, deploy.

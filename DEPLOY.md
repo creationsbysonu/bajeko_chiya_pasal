@@ -59,15 +59,19 @@ Files, in order:
    `submit_song_request()`, a contact-free `get_song_requests_recent()` feed,
    and the admin moderation RPCs (`admin_song_requests`,
    `admin_song_request_action`)
-10. `supabase/seed.sql` — the full catalog (286 songs, 163 artists, 10 stations,
-    23 festivals, taxonomies)
+10. `supabase/migrations/0010_chiya_pasal_playlist.sql` — the curated 22-song
+    **Bajeko Chiya Pasal** playlist: verified embeddable YouTube ids, missing
+    performers, and the `chiya-pasal` station queue order. Idempotent, so it is
+    safe to paste into an existing database.
+11. `supabase/seed.sql` — the full catalog (301 songs, 177 artists, 10 stations,
+   23 festivals, taxonomies)
 
 > **Already deployed?** Run the new migrations once (`supabase db push` applies
-> `0006` + `0007` + `0008` + `0009`). Because `supabase/seed.sql` is only safe on
-> an empty database, existing installs should instead paste the generated
+> `0006` through `0010`). Because `supabase/seed.sql` is only safe on an empty
+> database, existing installs should instead paste the generated
 > **`supabase/deploy/upgrade_festive.sql`** into the SQL Editor — it bundles
-> `0006` + `0007` + `0008` + `0009` + just the festival rows, and is safe to
-> re-run. Regenerate it after changing the seed or migrations with
+> `0006` + `0007` + `0008` + `0009` + `0010` + just the festival rows, and is
+> safe to re-run. Regenerate it after changing the seed or migrations with
 > `cd supabase && npm run build:upgrade` (`npm run verify:upgrade` proves it
 > upgrades a pre-festival database, and CI runs it on every push).
 
