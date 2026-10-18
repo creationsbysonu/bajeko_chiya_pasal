@@ -102,6 +102,12 @@ const PlayerContext = createContext<PlayerContextType | undefined>(undefined);
 
 export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentSong, setCurrentSong] = useState<Song | null>(null);
+  // Mirror of `currentSong` for effects that schedule retries. The player
+  // bootstrap effect re-arms timers; without this ref a retry that fires after
+  // the listener skipped to another song would load the *old* video id while
+  // the UI shows the new track.
+  const currentSongRef = useRef<Song | null>(null);
+  useEffect(() => { currentSongRef.current = currentSong; }, [currentSong]);
   const [currentStation, setCurrentStation] = useState<Station | null>(null);
   const [status, setStatus] = useState<PlaybackStatus>('unstarted');
   const [currentTime, setCurrentTime] = useState<number>(0);
@@ -259,18 +265,40 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   useEffect(() => {
     if (!currentSong) return;
 
+    // Cancels the retry timers below when the listener skips track or the
+    // component unmounts. Without this, a track change made while the YouTube
+    // script is unreachable (ad-blocker, flaky network) left the previous
+    // effect's timers running forever — one extra 150ms loop per track, each
+    // holding a stale `currentSong` closure that could load the wrong video.
+    let cancelled = false;
+    let retryTimer: number | undefined;
+    let attempts = 0;
+
     setErrorMessage(null);
     setCurrentTime(0);
 
     const initOrLoad = () => {
+      if (cancelled) return;
       if (!window.YT || !window.YT.Player) {
-        setTimeout(initOrLoad, 150);
+        // The IFrame API script is blocked or still loading. Keep trying while
+        // this song is current, but tell the listener once it is clearly stuck
+        // instead of leaving a silently dead player.
+        if (++attempts > 100) {
+          setErrorMessage('Could not reach the YouTube player. Check your connection or disable your ad-blocker.');
+          return;
+        }
+        retryTimer = window.setTimeout(initOrLoad, 150);
         return;
       }
 
+      // Always act on the *latest* song: this callback may fire long after a
+      // different track was selected.
+      const song = currentSongRef.current;
+      if (!song) return;
+
       if (ytPlayerRef.current && typeof ytPlayerRef.current.loadVideoById === 'function') {
         try {
-          ytPlayerRef.current.loadVideoById(currentSong.provider_video_id);
+          ytPlayerRef.current.loadVideoById(song.provider_video_id);
           ytPlayerRef.current.setVolume(volumeRef.current);
           if (isMutedRef.current) {
             ytPlayerRef.current.mute();
@@ -288,17 +316,23 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     };
 
     const createPlayer = () => {
+      if (cancelled) return;
       const container = document.getElementById(containerId);
       if (!container) {
-        setTimeout(createPlayer, 100);
+        retryTimer = window.setTimeout(createPlayer, 100);
         return;
       }
+
+      // The slot exists, so the retry loop for this song is done — a fresh
+      // effect re-arms it if the song changes again.
+      const song = currentSongRef.current;
+      if (!song) return;
 
       try {
         ytPlayerRef.current = new window.YT.Player(containerId, {
           height: '100%',
           width: '100%',
-          videoId: currentSong.provider_video_id,
+          videoId: song.provider_video_id,
           playerVars: {
             autoplay: 1,
             controls: 1,
@@ -396,6 +430,10 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     };
 
     initOrLoad();
+    return () => {
+      cancelled = true;
+      if (retryTimer !== undefined) window.clearTimeout(retryTimer);
+    };
     // Deliberately keyed on the song id only: re-running on volume/mute/queue
     // changes would reload the video and restart playback. Volume/mute are read
     // through refs (above) and track advancement goes through actionsRef, so the
@@ -413,12 +451,19 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
   };
 
+  // Token for "which station did the listener tap last" — two quick taps put
+  // two getStationDetail calls in flight, and the slower one would otherwise
+  // land last and overwrite the queue of the station now shown as tuned.
+  const stationRequestRef = useRef(0);
+
   const playStation = async (station: Station, startSong?: Song) => {
+    const requestId = ++stationRequestRef.current;
     consecutiveErrorsRef.current = 0;
     setCurrentStation(station);
 
     try {
       const details = await api.getStationDetail(station.slug);
+      if (requestId !== stationRequestRef.current) return;
       const stationSongs = details.station_songs?.map((ss) => ss.song) || [];
 
       if (stationSongs.length === 0) {
@@ -433,6 +478,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       setCurrentSong(songToPlay);
       setQueue(remainingQueue);
     } catch {
+      if (requestId !== stationRequestRef.current) return;
       setErrorMessage('Could not load station tracklist.');
     }
   };
@@ -789,43 +835,61 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
   }, [currentSong, currentTime, duration]);
 
-  // Keyboard navigation shortcuts
+  // Keyboard navigation shortcuts.
+  //
+  // These must never steal a key the browser or assistive technology needs:
+  // Space activates whatever button/link has focus, and ArrowUp/ArrowDown
+  // scroll the page. Both are sacred here — a global handler that swallowed
+  // them made every control on the site un-activatable by keyboard.
   useEffect(() => {
+    const isTypingTarget = (target: EventTarget | null): boolean => {
+      const el = target as HTMLElement | null;
+      if (!el || !el.tagName) return false;
+      if (['INPUT', 'TEXTAREA', 'SELECT'].includes(el.tagName)) return true;
+      return el.isContentEditable === true;
+    };
+
+    // Controls that Space/Enter are supposed to activate. If focus is on one
+    // of these, the shortcut layer stands down entirely.
+    const isActivatableTarget = (target: EventTarget | null): boolean => {
+      const el = target as HTMLElement | null;
+      if (!el || typeof el.closest !== 'function') return false;
+      return el.closest(
+        'button, a[href], [role="button"], [role="link"], [role="tab"], ' +
+          '[role="switch"], [role="menuitem"], [role="option"], [role="checkbox"], ' +
+          '[role="radio"], [contenteditable="true"]'
+      ) !== null;
+    };
+
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Ignore if user is typing in an input or textarea
-      if (['INPUT', 'TEXTAREA', 'SELECT'].includes((e.target as HTMLElement)?.tagName)) {
+      // Modifier combos (⌘/Ctrl + ←/→) are unambiguous, so handle them first.
+      if (e.key === 'ArrowRight' && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        actionsRef.current.nextTrack();
+        return;
+      }
+      if (e.key === 'ArrowLeft' && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        actionsRef.current.prevTrack();
         return;
       }
 
+      // Any other shortcut is meaningless while the user is typing.
+      if (isTypingTarget(e.target)) return;
+
       if (e.code === 'Space') {
+        // Let the focused control handle its own activation.
+        if (isActivatableTarget(e.target)) return;
         e.preventDefault();
         actionsRef.current.togglePlayPause();
       } else if (e.key === 'n' || e.key === 'N') {
-        e.preventDefault();
         actionsRef.current.nextTrack();
       } else if (e.key === 'p' || e.key === 'P') {
-        e.preventDefault();
         actionsRef.current.prevTrack();
       } else if (e.key === 'm' || e.key === 'M') {
-        e.preventDefault();
         actionsRef.current.toggleMute();
-      } else if (e.key === 'ArrowUp') {
-        e.preventDefault();
-        // Increase volume by 10%
-        const currentVol = actionsRef.current.getCurrentVolume();
-        actionsRef.current.setVolumeLevel(Math.min(100, currentVol + 10));
-      } else if (e.key === 'ArrowDown') {
-        e.preventDefault();
-        // Decrease volume by 10%
-        const currentVol = actionsRef.current.getCurrentVolume();
-        actionsRef.current.setVolumeLevel(Math.max(0, currentVol - 10));
-      } else if (e.key === 'ArrowRight' && (e.metaKey || e.ctrlKey)) {
-        e.preventDefault();
-        actionsRef.current.nextTrack();
-      } else if (e.key === 'ArrowLeft' && (e.metaKey || e.ctrlKey)) {
-        e.preventDefault();
-        actionsRef.current.prevTrack();
       }
+      // ArrowUp/ArrowDown are intentionally NOT bound: they scroll the page.
     };
 
     window.addEventListener('keydown', handleKeyDown);

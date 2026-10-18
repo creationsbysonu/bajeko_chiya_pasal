@@ -172,12 +172,12 @@ export const RecommendSongSection: React.FC = () => {
 
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div className="sm:col-span-2">
-                    <label className={labelClass}>{s.titleLabel} *</label>
+                    <label htmlFor="req-title" className={labelClass}>{s.titleLabel} *</label>
                     <div className="relative">
                       <Music2 className={`${iconWrap} w-4 h-4`} />
                       <input
                         type="text"
-                        value={title}
+                        id="req-title" value={title}
                         onChange={(e) => setTitle(e.target.value)}
                         placeholder={s.titlePlaceholder}
                         maxLength={300}
@@ -188,12 +188,12 @@ export const RecommendSongSection: React.FC = () => {
                   </div>
 
                   <div>
-                    <label className={labelClass}>{s.artistLabel}</label>
+                    <label htmlFor="req-artist" className={labelClass}>{s.artistLabel}</label>
                     <div className="relative">
                       <User className={`${iconWrap} w-4 h-4`} />
                       <input
                         type="text"
-                        value={artist}
+                        id="req-artist" value={artist}
                         onChange={(e) => setArtist(e.target.value)}
                         placeholder={s.artistPlaceholder}
                         maxLength={200}
@@ -203,13 +203,13 @@ export const RecommendSongSection: React.FC = () => {
                   </div>
 
                   <div>
-                    <label className={labelClass}>
+                    <label htmlFor="req-festival" className={labelClass}>
                       {s.festivalLabel}
                     </label>
                     <div className="relative">
                       <CalendarDays className={`${iconWrap} w-4 h-4`} />
                       <select
-                        value={festivalSlug}
+                        id="req-festival" value={festivalSlug}
                         onChange={(e) => setFestivalSlug(e.target.value)}
                         className={`${inputClass} pl-9 pr-9 appearance-none`}
                       >
@@ -225,7 +225,7 @@ export const RecommendSongSection: React.FC = () => {
                   </div>
 
                   <div className="sm:col-span-2">
-                    <label className={labelClass}>
+                    <label htmlFor="req-youtube" className={labelClass}>
                       {s.youtubeLabel}
                       <span className="ml-2 text-neutral-600 normal-case tracking-normal">({s.emailOptional})</span>
                     </label>
@@ -233,7 +233,7 @@ export const RecommendSongSection: React.FC = () => {
                       <Link2 className={`${iconWrap} w-4 h-4`} />
                       <input
                         type="url"
-                        value={youtubeUrl}
+                        id="req-youtube" value={youtubeUrl}
                         onChange={(e) => setYoutubeUrl(e.target.value)}
                         placeholder={s.youtubePlaceholder}
                         maxLength={500}
@@ -244,11 +244,11 @@ export const RecommendSongSection: React.FC = () => {
                   </div>
 
                   <div className="sm:col-span-2">
-                    <label className={labelClass}>{s.genreLabel}</label>
+                    <label htmlFor="req-genre" className={labelClass}>{s.genreLabel}</label>
                     <div className="relative">
                       <Tag className={`${iconWrap} w-4 h-4`} />
                       <select
-                        value={genreId}
+                        id="req-genre" value={genreId}
                         onChange={(e) => setGenreId(e.target.value)}
                         className={`${inputClass} pl-9 pr-9 appearance-none`}
                       >
@@ -264,9 +264,9 @@ export const RecommendSongSection: React.FC = () => {
                   </div>
 
                   <div className="sm:col-span-2">
-                    <label className={labelClass}>{s.noteLabel}</label>
+                    <label htmlFor="req-note" className={labelClass}>{s.noteLabel}</label>
                     <textarea
-                      value={note}
+                      id="req-note" value={note}
                       onChange={(e) => setNote(e.target.value)}
                       rows={3}
                       maxLength={2000}
@@ -276,12 +276,12 @@ export const RecommendSongSection: React.FC = () => {
                   </div>
 
                   <div>
-                    <label className={labelClass}>{s.nameLabel} *</label>
+                    <label htmlFor="req-name" className={labelClass}>{s.nameLabel} *</label>
                     <div className="relative">
                       <User className={`${iconWrap} w-4 h-4`} />
                       <input
                         type="text"
-                        value={requesterName}
+                        id="req-name" value={requesterName}
                         onChange={(e) => setRequesterName(e.target.value)}
                         placeholder={s.namePlaceholder}
                         maxLength={200}
@@ -292,7 +292,7 @@ export const RecommendSongSection: React.FC = () => {
                   </div>
 
                   <div>
-                    <label className={labelClass}>
+                    <label htmlFor="req-email" className={labelClass}>
                       {s.emailLabel}
                       <span className="ml-2 text-neutral-600 normal-case tracking-normal">({s.emailOptional})</span>
                     </label>
@@ -300,7 +300,7 @@ export const RecommendSongSection: React.FC = () => {
                       <Mail className={`${iconWrap} w-4 h-4`} />
                       <input
                         type="email"
-                        value={requesterEmail}
+                        id="req-email" value={requesterEmail}
                         onChange={(e) => setRequesterEmail(e.target.value)}
                         placeholder={s.emailPlaceholder}
                         maxLength={320}

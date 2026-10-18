@@ -9,6 +9,7 @@ import { useI18n } from '../context/I18nContext';
 import { ChevronDown, ChevronUp, ArrowUp } from 'lucide-react';
 import { resolveCategories } from '../utils/genreTaxonomy';
 import { RecommendSongSection } from '../components/RecommendSongSection';
+import { JsonLd } from '../components/JsonLd';
 
 interface HomeProps {
   stations: Station[];
@@ -223,6 +224,25 @@ export const Home: React.FC<HomeProps> = ({
             })}
           </div>
         </section>
+
+        {/* Structured data mirrors the accordion below in the language actually
+            on screen, so search engines see the full Q&A without having to
+            "click" a closed panel. */}
+        <JsonLd
+          data={{
+            '@context': 'https://schema.org',
+            '@type': 'FAQPage',
+            inLanguage: locale === 'ne' ? 'ne-NP' : 'en',
+            mainEntity: faqs.map((faq) => ({
+              '@type': 'Question',
+              name: locale === 'ne' ? faq.q : faq.q_en,
+              acceptedAnswer: {
+                '@type': 'Answer',
+                text: locale === 'ne' ? faq.a : faq.a_en,
+              },
+            })),
+          }}
+        />
 
         <section className="mt-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
           <div className="text-center mb-8">

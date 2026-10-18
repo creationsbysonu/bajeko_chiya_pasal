@@ -5,10 +5,11 @@ import { usePlayer } from '../context/PlayerContext';
 import { useTheme } from '../context/ThemeContext';
 import { useScrollProgress } from '../hooks/useMotion';
 import { BrandMark } from './BrandMark';
+import { RouteTab, tabToPath } from '../utils/seo';
 
 interface NavigationProps {
-  currentTab: string;
-  setCurrentTab: (tab: string) => void;
+  currentTab: RouteTab;
+  setCurrentTab: (tab: RouteTab) => void;
   onOpenTakedown: () => void;
 }
 
@@ -33,7 +34,17 @@ export const Navigation: React.FC<NavigationProps> = ({
     return () => window.removeEventListener('scroll', handler);
   }, []);
 
-  const navItems = [
+  // Real hrefs so crawlers (and "open in new tab") work; the click is still
+  // intercepted to keep the SPA transition and never reload the page.
+  const handleNavClick = (event: React.MouseEvent<HTMLAnchorElement>, tab: RouteTab) => {
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) {
+      return;
+    }
+    event.preventDefault();
+    setCurrentTab(tab);
+  };
+
+  const navItems: { id: RouteTab; label: string }[] = [
     { id: 'home', label: t.nav.home },
     { id: 'stations', label: t.nav.radioWorlds },
     { id: 'catalog', label: t.nav.catalog },
@@ -51,10 +62,12 @@ export const Navigation: React.FC<NavigationProps> = ({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-[env(safe-area-inset-top)]">
         <div className="flex items-center justify-between h-14">
 
-          {/* Wordmark */}
-          <button
-            onClick={() => setCurrentTab('home')}
+          {/* Wordmark — a home link, not a button, so crawlers see an internal edge */}
+          <a
+            href={tabToPath('home')}
+            onClick={(e) => handleNavClick(e, 'home')}
             className="flex items-center gap-2.5 group flex-shrink-0"
+            aria-label="Bajeko Chiya Pasal — home"
           >
             <div className="flex items-center gap-2.5 transition-transform duration-200 group-hover:scale-[1.03]">
               <BrandMark size={30} />
@@ -67,16 +80,18 @@ export const Navigation: React.FC<NavigationProps> = ({
                 </span>
               </span>
             </div>
-          </button>
+          </a>
 
           {/* Desktop Nav Links */}
-          <nav className="hidden md:flex items-center gap-6">
+          <nav className="hidden md:flex items-center gap-6" aria-label={locale === 'ne' ? 'मुख्य नेभिगेसन' : 'Primary'}>
             {navItems.map((item) => {
               const isActive = currentTab === item.id;
               return (
-                <button
+                <a
                   key={item.id}
-                  onClick={() => setCurrentTab(item.id)}
+                  href={tabToPath(item.id)}
+                  onClick={(e) => handleNavClick(e, item.id)}
+                  aria-current={isActive ? 'page' : undefined}
                   className={`relative text-xs tracking-widest uppercase font-medium pb-0.5 transition-colors duration-200 ${
                     isActive
                       ? 'text-red-500'
@@ -87,7 +102,7 @@ export const Navigation: React.FC<NavigationProps> = ({
                   {isActive && (
                     <span className="absolute -bottom-0.5 left-0 right-0 h-px bg-red-600 rounded-full" />
                   )}
-                </button>
+                </a>
               );
             })}
           </nav>
@@ -200,20 +215,22 @@ export const Navigation: React.FC<NavigationProps> = ({
           {navItems.map((item) => {
             const isActive = currentTab === item.id;
             return (
-              <button
+              <a
                 key={item.id}
-                onClick={() => {
-                  setCurrentTab(item.id);
+                href={tabToPath(item.id)}
+                onClick={(e) => {
+                  handleNavClick(e, item.id);
                   setMobileOpen(false);
                 }}
-                className={`w-full text-left px-3 py-2.5 rounded text-sm font-medium transition-colors duration-150 ${
+                aria-current={isActive ? 'page' : undefined}
+                className={`block w-full text-left px-3 py-2.5 rounded text-sm font-medium transition-colors duration-150 ${
                   isActive
                     ? 'text-red-500 bg-red-950/30'
                     : 'text-neutral-400 hover:text-white hover:bg-white/5'
                 }`}
               >
                 {item.label}
-              </button>
+              </a>
             );
           })}
 

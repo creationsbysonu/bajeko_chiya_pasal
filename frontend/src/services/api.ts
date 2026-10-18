@@ -13,6 +13,16 @@ import {
 const SUPABASE_URL: string = import.meta.env.VITE_SUPABASE_URL || 'http://127.0.0.1:54321';
 const SUPABASE_ANON_KEY: string = import.meta.env.VITE_SUPABASE_ANON_KEY || 'local-anon-key';
 
+// A build deployed without the env vars silently targets localhost, so every
+// request fails with a generic "Request failed" and nothing explains why.
+// Fail loudly in the console instead (the UI shows its own load-error state).
+if (import.meta.env.PROD && !import.meta.env.VITE_SUPABASE_URL) {
+  console.error(
+    '[bajeko-chiya-pasal] VITE_SUPABASE_URL is not set in this build — ' +
+      'falling back to http://127.0.0.1:54321, so every request will fail.'
+  );
+}
+
 export const supabase: SupabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: {
     persistSession: true,
@@ -61,14 +71,23 @@ async function rpc<T>(
 }
 
 // Drop undefined/empty args so RPC parameters keep their declared defaults.
+// Note `'all'` is intentionally NOT treated as a sentinel here: a listener can
+// legitimately search for the word "all", and discarding it silently returned
+// unfiltered results while the UI still showed the query. Dropdown "All"
+// options are normalised at the call site instead (see `unlessAll`).
 function args(map: Record<string, unknown>): Record<string, unknown> {
   const out: Record<string, unknown> = {};
   Object.entries(map).forEach(([key, value]) => {
-    if (value !== undefined && value !== null && value !== '' && value !== 'all') {
+    if (value !== undefined && value !== null && value !== '') {
       out[key] = value;
     }
   });
   return out;
+}
+
+/** Turns a filter dropdown's "All" option into "no filter". */
+function unlessAll(value: string | undefined | null): string | undefined {
+  return value && value !== 'all' ? value : undefined;
 }
 
 export const api = {
@@ -169,11 +188,10 @@ export const api = {
 
   // Favorites
   async getFavorites(): Promise<FavoriteItem[]> {
-    try {
-      return await rpc<FavoriteItem[]>('get_favorites', args({}), { listener: true });
-    } catch {
-      return [];
-    }
+    // Rethrow so the page can tell "the listener has no favorites" apart from
+    // "this failed" — returning [] for both rendered an offline user as simply
+    // having an empty list, with no retry offered.
+    return rpc<FavoriteItem[]>('get_favorites', args({}), { listener: true });
   },
 
   async addFavorite(songId: number): Promise<FavoriteItem> {
@@ -278,7 +296,7 @@ export const api = {
   async getAdminSongRequests(params: { status?: string; search?: string } = {}): Promise<SongRequestListResponse> {
     try {
       return await rpc('admin_song_requests', {
-        ...args({ p_status: params.status, p_search: params.search }),
+        ...args({ p_status: unlessAll(params.status), p_search: params.search }),
       });
     } catch {
       throw new Error('Failed to load suggestions');
@@ -313,8 +331,8 @@ export const api = {
   async getAdminTakedowns(params: { status?: string; reason?: string; search?: string } = {}): Promise<TakedownListResponse> {
     try {
       return await rpc<TakedownListResponse>('admin_takedowns', args({
-        p_status: params.status,
-        p_reason: params.reason,
+        p_status: unlessAll(params.status),
+        p_reason: unlessAll(params.reason),
         p_search: params.search,
       }));
     } catch {
@@ -358,11 +376,11 @@ export const api = {
     try {
       return await rpc('admin_songs', args({
         p_search: params.search,
-        p_status: params.status,
+        p_status: unlessAll(params.status),
         p_genre: params.genre,
-        p_category: params.category,
+        p_category: unlessAll(params.category),
         p_artist: params.artist,
-        p_language: params.language,
+        p_language: unlessAll(params.language),
         p_decade: params.decade,
         p_verification: params.verification,
         p_ordering: params.ordering,

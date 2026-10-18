@@ -3,6 +3,7 @@ import { Station } from '../types';
 import { useI18n } from '../context/I18nContext';
 import { usePlayer } from '../context/PlayerContext';
 import { Play, Volume2, Coffee, Bus, Mountain, Flame, Heart, Radio, Sun } from 'lucide-react';
+import { safeImageUrl, hideBrokenImage } from '../utils/urlSafety';
 
 interface StationCardProps {
   station: Station;
@@ -36,7 +37,9 @@ export const StationCard: React.FC<StationCardProps> = ({ station }) => {
   const isCurrent = currentStation?.slug === station.slug;
   const isPlaying = isCurrent && status === 'playing';
 
-  const coverUrl = station.cover_image || 'https://images.unsplash.com/photo-1544787219-7f47ccb76574?auto=format&fit=crop&w=1200&q=80';
+  // Validate the stored cover before it reaches an image src (rejects
+  // javascript:/data: URLs), and hide the element if the network 404s.
+  const coverUrl = safeImageUrl(station.cover_image) || 'https://images.unsplash.com/photo-1544787219-7f47ccb76574?auto=format&fit=crop&w=1200&q=80';
 
   return (
     <div
@@ -52,6 +55,7 @@ export const StationCard: React.FC<StationCardProps> = ({ station }) => {
           src={coverUrl}
           alt={station.title}
           loading="lazy"
+          onError={hideBrokenImage}
           className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105 brightness-[0.85] group-hover:brightness-100"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent pointer-events-none" />

@@ -2,23 +2,28 @@ import React from 'react';
 import { useI18n } from '../context/I18nContext';
 import { ShieldCheck, Heart, ExternalLink, Lock } from 'lucide-react';
 import { BrandMark } from './BrandMark';
+import { Station } from '../types';
+import { navigateTo, RouteTab } from '../utils/seo';
 
 interface FooterProps {
+  /** Live station list — links out to the worlds page instead of static text. */
+  stations?: Station[];
   onOpenTakedown: () => void;
   onOpenAdmin: () => void;
 }
 
-export const Footer: React.FC<FooterProps> = ({ onOpenTakedown, onOpenAdmin }) => {
-  const { t } = useI18n();
+export const Footer: React.FC<FooterProps> = ({ stations = [], onOpenTakedown, onOpenAdmin }) => {
+  const { locale, t } = useI18n();
 
-  const stations = [
-    'पुरानो रेडियो — Golden Era',
-    'चिया पसल — Tea Shop Acoustic',
-    'बस यात्रा — Highway Travel',
-    'लोक दोहोरी — Folk Heritage',
-    'प्रेम गीत — Romantic Melodies',
-    'नेपाली रक — Pioneering Rock',
-  ];
+  // Real anchors: crawlers see six more internal edges out of every page, and
+  // modified clicks still open a new tab.
+  const handleWorldLink = (event: React.MouseEvent<HTMLAnchorElement>, tab: RouteTab) => {
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) {
+      return;
+    }
+    event.preventDefault();
+    navigateTo(tab);
+  };
 
   return (
     <footer className="bg-black border-t border-white/8 pt-14 pb-[calc(7rem+env(safe-area-inset-bottom))] text-neutral-400">
@@ -41,19 +46,28 @@ export const Footer: React.FC<FooterProps> = ({ onOpenTakedown, onOpenAdmin }) =
             </div>
           </div>
 
-          {/* Stations */}
-          <div>
-            <h4 className="text-xs font-bold text-white uppercase tracking-widest mb-4">
-              Themed Worlds
-            </h4>
-            <ul className="space-y-2">
-              {stations.map((s, i) => (
-                <li key={i} className="text-xs font-nepali hover:text-white transition-colors duration-150 cursor-default">
-                  {s}
-                </li>
-              ))}
-            </ul>
-          </div>
+          {/* Themed worlds — links into /stations, driven by live data so the
+              footer can never drift from the catalog */}
+          {stations.length > 0 && (
+            <div>
+              <h4 className="text-xs font-bold text-white uppercase tracking-widest mb-4">
+                {t.nav.radioWorlds}
+              </h4>
+              <ul className="space-y-2">
+                {stations.map((s) => (
+                  <li key={s.slug}>
+                    <a
+                      href="/stations"
+                      onClick={(e) => handleWorldLink(e, 'stations')}
+                      className="block text-xs font-nepali hover:text-white transition-colors duration-150"
+                    >
+                      {locale === 'ne' ? s.title_ne || s.title : s.title}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           {/* Links & Developer */}
           <div className="space-y-6">

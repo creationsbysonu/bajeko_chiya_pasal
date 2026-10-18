@@ -1,26 +1,81 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { I18nProvider } from './context/I18nContext';
+import React, { useState, useEffect, useMemo, useRef, Suspense } from 'react';
+import { I18nProvider, useI18n } from './context/I18nContext';
 import { PlayerProvider, usePlayer } from './context/PlayerContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { Navigation } from './components/Navigation';
 import { Player } from './components/Player';
 import { QueueDrawer } from './components/QueueDrawer';
-import { TakedownModal } from './components/TakedownModal';
-import { AdminModal } from './components/AdminModal';
 import { Footer } from './components/Footer';
 
 import { Home } from './pages/Home';
-import { RadioWorldsPage } from './pages/RadioWorldsPage';
-import { Catalog } from './pages/Catalog';
-import { FavoritesPage } from './pages/FavoritesPage';
 
 import { Station, Song, Genre, GenreCategory } from './types';
 import { api } from './services/api';
+import {
+  applyRouteSeo,
+  isUnknownPath,
+  navigateTo,
+  pathToTab,
+  RouteTab,
+} from './utils/seo';
+
+// The three secondary screens are split into their own chunks so the home page
+// — the one search engines rank — parses far less JavaScript before first
+// paint. That shows up directly in LCP/TBT, which are ranking signals.
+const RadioWorldsPage = React.lazy(() =>
+  import('./pages/RadioWorldsPage').then((m) => ({ default: m.RadioWorldsPage }))
+);
+const Catalog = React.lazy(() =>
+  import('./pages/Catalog').then((m) => ({ default: m.Catalog }))
+);
+const FavoritesPage = React.lazy(() =>
+  import('./pages/FavoritesPage').then((m) => ({ default: m.FavoritesPage }))
+);
+
+// Both modals are on-demand too: the admin portal is ~164 kB of source that no
+// listener needs at first paint, so it is fetched only when the button is hit.
+const TakedownModal = React.lazy(() =>
+  import('./components/TakedownModal').then((m) => ({ default: m.TakedownModal }))
+);
+const AdminModal = React.lazy(() =>
+  import('./components/AdminModal').then((m) => ({ default: m.AdminModal }))
+);
+
+const RouteFallback = () => (
+  <div className="flex items-center justify-center py-32" role="status" aria-live="polite">
+    <span className="h-8 w-8 animate-spin rounded-full border-2 border-white/15 border-t-red-500" />
+    <span className="sr-only">Loading…</span>
+  </div>
+);
 
 function MainApp() {
   const { currentStation, playStation } = usePlayer();
+  const { locale } = useI18n();
   const defaultTunedRef = useRef(false);
-  const [currentTab, setCurrentTab] = useState('home');
+  const [currentTab, setCurrentTab] = useState<RouteTab>(() => pathToTab(window.location.pathname));
+
+  // Address bar ↔ tab state. Back/forward must move between the four screens
+  // like the real pages they now are, and an unknown path is collapsed to "/"
+  // — Vercel answers 200 for every path, so /whatever would otherwise be an
+  // indexed soft-404 duplicating the home page.
+  useEffect(() => {
+    if (isUnknownPath(window.location.pathname)) {
+      window.history.replaceState(null, '', '/');
+    }
+    const onPopState = () => setCurrentTab(pathToTab(window.location.pathname));
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, []);
+
+  // Every route change (nav, footer links, back/forward) funnels through
+  // `navigateTo`, which pushes the URL and announces it via popstate.
+  const navigate = (tab: RouteTab) => navigateTo(tab);
+
+  // Keep <title>, description, canonical and robots pointing at what is
+  // actually on screen (and in the reader's language) for the active route.
+  useEffect(() => {
+    applyRouteSeo(currentTab, locale);
+  }, [currentTab, locale]);
   const [stations, setStations] = useState<Station[]>([]);
   const [featuredSongs, setFeaturedSongs] = useState<Song[]>([]);
   const [newSongs, setNewSongs] = useState<Song[]>([]);
@@ -38,6 +93,27 @@ function MainApp() {
   const [takedownOpen, setTakedownOpen] = useState(false);
   const [adminOpen, setAdminOpen] = useState(false);
   const [targetTakedownSong, setTargetTakedownSong] = useState<Song | null>(null);
+
+  // 'loading' → first paint, 'ready' → catalog in place, 'error' → every call
+  // failed (offline / Supabase asleep) and the page would otherwise render a
+  // permanently empty shell with no explanation and no way to retry.
+  const [loadStatus, setLoadStatus] = useState<'loading' | 'ready' | 'error'>('loading');
+
+  // Songs offered in the takedown form's picker. It used to receive only the
+  // 8 featured songs, so most of the catalog could not be reported at all —
+  // and with an empty list at first render it silently filed reports against
+  // whatever id happened to be in state.
+  const reportableSongs = useMemo(() => {
+    const seen = new Set<number>();
+    const out: Song[] = [];
+    for (const song of [...featuredSongs, ...trendingSongs, ...newSongs, ...teaShopSongs]) {
+      if (song && typeof song.id === 'number' && !seen.has(song.id)) {
+        seen.add(song.id);
+        out.push(song);
+      }
+    }
+    return out;
+  }, [featuredSongs, trendingSongs, newSongs, teaShopSongs]);
 
   const loadData = async () => {
     try {
@@ -63,8 +139,10 @@ function MainApp() {
           .map((entry) => entry.song)
           .filter((song) => song?.publication_status === 'published')
       );
+      setLoadStatus('ready');
     } catch (err) {
       console.error('Failed to load initial data', err);
+      setLoadStatus('error');
     }
   };
 
@@ -88,19 +166,19 @@ function MainApp() {
   const handleSelectGenre = (genreSlug: string) => {
     setSelectedGenreFilter(genreSlug);
     setSelectedDecadeFilter('');
-    setCurrentTab('catalog');
+    navigate('catalog');
   };
 
   const handleSelectDecade = (decade: string) => {
     setSelectedDecadeFilter(decade);
     setSelectedGenreFilter('');
-    setCurrentTab('catalog');
+    navigate('catalog');
   };
 
   const handleExploreCatalog = () => {
     setSelectedGenreFilter('');
     setSelectedDecadeFilter('');
-    setCurrentTab('catalog');
+    navigate('catalog');
   };
 
   return (
@@ -109,12 +187,36 @@ function MainApp() {
       {/* Navigation Header */}
       <Navigation
         currentTab={currentTab}
-        setCurrentTab={setCurrentTab}
+        setCurrentTab={navigate}
         onOpenTakedown={() => setTakedownOpen(true)}
       />
 
       {/* Main Content Area */}
       <main id="main-content" className="flex-1">
+        {/* Catalog failed to load — say so and offer a retry instead of
+            silently rendering an empty shell of "0 songs" panels. */}
+        {loadStatus === 'error' && (
+          <div role="alert" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+            <div className="flex flex-wrap items-center gap-3 rounded-xl border border-amber-500/40 bg-amber-950/40 px-4 py-3">
+              <p className="flex-1 min-w-[220px] text-sm text-amber-100 font-nepali leading-relaxed">
+                सामग्री लोड गर्न सकिएन — इन्टरनेट जाँच गरी पुनः प्रयास गर्नुहोस्।
+                <span className="mt-0.5 block text-xs font-mono text-amber-300/80">
+                  The catalog could not be loaded. Check your connection and retry.
+                </span>
+              </p>
+              <button
+                onClick={() => {
+                  setLoadStatus('loading');
+                  void loadData();
+                }}
+                className="rounded-lg border border-amber-400/50 bg-amber-500/15 px-4 py-2 text-xs font-semibold text-amber-100 transition-colors hover:bg-amber-500/25 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
+              >
+                Retry / पुनः प्रयास
+              </button>
+            </div>
+          </div>
+        )}
+
         {currentTab === 'home' && (
           <Home
             stations={stations}
@@ -131,20 +233,19 @@ function MainApp() {
           />
         )}
 
-        {currentTab === 'stations' && (
-          <RadioWorldsPage stations={stations} />
-        )}
+        {/* Secondary routes arrive as separate chunks; only they suspend. */}
+        <Suspense fallback={<RouteFallback />}>
+          {currentTab === 'stations' && <RadioWorldsPage stations={stations} />}
 
-        {currentTab === 'catalog' && (
-          <Catalog
-            initialGenre={selectedGenreFilter}
-            initialDecade={selectedDecadeFilter}
-          />
-        )}
+          {currentTab === 'catalog' && (
+            <Catalog
+              initialGenre={selectedGenreFilter}
+              initialDecade={selectedDecadeFilter}
+            />
+          )}
 
-        {currentTab === 'favorites' && (
-          <FavoritesPage />
-        )}
+          {currentTab === 'favorites' && <FavoritesPage />}
+        </Suspense>
       </main>
 
       {/* Persistent Audio Player */}
@@ -153,26 +254,31 @@ function MainApp() {
       {/* Up Next / History Queue Drawer */}
       <QueueDrawer />
 
-      {/* Content Moderation / Takedown Modal */}
-      <TakedownModal
-        isOpen={takedownOpen}
-        onClose={() => {
-          setTakedownOpen(false);
-          setTargetTakedownSong(null);
-        }}
-        targetSong={targetTakedownSong}
-        songsList={featuredSongs}
-      />
+      {/* Content Moderation / Takedown Modal — mounted on demand */}
+      {takedownOpen && (
+        <Suspense fallback={null}>
+          <TakedownModal
+            isOpen
+            onClose={() => {
+              setTakedownOpen(false);
+              setTargetTakedownSong(null);
+            }}
+            targetSong={targetTakedownSong}
+            songsList={reportableSongs}
+          />
+        </Suspense>
+      )}
 
-      {/* Admin Portal Modal */}
-      <AdminModal
-        isOpen={adminOpen}
-        onClose={() => setAdminOpen(false)}
-        onCatalogUpdated={loadData}
-      />
+      {/* Admin Portal Modal — mounted on demand */}
+      {adminOpen && (
+        <Suspense fallback={null}>
+          <AdminModal isOpen onClose={() => setAdminOpen(false)} onCatalogUpdated={loadData} />
+        </Suspense>
+      )}
 
       {/* Footer */}
       <Footer
+        stations={stations}
         onOpenTakedown={() => setTakedownOpen(true)}
         onOpenAdmin={() => setAdminOpen(true)}
       />

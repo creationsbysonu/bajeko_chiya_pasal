@@ -3,6 +3,7 @@ import { Station } from '../types';
 import { useI18n } from '../context/I18nContext';
 import { usePlayer } from '../context/PlayerContext';
 import { Play, Pause, Radio, Shuffle } from 'lucide-react';
+import { safeImageUrl, hideBrokenImage } from '../utils/urlSafety';
 
 interface RadioTunerProps {
   stations: Station[];
@@ -45,7 +46,7 @@ export const RadioTuner: React.FC<RadioTunerProps> = ({ stations }) => {
 
   if (!activeStation) return null;
 
-  const coverUrl = activeStation.cover_image || 'https://images.unsplash.com/photo-1544787219-7f47ccb76574?auto=format&fit=crop&w=1200&q=80';
+  const coverUrl = safeImageUrl(activeStation.cover_image) || 'https://images.unsplash.com/photo-1544787219-7f47ccb76574?auto=format&fit=crop&w=1200&q=80';
 
   return (
     <div className="my-10 max-w-6xl mx-auto">
@@ -57,6 +58,7 @@ export const RadioTuner: React.FC<RadioTunerProps> = ({ stations }) => {
           <img
             src={coverUrl}
             alt={activeStation.title}
+            onError={hideBrokenImage}
             className="w-full h-full object-cover transition-transform duration-1000 ease-out group-hover:scale-105 brightness-[0.75] contrast-[1.05]"
           />
           {/* Subtle multi-layer vignette gradient */}

@@ -4,28 +4,43 @@ import { SongCard } from '../components/SongCard';
 import { useI18n } from '../context/I18nContext';
 import { usePlayer } from '../context/PlayerContext';
 import { api } from '../services/api';
-import { Heart, Play } from 'lucide-react';
+import { Heart, Play, RefreshCw } from 'lucide-react';
 
 export const FavoritesPage: React.FC = () => {
-  const { t } = useI18n();
+  // Retrying remounts the view with fresh `loading`/`loadError` initial state,
+  // instead of setting them synchronously from inside the fetch effect.
+  const [retryToken, setRetryToken] = useState(0);
+  return <FavoritesView key={retryToken} onRetry={() => setRetryToken((n) => n + 1)} />;
+};
+
+const FavoritesView: React.FC<{ onRetry: () => void }> = ({ onRetry }) => {
+  const { locale, t } = useI18n();
   const { playSong } = usePlayer();
   const [favorites, setFavorites] = useState<FavoriteItem[]>([]);
   const [loading, setLoading] = useState(true);
-
-  const loadFavorites = async () => {
-    setLoading(true);
-    try {
-      const data = await api.getFavorites();
-      setFavorites(data);
-    } catch (err) {
-      console.error('Failed to load favorites', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [loadError, setLoadError] = useState(false);
 
   useEffect(() => {
-    loadFavorites();
+    let active = true;
+    api
+      .getFavorites()
+      .then((data) => {
+        if (active) setFavorites(data);
+      })
+      .catch((err) => {
+        console.error('Failed to load favorites', err);
+        // Must not be rendered as "you have no favorites" — that is what an
+        // offline listener saw before, with no way to retry.
+        if (active) setLoadError(true);
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+    // Runs once per mount; `onRetry` remounts this view with a fresh key.
+    // oxlint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleFavoriteChange = (songId: number, isFav: boolean) => {
@@ -75,6 +90,26 @@ export const FavoritesPage: React.FC = () => {
           {Array.from({ length: 4 }).map((_, i) => (
             <div key={i} className="h-44 rounded-xl bg-white/5 animate-pulse" />
           ))}
+        </div>
+      ) : loadError ? (
+        <div role="alert" className="text-center py-20 bg-white/3 rounded-2xl border border-white/8 p-8 max-w-md mx-auto">
+          <Heart className="w-12 h-12 text-amber-500/40 mx-auto mb-4" />
+          <h3 className="font-serif text-xl font-bold text-white mb-2">
+            मनपरेको सूची लोड गर्न सकिएन
+          </h3>
+          <p className="text-xs text-neutral-500 font-nepali leading-relaxed mb-6">
+            इन्टरनेट जाँच गरी पुनः प्रयास गर्नुहोस्।
+            <span className="mt-1 block font-mono text-neutral-600">
+              Could not load your favorites. Check your connection and retry.
+            </span>
+          </p>
+          <button
+            onClick={onRetry}
+            className="inline-flex items-center gap-2 rounded-lg border border-white/15 bg-white/5 px-5 py-2.5 text-xs font-semibold text-white transition-colors hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
+          >
+            <RefreshCw className="w-3.5 h-3.5" />
+            {locale === 'ne' ? 'पुनः प्रयास' : 'Retry'}
+          </button>
         </div>
       ) : favorites.length === 0 ? (
         <div className="text-center py-20 bg-white/3 rounded-2xl border border-white/8 p-8 max-w-md mx-auto">

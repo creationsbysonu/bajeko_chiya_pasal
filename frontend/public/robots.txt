@@ -1,0 +1,10 @@
+# Bajeko Chiya Pasal — https://bajeko-chiya-pasal.vercel.app
+#
+# Every indexable screen is one hop away from the header nav (/, /stations,
+# /catalog). /favorites is per-listener state — empty for guests and carrying
+# its own noindex meta — so crawlers are told not to waste budget on it.
+User-agent: *
+Allow: /
+Disallow: /favorites
+
+Sitemap: https://bajeko-chiya-pasal.vercel.app/sitemap.xml

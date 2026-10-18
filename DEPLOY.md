@@ -158,6 +158,59 @@ with the Vercel URL:
 3. Export/download the Render Postgres data if you want a final backup, then
    delete the Render database.
 
+## 8. Search & SEO
+
+The frontend is client-rendered, so ranking rests on three things: every screen
+having its own URL, correct tags in the head, and a fetchable sitemap.
+
+Already wired up — do not redo it:
+
+- **Four crawlable routes** (`/`, `/stations`, `/catalog`, `/favorites`), each
+  with its own title, description, canonical and robots directive, rewritten on
+  navigation and language switch by `frontend/src/utils/seo.ts`. Header and
+  footer navigation are real `<a href>` links that keep SPA behaviour (⌘/ctrl
+  -click still opens a new tab).
+- **`frontend/public/robots.txt`** and **`frontend/public/sitemap.xml`**
+  (`/favorites` is excluded — it is per-listener state, empty for guests).
+- **Absolute social URLs** in `frontend/index.html`. A relative `og:image` is
+  ignored by scrapers, so every `og:`/`twitter:`/JSON-LD URL is absolute.
+- **Structured data**: WebSite + Organization + SearchAction (static in
+  `index.html`), FAQPage on the home page, and a CollectionPage listing the ten
+  radio worlds — all emitted through `src/components/JsonLd.tsx`.
+- **Soft-404 protection**: the Vercel rewrite answers 200 for *any* path, so
+  unknown paths are collapsed to `/` instead of being indexed as twins of home.
+
+One-time setup that is still yours to run:
+
+1. Google Search Console → **Add property** → domain
+   `bajeko-chiya-pasal.vercel.app` → verify with a DNS TXT record (Vercel has no
+   Search Console integration, so verification is done at the registrar).
+2. Submit `https://bajeko-chiya-pasal.vercel.app/sitemap.xml` under **Sitemaps**,
+   then use URL Inspection on `/` and request indexing.
+3. After the deploy, re-check `/`, `/stations` and `/catalog` with the Rich
+   Results Test and run the PageSpeed Insights mobile report.
+
+If the domain changes, these four move together (a test in
+`frontend/src/test/Routing.test.tsx` keeps the last two honest against the first):
+
+- `SITE_URL` in `frontend/src/utils/seo.ts`
+- the absolute `og:`/`twitter:`/JSON-LD URLs in `frontend/index.html`
+- `frontend/public/robots.txt`
+- `frontend/public/sitemap.xml`
+
+Plain expectations: Google currently restricts FAQ rich-result boxes to
+well-known government and health sites, so the FAQPage block helps the engine
+*understand* the copy rather than guaranteeing a snippet. The realistic wins
+from the work above are four separately indexed pages with sitelinks, the site
+search box (SearchAction → `/catalog?q=`), and correct link previews.
+
+Performance work in place (Core Web Vitals are ranking signals): secondary
+routes and both modals are code-split — `AdminModal` alone is a 98 kB chunk
+loaded only when the portal opens, dropping the entry bundle from 739 kB to
+617 kB raw (191 → 172 kB gzip) — the service worker is network-first for
+navigations so bots never read a stale shell, and below-the-fold imagery is
+lazy-loaded with graceful broken-image handling.
+
 ## Regenerating the seed
 
 `supabase/seed.sql` was generated from the legacy dev database with

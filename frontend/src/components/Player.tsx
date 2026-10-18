@@ -5,6 +5,7 @@ import {
   Play, Pause, SkipBack, SkipForward, Shuffle, Repeat, Repeat1,
   Volume2, VolumeX, ListMusic, Maximize2, Minimize2, AlertCircle, Music, Sun
 } from 'lucide-react';
+import { songArtwork, hideBrokenImage } from '../utils/urlSafety';
 
 export const Player: React.FC = () => {
   const {
@@ -54,6 +55,10 @@ export const Player: React.FC = () => {
   };
 
   const handleSeekCommit = () => {
+    // Only commit a real drag/nudge. Without this guard, a plain click that
+    // didn't move the thumb (or a Tab away from the slider) seeked to the
+    // initial stale seekValue of 0 and silently rewound playback.
+    if (!seeking) return;
     setSeeking(false);
     seekTo(seekValue);
   };
@@ -132,6 +137,10 @@ export const Player: React.FC = () => {
                 onChange={handleSeekChange}
                 onMouseUp={handleSeekCommit}
                 onTouchEnd={handleSeekCommit}
+                // Keyboard nudges fire no mouse/touch event, so the readouts
+                // would freeze on the seek value until a real drag happened.
+                onKeyUp={handleSeekCommit}
+                onBlur={handleSeekCommit}
                 className="flex-1 accent-red-600 h-1.5 bg-white/10 rounded-lg cursor-pointer"
                 aria-label="Seek time"
               />
@@ -194,6 +203,10 @@ export const Player: React.FC = () => {
 
       {/* Persistent Bottom Audio Player Bar */}
       <div
+        // Inert while there is no song: the bar is translated off-screen but
+        // its controls stayed in the tab order, so keyboard users jumped from
+        // the nav straight into invisible buttons.
+        inert={!currentSong}
         className={`fixed bottom-0 left-0 right-0 z-40 bg-black/98 backdrop-blur-md border-t border-white/8 shadow-2xl pb-[env(safe-area-inset-bottom)] transition-transform duration-300 ${
           currentSong ? 'translate-y-0' : 'translate-y-full pointer-events-none'
         }`}
@@ -235,6 +248,8 @@ export const Player: React.FC = () => {
             onChange={handleSeekChange}
             onMouseUp={handleSeekCommit}
             onTouchEnd={handleSeekCommit}
+            onKeyUp={handleSeekCommit}
+            onBlur={handleSeekCommit}
             className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
             aria-label="Seek bar"
           />
@@ -248,7 +263,8 @@ export const Player: React.FC = () => {
             <div className="w-12 h-12 rounded-xl border border-white/10 flex-shrink-0 relative overflow-hidden bg-black shadow-md">
               {currentSong ? (
                 <img
-                  src={currentSong.artwork_url || `https://img.youtube.com/vi/${currentSong.provider_video_id}/hqdefault.jpg`}
+                  src={songArtwork(currentSong) || undefined}
+                  onError={hideBrokenImage}
                   alt={currentSong.title}
                   className="w-full h-full object-cover"
                 />

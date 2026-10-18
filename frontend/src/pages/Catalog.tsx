@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Song, Genre, GenreCategory } from '../types';
 import { SongCard } from '../components/SongCard';
 import { useI18n } from '../context/I18nContext';
@@ -12,10 +12,22 @@ interface CatalogProps {
   initialLanguage?: string;
 }
 
+/**
+ * Initial query for `/catalog?q=…` — the target of the site's SearchAction
+ * (see the WebSite JSON-LD in index.html). Capped because it flows straight
+ * into an RPC argument.
+ */
+const readQueryFromUrl = (): string => {
+  const q = new URLSearchParams(window.location.search).get('q');
+  return q ? q.slice(0, 100) : '';
+};
+
 export const Catalog: React.FC<CatalogProps> = ({ initialGenre, initialDecade, initialLanguage }) => {
   const { locale, t } = useI18n();
-  const [search, setSearch] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [search, setSearch] = useState(readQueryFromUrl);
+  // Seeded with the same value so a deep-linked search fetches once instead of
+  // showing "no results" first and correcting itself 300ms later.
+  const [debouncedSearch, setDebouncedSearch] = useState(readQueryFromUrl);
   const [selectedGenre, setSelectedGenre] = useState<string>(initialGenre || '');
   const [selectedDecade, setSelectedDecade] = useState<string>(initialDecade || '');
   const [selectedLanguage, setSelectedLanguage] = useState<string>(initialLanguage || '');
@@ -26,11 +38,21 @@ export const Catalog: React.FC<CatalogProps> = ({ initialGenre, initialDecade, i
   const [genres, setGenres] = useState<Genre[]>([]);
   const [categories, setCategories] = useState<GenreCategory[]>([]);
   const [languages, setLanguages] = useState<{ language: string; count: number }[]>([]);
+  const [decades, setDecades] = useState<{ decade: string; count: number }[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [totalCount, setTotalCount] = useState(0);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
+
+  // Monotonic id for the song query. Two quick filter/search changes put two
+  // requests in flight; without this guard the slower, older response lands
+  // last and overwrites the newer result set (and a "load more" from the old
+  // filter can append onto the new one). Bumping it on unmount also stops
+  // in-flight responses from setting state on an unmounted page.
+  const requestIdRef = useRef(0);
+  useEffect(() => () => { requestIdRef.current += 1; }, []);
 
   // Debounce search input
   useEffect(() => {
@@ -40,17 +62,24 @@ export const Catalog: React.FC<CatalogProps> = ({ initialGenre, initialDecade, i
     return () => clearTimeout(handler);
   }, [search]);
 
-  // Load genres and languages for dropdowns
+  // Load genres, languages and decades for the filter dropdowns
   useEffect(() => {
     api.getGenres().then(setGenres).catch(console.error);
     api.getLanguages().then(setLanguages).catch(console.error);
     api.getGenreCategories().then(setCategories).catch(console.error);
+    // Decades come from the catalog rather than a hardcoded list, so a
+    // deep-linked decade that this deployment actually publishes always has a
+    // matching option (previously a 1950s link showed "All Decades" while
+    // silently filtering).
+    api.getDecades().then(setDecades).catch(console.error);
   }, []);
 
   const groupedGenres = groupGenresByCategory(genres, categories);
 
   const fetchSongs = useCallback(async () => {
+    const requestId = ++requestIdRef.current;
     setLoading(true);
+    setLoadError(null);
     try {
       const res = await api.getSongs({
         search: debouncedSearch,
@@ -61,14 +90,24 @@ export const Catalog: React.FC<CatalogProps> = ({ initialGenre, initialDecade, i
         ordering,
         page: 1,
       });
+      // A newer query superseded this one while it was in flight.
+      if (requestId !== requestIdRef.current) return;
       setSongs(res.results);
       setTotalCount(res.count);
       setHasMore(Boolean(res.next));
       setPage(1);
     } catch (err) {
+      if (requestId !== requestIdRef.current) return;
       console.error('Failed to load songs', err);
+      // The previous list would otherwise stay on screen looking current.
+      setSongs([]);
+      setTotalCount(0);
+      setHasMore(false);
+      setLoadError(
+        'Could not load songs — check your connection and retry. / गीत लोड गर्न सकिएन।'
+      );
     } finally {
-      setLoading(false);
+      if (requestId === requestIdRef.current) setLoading(false);
     }
   }, [debouncedSearch, selectedGenre, selectedDecade, selectedLanguage, selectedVerification, ordering]);
 
@@ -77,6 +116,10 @@ export const Catalog: React.FC<CatalogProps> = ({ initialGenre, initialDecade, i
   }, [fetchSongs]);
 
   const loadMore = useCallback(async () => {
+    if (loadingMore) return;
+    // Join the *current* query rather than starting a new one: a filter change
+    // bumps the id, which invalidates any page-2 append still in flight.
+    const requestId = requestIdRef.current;
     setLoadingMore(true);
     try {
       const nextPage = page + 1;
@@ -89,15 +132,18 @@ export const Catalog: React.FC<CatalogProps> = ({ initialGenre, initialDecade, i
         ordering,
         page: nextPage,
       });
+      if (requestId !== requestIdRef.current) return;
       setSongs((prev) => [...prev, ...res.results]);
       setHasMore(Boolean(res.next));
       setPage(nextPage);
     } catch (err) {
+      if (requestId !== requestIdRef.current) return;
       console.error('Failed to load more songs', err);
+      setLoadError('Could not load the next page — check your connection and retry.');
     } finally {
-      setLoadingMore(false);
+      if (requestId === requestIdRef.current) setLoadingMore(false);
     }
-  }, [page, debouncedSearch, selectedGenre, selectedDecade, selectedLanguage, selectedVerification, ordering]);
+  }, [page, loadingMore, debouncedSearch, selectedGenre, selectedDecade, selectedLanguage, selectedVerification, ordering]);
 
   const clearFilters = () => {
     setSearch('');
@@ -123,13 +169,32 @@ export const Catalog: React.FC<CatalogProps> = ({ initialGenre, initialDecade, i
         </p>
       </div>
 
+      {/* Failed load: replace the silent stale/empty list with a real message */}
+      {loadError && !loading && (
+        <div role="alert" className="mb-6 rounded-xl border border-amber-500/40 bg-amber-950/40 px-4 py-3 flex flex-wrap items-center gap-3">
+          <p className="flex-1 min-w-[200px] text-sm text-amber-100">{loadError}</p>
+          <button
+            onClick={() => void fetchSongs()}
+            aria-label={locale === 'ne' ? 'पुनः प्रयास गर्नुहोस्' : 'Retry loading songs'}
+            className="flex items-center gap-1.5 rounded-lg border border-amber-400/50 bg-amber-500/15 px-4 py-2 text-xs font-semibold text-amber-100 transition-colors hover:bg-amber-500/25 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
+          >
+            <RefreshCw className="w-3.5 h-3.5" />
+            {locale === 'ne' ? 'पुनः प्रयास' : 'Retry'}
+          </button>
+        </div>
+      )}
+
       {/* Search and Filters Bar */}
       <div className="bg-black/60 backdrop-blur-md rounded-3xl border border-white/10 p-5 md:p-7 mb-8 shadow-2xl space-y-4">
         
         {/* Main Search Input */}
         <div className="relative">
+          <label htmlFor="catalog-search" className="sr-only">
+            {locale === 'ne' ? 'गीत खोज्नुहोस्' : 'Search songs'}
+          </label>
           <Search className="w-4 h-4 text-neutral-500 absolute left-4 top-1/2 -translate-y-1/2" />
           <input
+            id="catalog-search"
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -139,6 +204,7 @@ export const Catalog: React.FC<CatalogProps> = ({ initialGenre, initialDecade, i
           {search && (
             <button
               onClick={() => setSearch('')}
+              aria-label={locale === 'ne' ? 'खोज खाली गर्नुहोस्' : 'Clear search'}
               className="absolute right-3.5 top-1/2 -translate-y-1/2 p-1 text-white/50 hover:text-white transition-colors"
             >
               <X className="w-4 h-4" />
@@ -151,10 +217,11 @@ export const Catalog: React.FC<CatalogProps> = ({ initialGenre, initialDecade, i
           
           {/* Genre Filter */}
           <div>
-            <label className="block text-xs font-mono text-neutral-500 uppercase mb-1 tracking-widest">
+            <label htmlFor="catalog-genre" className="block text-xs font-mono text-neutral-500 uppercase mb-1 tracking-widest">
               Genre (विधा)
             </label>
             <select
+              id="catalog-genre"
               value={selectedGenre}
               onChange={(e) => setSelectedGenre(e.target.value)}
               className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-xs focus:border-red-500 focus:outline-none"
@@ -174,31 +241,37 @@ export const Catalog: React.FC<CatalogProps> = ({ initialGenre, initialDecade, i
 
           {/* Decade Filter */}
           <div>
-            <label className="block text-xs font-mono text-neutral-500 uppercase mb-1 tracking-widest">
+            <label htmlFor="catalog-decade" className="block text-xs font-mono text-neutral-500 uppercase mb-1 tracking-widest">
               Decade (दशक)
             </label>
             <select
+              id="catalog-decade"
               value={selectedDecade}
               onChange={(e) => setSelectedDecade(e.target.value)}
               className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-xs focus:border-red-500 focus:outline-none"
             >
               <option value="">{t.catalog.allDecades}</option>
-              <option value="1960s">1960s (२०२० दशक)</option>
-              <option value="1970s">1970s (२०३० दशक)</option>
-              <option value="1980s">1980s (२०४० दशक)</option>
-              <option value="1990s">1990s (२०५० दशक)</option>
-              <option value="2000s">2000s (२०६० दशक)</option>
-              <option value="2010s">2010s (२०७० दशक)</option>
-              <option value="2020s">2020s (२०८० दशक)</option>
+              {/* Keep a deep-linked decade visible even if the RPC has not
+                  reported it yet, so the control never lies about being on
+                  "All Decades" while the results are filtered. */}
+              {selectedDecade && !decades.some((d) => d.decade === selectedDecade) && (
+                <option value={selectedDecade}>{selectedDecade}</option>
+              )}
+              {decades.map((d) => (
+                <option key={d.decade} value={d.decade}>
+                  {d.decade} ({d.count})
+                </option>
+              ))}
             </select>
           </div>
 
           {/* Language Filter */}
           <div>
-            <label className="block text-xs font-mono text-neutral-500 uppercase mb-1 tracking-widest">
+            <label htmlFor="catalog-language" className="block text-xs font-mono text-neutral-500 uppercase mb-1 tracking-widest">
               Language (भाषा)
             </label>
             <select
+              id="catalog-language"
               value={selectedLanguage}
               onChange={(e) => setSelectedLanguage(e.target.value)}
               className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-xs focus:border-red-500 focus:outline-none"
@@ -214,10 +287,11 @@ export const Catalog: React.FC<CatalogProps> = ({ initialGenre, initialDecade, i
 
           {/* Verification Status */}
           <div>
-            <label className="block text-xs font-mono text-neutral-500 uppercase mb-1 tracking-widest">
+            <label htmlFor="catalog-verification" className="block text-xs font-mono text-neutral-500 uppercase mb-1 tracking-widest">
               Verification (प्रमाणन)
             </label>
             <select
+              id="catalog-verification"
               value={selectedVerification}
               onChange={(e) => setSelectedVerification(e.target.value)}
               className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-xs focus:border-red-500 focus:outline-none"
@@ -230,10 +304,11 @@ export const Catalog: React.FC<CatalogProps> = ({ initialGenre, initialDecade, i
 
           {/* Sorting */}
           <div>
-            <label className="block text-xs font-mono text-neutral-500 uppercase mb-1 tracking-widest">
+            <label htmlFor="catalog-ordering" className="block text-xs font-mono text-neutral-500 uppercase mb-1 tracking-widest">
               Sort By (क्रम)
             </label>
             <select
+              id="catalog-ordering"
               value={ordering}
               onChange={(e) => setOrdering(e.target.value)}
               className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-xs focus:border-red-500 focus:outline-none"

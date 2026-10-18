@@ -6,6 +6,7 @@ import { useI18n } from '../context/I18nContext';
 import { usePlayer } from '../context/PlayerContext';
 import { Play, Pause, Music, Music2, CalendarDays, ChevronRight, Flame, Camera } from 'lucide-react';
 import { festivalImage } from '../utils/festivalImagery';
+import { hideBrokenImage, isPlayableVideoId } from '../utils/urlSafety';
 import { FestivalGlyph } from './FestivalGlyph';
 
 /* --------------------------------------------------------------------------- */
@@ -13,16 +14,23 @@ import { FestivalGlyph } from './FestivalGlyph';
 /* --------------------------------------------------------------------------- */
 
 /** A Date built from a `YYYY-MM-DD` string without the UTC-midnight shift. */
-const parseDate = (value: string): Date => {
+const parseDate = (value: string | null | undefined): Date | null => {
+  if (typeof value !== 'string' || !value) return null;
   const [y, m, d] = value.split('-').map(Number);
-  return new Date(y || 1970, (m || 1) - 1, d || 1);
+  if (!Number.isFinite(y)) return null;
+  return new Date(y, (m || 1) - 1, d || 1);
 };
 
-const formatDate = (value: string, locale: string): string =>
-  parseDate(value).toLocaleDateString(locale === 'ne' ? 'ne-NP' : 'en-GB', {
+const formatDate = (value: string | null | undefined, locale: string): string => {
+  // A missing or malformed date from the RPC must not throw mid-render — the
+  // festival card renders on the home page.
+  const date = parseDate(value);
+  if (!date) return locale === 'ne' ? 'मिति अद्यावधिक हुँदै' : 'Date pending';
+  return date.toLocaleDateString(locale === 'ne' ? 'ne-NP' : 'en-GB', {
     month: 'short',
     day: 'numeric',
   });
+};
 
 /**
  * Festival songs come from a lighter RPC payload than catalog songs; widen them
@@ -119,7 +127,9 @@ const FestiveSongRow: React.FC<{ song: FestivalSong; index: number }> = ({ song,
   const handlePlay = (event: React.MouseEvent) => {
     event.stopPropagation();
     if (isCurrent) togglePlayPause();
-    else playSong(toPlayableSong(song));
+    // A row without a usable video id would raise YouTube error 2 and get
+    // auto-skipped, which can cascade into skipping the entire mix.
+    else if (isPlayableVideoId(song.provider_video_id)) playSong(toPlayableSong(song));
   };
 
   return (
@@ -316,8 +326,11 @@ export const FestiveSection: React.FC<{ embedded?: boolean }> = ({ embedded = fa
   const heroImage = curated?.url ?? (playlist[0] ? artworkFor(playlist[0]) : null);
 
   const playMix = () => {
-    if (!playlist.length) return;
-    const [first, ...rest] = playlist.map(toPlayableSong);
+    // Drop entries with a missing/invalid video id up front: the first of them
+    // would error and auto-skip the listener through the whole festival mix.
+    const playable = playlist.filter((s) => isPlayableVideoId(s.provider_video_id));
+    if (!playable.length) return;
+    const [first, ...rest] = playable.map(toPlayableSong);
     playSong(first, undefined, rest);
   };
 
@@ -359,6 +372,9 @@ export const FestiveSection: React.FC<{ embedded?: boolean }> = ({ embedded = fa
                     src={heroImage}
                     alt=""
                     aria-hidden
+                    loading="lazy"
+                    decoding="async"
+                    onError={hideBrokenImage}
                     className="absolute inset-0 w-full h-full object-cover opacity-70"
                   />
                   <div className={`absolute inset-0 bg-gradient-to-br ${tone.glow} via-black/70 to-black/85`} />

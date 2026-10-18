@@ -3,6 +3,7 @@ import { X, Lock, LogOut, AlertTriangle, ShieldCheck, FileText, Database, Plus, 
 import { api } from '../services/api';
 import { AdminStats, TakedownTicket, AuditLogItem, Song, Station, Artist, AuthUser, Genre, GenreCategory, StationQueueItem, AdminInsights, SongRequestTicket } from '../types';
 import { resolveCategories, categoryLabel } from '../utils/genreTaxonomy';
+import { safeImageUrl, safeYouTubeUrl, songArtwork, hideBrokenImage } from '../utils/urlSafety';
 import { FestivalGlyph } from './FestivalGlyph';
 
 
@@ -166,15 +167,22 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, onCatal
   };
 
   const handleLogout = async () => {
-    await api.logout();
-    setIsAuthenticated(false);
-    setCurrentUser(null);
-    setPassword('');
-    setPasswordForm({ current_password: '', new_password: '', confirm_password: '' });
-    setLoginError(null);
-    setSecurityError(null);
-    setSecuritySuccess(null);
-    setActiveTab('stats');
+    // Clear the local session even if the network call fails — otherwise a
+    // flaky connection leaves the button dead and the user unable to log out.
+    try {
+      await api.logout();
+    } catch (err) {
+      console.error('Logout request failed, clearing local session anyway', err);
+    } finally {
+      setIsAuthenticated(false);
+      setCurrentUser(null);
+      setPassword('');
+      setPasswordForm({ current_password: '', new_password: '', confirm_password: '' });
+      setLoginError(null);
+      setSecurityError(null);
+      setSecuritySuccess(null);
+      setActiveTab('stats');
+    }
   };
 
   const handleChangePassword = async (e: React.FormEvent) => {
@@ -1594,7 +1602,8 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, onCatal
                             aria-label={`Select ${song.title}`}
                           />
                           <img
-                            src={song.artwork_url || `https://img.youtube.com/vi/${song.provider_video_id}/hqdefault.jpg`}
+                            src={songArtwork(song) || undefined}
+                            onError={hideBrokenImage}
                             alt={song.title}
                             className="w-10 h-10 rounded-lg object-cover bg-neutral-900 border border-white/10 flex-shrink-0"
                           />
@@ -2000,7 +2009,12 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, onCatal
                         <div key={item.song_id} className="p-2.5 rounded-xl bg-black border border-white/10 flex items-center gap-3">
                           <span className="text-xs font-mono text-neutral-500 w-6 text-center">{index + 1}</span>
                           {item.artwork_url && (
-                            <img src={item.artwork_url} alt={item.title} className="w-9 h-9 rounded-lg object-cover flex-shrink-0" />
+                            <img
+                              src={safeImageUrl(item.artwork_url) || undefined}
+                              onError={hideBrokenImage}
+                              alt={item.title}
+                              className="w-9 h-9 rounded-lg object-cover flex-shrink-0"
+                            />
                           )}
                           <div className="min-w-0 flex-1">
                             <p className="text-xs font-bold text-white truncate">{item.title}</p>
@@ -2046,7 +2060,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, onCatal
               {activeTab === 'addSong' && (
                 <form onSubmit={handleCreateSong} className="max-w-lg space-y-4">
                   {songSuccessMsg && (
-                    <div className="p-3 bg-red-950/80 border border-red-500/40 text-red-200 rounded-2xl text-xs">
+                    <div role="status" className="p-3 bg-emerald-950/80 border border-emerald-500/40 text-emerald-200 rounded-2xl text-xs">
                       {songSuccessMsg}
                     </div>
                   )}
@@ -2469,7 +2483,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, onCatal
                     </div>
                     <div className="space-y-2 max-h-[28vh] overflow-y-auto pr-1">
                       {artists
-                        .filter((artist) => artist.display_name.toLowerCase().includes(artistSearch.toLowerCase()))
+                        .filter((artist) => (artist.display_name || '').toLowerCase().includes(artistSearch.toLowerCase()))
                         .map((artist) => (
                           <div key={artist.id} className="p-3 rounded-2xl bg-black border border-white/10 flex items-center justify-between gap-3">
                             <div className="min-w-0">
@@ -2685,7 +2699,8 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, onCatal
                           <div key={st.id} className="p-3.5 rounded-2xl bg-black border border-white/10 flex items-center justify-between gap-3">
                             <div className="flex items-center gap-3 min-w-0">
                               <img
-                                src={st.cover_image || 'https://images.unsplash.com/photo-1544787219-7f47ccb76574?auto=format&fit=crop&w=400&q=80'}
+                                src={safeImageUrl(st.cover_image) || 'https://images.unsplash.com/photo-1544787219-7f47ccb76574?auto=format&fit=crop&w=400&q=80'}
+                                onError={hideBrokenImage}
                                 alt={st.title}
                                 className="w-12 h-12 rounded-xl object-cover flex-shrink-0"
                               />
@@ -2884,16 +2899,24 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, onCatal
                           <p className="text-sm font-serif font-bold text-white">
                             {req.title}{req.artist ? ` — ${req.artist}` : ''}
                           </p>
-                          {req.youtube_url && (
-                            <a
-                              href={req.youtube_url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1.5 text-xs text-red-400 hover:text-red-300 break-all"
-                            >
-                              <ExternalLink className="w-3 h-3 flex-shrink-0" /> {req.youtube_url}
-                            </a>
-                          )}
+                          {(() => {
+                            // Listener-supmitted value: only render it as a link
+                            // when it is http(s) and actually on YouTube, so a
+                            // `javascript:` row can never become clickable
+                            // inside the admin portal.
+                            const requestUrl = safeYouTubeUrl(req.youtube_url);
+                            if (!requestUrl) return null;
+                            return (
+                              <a
+                                href={requestUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1.5 text-xs text-red-400 hover:text-red-300 break-all"
+                              >
+                                <ExternalLink className="w-3 h-3 flex-shrink-0" /> {requestUrl}
+                              </a>
+                            );
+                          })()}
                           {req.note && (
                             <p className="text-xs text-neutral-300 bg-neutral-900 p-2.5 rounded-xl border border-white/5 whitespace-pre-wrap">
                               {req.note}

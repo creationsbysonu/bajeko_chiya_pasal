@@ -329,8 +329,26 @@ export const HomeShowcase: React.FC<HomeShowcaseProps> = ({
               aria-label={panel.title}
               onMouseEnter={() => setActive(i)}
               onMouseLeave={() => clear(i)}
-              onFocus={() => setActive(i)}
-              onBlur={() => clear(i)}
+              onFocus={(e) => {
+                // Only open when focus arrives from *outside* the panel;
+                // moving between the panel and its own controls must not
+                // collapse it mid-interaction.
+                if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setActive(i);
+              }}
+              onBlur={(e) => {
+                if (!e.currentTarget.contains(e.relatedTarget as Node | null)) clear(i);
+              }}
+              onKeyDown={(e) => {
+                // role="button" without a click handler left this panel
+                // unreachable for keyboard users — give Enter/Space the same
+                // open action hover provides, and Escape the fold-back.
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  setActive(i);
+                } else if (e.key === 'Escape') {
+                  clear(i);
+                }
+              }}
               style={{ flexGrow: isActive ? 5 : 1 }}
               className={`group/panel relative overflow-hidden rounded-3xl cursor-pointer outline-none select-none
                 pd-dark-zone
@@ -396,8 +414,12 @@ export const HomeShowcase: React.FC<HomeShowcaseProps> = ({
                 </div>
               </div>
 
-              {/* Opened window: contents fade and rise in */}
+              {/* Opened window: contents fade and rise in.
+                  `inert` removes the closed panel's controls from the tab order —
+                  opacity-0 alone still let keyboard users focus invisible
+                  buttons across all five panels. */}
               <div
+                inert={!isActive}
                 className={`absolute inset-0 z-20 flex flex-col p-5 sm:p-6 transition-all duration-500 ease-out motion-reduce:transition-none ${
                   isActive ? 'opacity-100 translate-y-0 delay-100' : 'opacity-0 translate-y-3 pointer-events-none'
                 }`}

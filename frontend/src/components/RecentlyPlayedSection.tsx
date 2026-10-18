@@ -12,7 +12,16 @@ const MAX_RECENT_SONGS = 20;
 const loadRecentlyPlayed = (): Song[] => {
   try {
     const stored = localStorage.getItem(RECENTLY_PLAYED_KEY);
-    return stored ? JSON.parse(stored) : [];
+    if (!stored) return [];
+    const parsed: unknown = JSON.parse(stored);
+    // The key is shared, so a tampered or stale value can be anything —
+    // a null/object here would throw on `.length`/`.map` and take down the
+    // whole Home tab. Only accept a plain array of songs with ids.
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter(
+      (item): item is Song =>
+        Boolean(item) && typeof item === 'object' && typeof (item as Song).id === 'number'
+    );
   } catch {
     return [];
   }

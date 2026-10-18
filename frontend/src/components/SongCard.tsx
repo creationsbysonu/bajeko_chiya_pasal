@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Song } from '../types';
 import { useI18n } from '../context/I18nContext';
 import { usePlayer } from '../context/PlayerContext';
 import { Play, Pause, Heart, ShieldCheck, Calendar, Music } from 'lucide-react';
 import { api } from '../services/api';
+import { songArtwork, hideBrokenImage } from '../utils/urlSafety';
 
 interface SongCardProps {
   song: Song;
@@ -20,11 +21,15 @@ export const SongCard: React.FC<SongCardProps> = ({
   const { currentSong, status, playSong, togglePlayPause } = usePlayer();
   const [favorited, setFavorited] = useState(isFavorited);
   const [favLoading, setFavLoading] = useState(false);
+  const [favError, setFavError] = useState(false);
+  const favErrorTimer = useRef<number | undefined>(undefined);
+  useEffect(() => () => window.clearTimeout(favErrorTimer.current), []);
 
   const isCurrent = currentSong?.id === song.id;
   const isPlaying = isCurrent && status === 'playing';
 
-  const thumbnail = song.artwork_url || (song.provider_video_id ? `https://img.youtube.com/vi/${song.provider_video_id}/hqdefault.jpg` : null);
+  // Validated: rejects unsafe schemes in artwork_url and implausible ids.
+  const thumbnail = songArtwork(song);
 
   const handlePlayClick = () => {
     if (isCurrent) {
@@ -39,18 +44,27 @@ export const SongCard: React.FC<SongCardProps> = ({
     if (favLoading) return;
     setFavLoading(true);
 
+    // Optimistic flip so the heart responds instantly, rolled back on failure.
+    // Without the visible error the tap did nothing at all when the RPC
+    // refused (offline, anonymous sign-in disabled, expired session) — the
+    // listener had no way to know it never saved.
+    const next = !favorited;
+    setFavorited(next);
+    setFavError(false);
     try {
-      if (favorited) {
-        await api.removeFavorite(song.id);
-        setFavorited(false);
-        onFavoriteChange?.(song.id, false);
-      } else {
+      if (next) {
         await api.addFavorite(song.id);
-        setFavorited(true);
         onFavoriteChange?.(song.id, true);
+      } else {
+        await api.removeFavorite(song.id);
+        onFavoriteChange?.(song.id, false);
       }
     } catch (err) {
       console.error('Failed to toggle favorite', err);
+      setFavorited(!next);
+      setFavError(true);
+      window.clearTimeout(favErrorTimer.current);
+      favErrorTimer.current = window.setTimeout(() => setFavError(false), 4000);
     } finally {
       setFavLoading(false);
     }
@@ -72,6 +86,7 @@ export const SongCard: React.FC<SongCardProps> = ({
               src={thumbnail}
               alt={song.title}
               loading="lazy"
+              onError={hideBrokenImage}
               className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105 brightness-[0.9] group-hover:brightness-100"
             />
           ) : (
@@ -110,6 +125,14 @@ export const SongCard: React.FC<SongCardProps> = ({
           >
             <Heart className={`w-3.5 h-3.5 ${favorited ? 'fill-red-500 text-red-500' : ''}`} />
           </button>
+          {favError && (
+            <p
+              role="alert"
+              className="absolute top-11 right-2 z-20 whitespace-nowrap rounded-lg border border-red-500/40 bg-black/95 px-2 py-1 text-[10px] font-medium text-red-200 shadow-lg"
+            >
+              सेभ गर्न सकिएन · Could not save
+            </p>
+          )}
 
           {/* Center Play Button Overlay on Hover or Playing */}
           <button

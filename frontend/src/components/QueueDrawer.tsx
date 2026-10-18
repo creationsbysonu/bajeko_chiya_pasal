@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { usePlayer } from '../context/PlayerContext';
 import { useI18n } from '../context/I18nContext';
+import { useDialog } from '../hooks/useDialog';
 import { X, Play, ListMusic, History, Music2 } from 'lucide-react';
+import { songArtwork, hideBrokenImage } from '../utils/urlSafety';
 import { Song } from '../types';
 
 export const QueueDrawer: React.FC = () => {
@@ -16,17 +18,35 @@ export const QueueDrawer: React.FC = () => {
   } = usePlayer();
   const { locale, t } = useI18n();
 
+  const drawerRef = useRef<HTMLDivElement>(null);
+  const closeQueue = () => setIsQueueOpen(false);
+
+  // Escape closes it, focus is trapped inside, and focus returns to the queue
+  // button that opened it — none of which the raw overlay div provided.
+  useDialog(isQueueOpen, closeQueue, drawerRef);
+
   if (!isQueueOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[70] flex justify-end bg-black/80 backdrop-blur-md animate-in fade-in pd-veil">
-      <div className="w-full max-w-md bg-black border-l border-white/10 h-full flex flex-col shadow-2xl pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
+    <div
+      className="fixed inset-0 z-[70] flex justify-end bg-black/80 backdrop-blur-md animate-in fade-in pd-veil"
+      onMouseDown={closeQueue}
+    >
+      <div
+        ref={drawerRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="queue-drawer-title"
+        tabIndex={-1}
+        onMouseDown={(e) => e.stopPropagation()}
+        className="w-full max-w-md bg-black border-l border-white/10 h-full flex flex-col shadow-2xl pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] focus:outline-none"
+      >
         
         {/* Drawer Header */}
         <div className="p-5 border-b border-white/10 flex items-center justify-between bg-black">
           <div className="flex items-center gap-2.5">
             <ListMusic className="w-5 h-5 text-red-500" />
-            <h3 className="font-serif text-lg font-bold text-white">
+            <h3 id="queue-drawer-title" className="font-serif text-lg font-bold text-white">
               {t.player.queue}
             </h3>
             {queue.length > 0 && (
@@ -57,7 +77,8 @@ export const QueueDrawer: React.FC = () => {
               <div className="p-3.5 rounded-2xl bg-neutral-950 border border-red-500/40 flex items-center gap-3.5 shadow-glow-red">
                 <div className="w-14 h-14 rounded-xl overflow-hidden bg-black flex-shrink-0 border border-white/10">
                   <img
-                    src={currentSong.artwork_url || `https://img.youtube.com/vi/${currentSong.provider_video_id}/hqdefault.jpg`}
+                    src={songArtwork(currentSong) || undefined}
+                    onError={hideBrokenImage}
                     alt={currentSong.title}
                     className="w-full h-full object-cover"
                   />
@@ -95,10 +116,12 @@ export const QueueDrawer: React.FC = () => {
             ) : (
               <div className="space-y-2">
                 {queue.map((song: Song, idx: number) => (
-                  <div
+                  <button
+                    type="button"
                     key={`${song.id}-${idx}`}
                     onClick={() => playSong(song, currentStation || undefined)}
-                    className="p-2.5 rounded-xl bg-black hover:bg-white/5 border border-white/8 hover:border-white/15 flex items-center justify-between cursor-pointer transition-all duration-200 group"
+                    aria-label={`Play ${song.title} — ${song.artist_name}`}
+                    className="w-full text-left p-2.5 rounded-xl bg-black hover:bg-white/5 border border-white/8 hover:border-white/15 flex items-center justify-between cursor-pointer transition-all duration-200 group focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500/60"
                   >
                     <div className="flex items-center gap-3 min-w-0">
                       <span className="text-xs font-mono text-white/40 w-4 text-center">
@@ -106,7 +129,8 @@ export const QueueDrawer: React.FC = () => {
                       </span>
                       <div className="w-10 h-10 rounded-lg overflow-hidden bg-black flex-shrink-0 border border-white/10">
                         <img
-                          src={song.artwork_url || `https://img.youtube.com/vi/${song.provider_video_id}/hqdefault.jpg`}
+                          src={songArtwork(song) || undefined}
+                          onError={hideBrokenImage}
                           alt={song.title}
                           className="w-full h-full object-cover"
                         />
@@ -121,7 +145,7 @@ export const QueueDrawer: React.FC = () => {
                       </div>
                     </div>
                     <Play className="w-3.5 h-3.5 text-neutral-600 group-hover:text-red-500 flex-shrink-0 ml-2 transition-colors" />
-                  </div>
+                  </button>
                 ))}
               </div>
             )}
@@ -136,15 +160,18 @@ export const QueueDrawer: React.FC = () => {
               </div>
               <div className="space-y-2">
                 {history.map((song: Song, idx: number) => (
-                  <div
+                  <button
+                    type="button"
                     key={`hist-${song.id}-${idx}`}
                     onClick={() => playSong(song, currentStation || undefined)}
-                    className="p-2 rounded-lg bg-black hover:bg-white/5 border border-white/5 hover:border-white/10 flex items-center justify-between cursor-pointer group transition-all duration-200"
+                    aria-label={`Play again ${song.title} — ${song.artist_name}`}
+                    className="w-full text-left p-2 rounded-lg bg-black hover:bg-white/5 border border-white/5 hover:border-white/10 flex items-center justify-between cursor-pointer group transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500/60"
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
                       <div className="w-8 h-8 rounded-lg overflow-hidden bg-black flex-shrink-0 border border-white/10">
                         <img
-                          src={song.artwork_url || `https://img.youtube.com/vi/${song.provider_video_id}/hqdefault.jpg`}
+                          src={songArtwork(song) || undefined}
+                          onError={hideBrokenImage}
                           alt={song.title}
                           className="w-full h-full object-cover"
                         />
@@ -159,7 +186,7 @@ export const QueueDrawer: React.FC = () => {
                       </div>
                     </div>
                     <Play className="w-3 h-3 text-neutral-600 group-hover:text-red-500 flex-shrink-0 ml-2 transition-colors" />
-                  </div>
+                  </button>
                 ))}
               </div>
             </div>

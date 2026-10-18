@@ -357,4 +357,45 @@ Known / pending
   cd supabase && npm run verify  # full SQL + RPC suite in PGlite
   curl -X POST $VITE_SUPABASE_URL/rest/v1/rpc/get_stations       # anon smoke test
     -H "apikey: $ANON" -H "Authorization: Bearer $ANON"
+
+--------------------------------------------------------------------------------
+15. SEO & CRAWLABLE ROUTES
+--------------------------------------------------------------------------------
+The site was a four-button SPA with no URLs, so search engines saw exactly one
+page. It now exposes four:
+
+  /            home          index,follow
+  /stations    radio worlds  index,follow
+  /catalog     song catalog  index,follow  (?q= is the SearchAction target)
+  /favorites   personal list noindex,follow (also Disallowed in robots.txt)
+
+frontend/src/utils/seo.ts is the single source of truth: route paths, bilingual
+(ne/en) titles, descriptions, the SITE_URL constant, and applyRouteSeo() which
+rewrites <title>, meta description, meta robots and the canonical on every tab
+or language change. Unknown paths are collapsed to "/" with replaceState so the
+Vercel SPA rewrite cannot create an indexed soft-404. App.tsx owns the
+address-bar state (initial path + popstate listener); Navigation.tsx and
+Footer.tsx render real <a href> links that intercept plain clicks only, so
+middle/cmd-click still opens a new tab.
+
+Structured data (src/components/JsonLd.tsx attaches dynamic blocks via
+script.textContent with "<" escaped — never JSX, or a `</script>` inside a
+catalog title would break out of the block):
+  index.html       WebSite + Organization + SearchAction (static)
+  Home.tsx         FAQPage, in the language actually on screen
+  RadioWorldsPage  CollectionPage + ItemList of RadioStation
+
+Static files: frontend/public/robots.txt, frontend/public/sitemap.xml. Both are
+asserted against seo.ts by frontend/src/test/Routing.test.tsx (6 tests: path
+mapping, canonical per route, noindex on favorites, popstate/back behaviour,
+sitemap coverage).
+
+Performance side of ranking: secondary routes (stations/catalog/favorites) and
+the AdminModal + TakedownModal are React.lazy chunks — entry bundle went
+739 kB -> 617 kB raw (191 -> 172 kB gzip); AdminModal is 98 kB on its own. The
+service worker serves navigations network-first, so crawlers never read a stale
+shell; static assets stay cache-first (content-hashed filenames).
+
+Owner to-dos are in DEPLOY.md section 8: Search Console verification via a DNS
+TXT record, then submit sitemap.xml and request indexing for "/".
 ================================================================================
