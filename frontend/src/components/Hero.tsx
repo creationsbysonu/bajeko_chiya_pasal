@@ -206,6 +206,31 @@ export const Hero: React.FC<HeroProps> = ({ stations, onExploreCatalog }) => {
                           : 'border-white/10 bg-white/[0.03] hover:border-white/25 hover:bg-white/[0.06]'
                       }`}
                     >
+                      {/* Station photograph — a glimpse of the world behind the words */}
+                      {station.cover_image && (
+                        <img
+                          src={station.cover_image}
+                          alt=""
+                          aria-hidden="true"
+                          loading="lazy"
+                          decoding="async"
+                          onError={(event) => {
+                            // A dead cover must degrade to the plain card, never
+                            // to a broken-image glyph over the copy.
+                            event.currentTarget.style.display = 'none';
+                          }}
+                          className={`pointer-events-none absolute inset-0 h-full w-full origin-center object-cover saturate-[0.85] transition-all duration-500 ease-out ${
+                            isActive
+                              ? 'scale-105 opacity-60'
+                              : 'opacity-40 group-hover/vibe:scale-105 group-hover/vibe:opacity-60'
+                          }`}
+                        />
+                      )}
+                      {/* Readability scrim over the photograph */}
+                      <span
+                        aria-hidden="true"
+                        className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/45 via-black/55 to-black/80"
+                      />
                       {/* Station-tinted wash — solid when tuned, revealed on hover */}
                       <span
                         aria-hidden="true"

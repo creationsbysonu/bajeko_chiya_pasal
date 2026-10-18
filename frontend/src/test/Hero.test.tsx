@@ -27,7 +27,7 @@ const station = (id: number, slug: string, title: string, titleNe: string): Stat
   tagline_ne: `${titleNe} ट्यागलाइन`,
   description: '',
   description_ne: '',
-  cover_image: '',
+  cover_image: `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=800&q=80`,
   theme_color: '#B96B4A',
   ambient_type: 'teashop_rain',
   is_featured: true,
@@ -98,6 +98,19 @@ describe('Hero vibe picker', () => {
     STATIONS.forEach((entry) => {
       const card = screen.getByRole('button', { name: new RegExp(entry.title) });
       expect(card.getAttribute('title')).toContain(entry.title);
+    });
+  });
+
+  it('shows each world\u2019s cover art behind the words', () => {
+    const { container } = renderHero();
+
+    // scoped to the vibe cards — RadioTuner renders its own imagery
+    const covers = container.querySelectorAll('button[aria-pressed] img');
+    expect(covers).toHaveLength(STATIONS.length);
+    covers.forEach((cover) => {
+      expect(cover).toHaveAttribute('alt', '');
+      expect(cover).toHaveAttribute('aria-hidden', 'true');
+      expect(cover.getAttribute('src')).toContain('images.unsplash.com');
     });
   });
 });
