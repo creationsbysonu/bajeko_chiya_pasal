@@ -2,6 +2,19 @@ import React, { createContext, useContext, useState, useEffect, useRef, useCallb
 import { Song, Station, PlaybackStatus, RepeatMode } from '../types';
 import { api } from '../services/api';
 
+/** Persisted choice for the "keep screen on" (Screen Wake Lock) toggle. */
+const WAKE_LOCK_STORAGE_KEY = 'bajeko_chiya_pasal_keep_screen_on';
+
+/** Minimal Screen Wake Lock typings — lib.dom varies between TS versions. */
+interface ScreenWakeLockSentinel {
+  release: () => Promise<void>;
+  addEventListener: (type: 'release', listener: () => void) => void;
+}
+
+interface ScreenWakeLock {
+  request: (type: 'screen') => Promise<ScreenWakeLockSentinel>;
+}
+
 // YouTube IFrame Player API declarations
 declare global {
   interface Window {
@@ -44,6 +57,7 @@ interface YTPlayerInstance {
   isMuted: () => boolean;
   getCurrentTime: () => number;
   getDuration: () => number;
+  getIframe?: () => HTMLIFrameElement;
   loadVideoById: (videoId: string, startSeconds?: number) => void;
   cueVideoById: (videoId: string) => void;
   destroy: () => void;
@@ -77,6 +91,11 @@ interface PlayerContextType {
   setIsExpanded: (expanded: boolean) => void;
   setIsQueueOpen: (open: boolean) => void;
   clearError: () => void;
+  /** Held while the listener wants the display awake during playback. */
+  keepScreenOn: boolean;
+  /** False on browsers/contexts without the Screen Wake Lock API. */
+  keepScreenOnSupported: boolean;
+  toggleKeepScreenOn: () => void;
 }
 
 const PlayerContext = createContext<PlayerContextType | undefined>(undefined);
@@ -290,6 +309,19 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           },
           events: {
             onReady: (evt) => {
+              // The embed element is created by the YouTube API. Tighten its
+              // permissions once we hold it: allow autoplay so a resumed track
+              // after a background round-trip can actually start again, and
+              // keep the player eager so it is never suspended for laziness.
+              const iframe = evt.target.getIframe?.();
+              if (iframe) {
+                iframe.setAttribute(
+                  'allow',
+                  'autoplay; encrypted-media; picture-in-picture; fullscreen'
+                );
+                iframe.setAttribute('loading', 'eager');
+              }
+
               evt.target.setVolume(volumeRef.current);
               if (isMutedRef.current) {
                 evt.target.mute();
@@ -539,6 +571,97 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     };
   }, []);
 
+  // ---------------------------------------------------------------------------
+  // Screen Wake Lock — "keep screen on while playing"
+  //
+  // The audio element lives inside a cross-origin YouTube iframe, so the
+  // operating system hands background playback to *YouTube's* document, not
+  // ours. That is why locking the phone stops the music and why no Media
+  // Session plumbing on this page can change it. The reliable in-browser answer
+  // is therefore to keep the display awake while the listener is actually
+  // playing, so the lock never happens. The choice belongs to the listener,
+  // is remembered between visits, and the lock is re-asked for whenever the
+  // page returns to the foreground (browsers drop it on visibility changes).
+  // ---------------------------------------------------------------------------
+  const [keepScreenOn, setKeepScreenOn] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem(WAKE_LOCK_STORAGE_KEY) === '1';
+    } catch {
+      return false;
+    }
+  });
+  const keepScreenOnRef = useRef<boolean>(keepScreenOn);
+  const wakeLockRef = useRef<ScreenWakeLockSentinel | null>(null);
+  const keepScreenOnSupported =
+    typeof navigator !== 'undefined' && 'wakeLock' in navigator;
+
+  useEffect(() => {
+    keepScreenOnRef.current = keepScreenOn;
+    try {
+      localStorage.setItem(WAKE_LOCK_STORAGE_KEY, keepScreenOn ? '1' : '0');
+    } catch {
+      // Storage blocked — the preference just won't persist.
+    }
+  }, [keepScreenOn]);
+
+  const releaseWakeLock = useCallback(async () => {
+    const sentinel = wakeLockRef.current;
+    wakeLockRef.current = null;
+    try {
+      await sentinel?.release();
+    } catch {
+      // Already released by the browser.
+    }
+  }, []);
+
+  const acquireWakeLock = useCallback(async () => {
+    if (wakeLockRef.current || typeof navigator === 'undefined') return;
+    const wakeLock = (navigator as Navigator & { wakeLock?: ScreenWakeLock }).wakeLock;
+    if (!wakeLock) return;
+    // The spec rejects the request outright while the document is hidden.
+    if (typeof document !== 'undefined' && document.visibilityState !== 'visible') return;
+    try {
+      const sentinel = await wakeLock.request('screen');
+      sentinel.addEventListener('release', () => {
+        if (wakeLockRef.current === sentinel) wakeLockRef.current = null;
+      });
+      wakeLockRef.current = sentinel;
+    } catch {
+      // Not granted: unsupported context, battery saver, or declined permission.
+    }
+  }, []);
+
+  // Hold the lock exactly while music is playing *and* the listener wants it.
+  useEffect(() => {
+    if (status === 'playing' && keepScreenOn) void acquireWakeLock();
+    else void releaseWakeLock();
+  }, [status, keepScreenOn, acquireWakeLock, releaseWakeLock]);
+
+  // Browsers silently drop the lock when the page is hidden — ask again as
+  // soon as it is back in the foreground.
+  useEffect(() => {
+    const handleWakeVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        if (keepScreenOnRef.current) void acquireWakeLock();
+      } else {
+        void releaseWakeLock();
+      }
+    };
+    document.addEventListener('visibilitychange', handleWakeVisibility);
+    return () => {
+      document.removeEventListener('visibilitychange', handleWakeVisibility);
+      void releaseWakeLock();
+    };
+  }, [acquireWakeLock, releaseWakeLock]);
+
+  const toggleKeepScreenOn = useCallback(() => {
+    setKeepScreenOn((prev) => {
+      const next = !prev;
+      if (!next) void releaseWakeLock();
+      return next;
+    });
+  }, [releaseWakeLock]);
+
   // Media Session API: artwork + transport controls on Android/iOS lock screens,
   // notification shades, Bluetooth headsets, Android Auto and wearables.
   useEffect(() => {
@@ -739,6 +862,9 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         setIsExpanded,
         setIsQueueOpen,
         clearError,
+        keepScreenOn,
+        keepScreenOnSupported,
+        toggleKeepScreenOn,
       }}
     >
       {children}

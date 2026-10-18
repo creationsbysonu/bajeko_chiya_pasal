@@ -3,7 +3,7 @@ import { usePlayer } from '../context/PlayerContext';
 import { useI18n } from '../context/I18nContext';
 import {
   Play, Pause, SkipBack, SkipForward, Shuffle, Repeat, Repeat1,
-  Volume2, VolumeX, ListMusic, Maximize2, Minimize2, AlertCircle, Music
+  Volume2, VolumeX, ListMusic, Maximize2, Minimize2, AlertCircle, Music, Sun
 } from 'lucide-react';
 
 export const Player: React.FC = () => {
@@ -31,6 +31,9 @@ export const Player: React.FC = () => {
     setIsExpanded,
     setIsQueueOpen,
     clearError,
+    keepScreenOn,
+    keepScreenOnSupported,
+    toggleKeepScreenOn,
   } = usePlayer();
 
   const { locale, t } = useI18n();
@@ -370,6 +373,24 @@ export const Player: React.FC = () => {
                 aria-label="Volume slider"
               />
             </div>
+
+            {/* Keep screen on — the reliable way to outlive a locked phone while
+                the audio rides inside a YouTube iframe (see PlayerContext). */}
+            {keepScreenOnSupported && (
+              <button
+                onClick={toggleKeepScreenOn}
+                className={`p-2.5 rounded-lg border transition-all duration-200 hover:scale-105 active:scale-95 ${
+                  keepScreenOn
+                    ? 'bg-amber-500/15 border-amber-400/40 text-amber-300'
+                    : 'bg-white/5 hover:bg-white/10 border-white/10 text-neutral-400 hover:text-white'
+                }`}
+                title={keepScreenOn ? t.player.keepScreenOn : t.player.keepScreenOnOff}
+                aria-label={keepScreenOn ? t.player.keepScreenOn : t.player.keepScreenOnOff}
+                aria-pressed={keepScreenOn}
+              >
+                <Sun className="w-4 h-4" />
+              </button>
+            )}
 
             {/* Queue Drawer toggle */}
             <button

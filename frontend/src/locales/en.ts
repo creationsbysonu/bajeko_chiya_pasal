@@ -47,6 +47,8 @@ export const en = {
     guestSession: 'Guest Session Active',
     keyboardHelp: 'Keyboard: Space (Play/Pause), N (Next), P (Prev), M (Mute)',
     officialBadge: 'Official YouTube Embed',
+    keepScreenOn: 'Keep screen on while playing',
+    keepScreenOnOff: 'Screen may lock — music can stop',
   },
   stations: {
     heading: 'Themed Radio Worlds',

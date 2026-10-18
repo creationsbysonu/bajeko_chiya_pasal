@@ -47,6 +47,8 @@ export const ne = {
     guestSession: 'अतिथि सत्र सक्रिय',
     keyboardHelp: 'सर्टकट: स्पेस (बजाउनु/रोक्नु), N (अर्को), P (अघिल्लो), M (मौन)',
     officialBadge: 'आधिकारिक युट्युब इम्बेड',
+    keepScreenOn: 'बजाउँदा पर्दा खुला राख्नुहोस्',
+    keepScreenOnOff: 'पर्दा बन्द हुन सक्छ — संगीत रोकिन सक्छ',
   },
   stations: {
     heading: 'विषयगत रेडियो संसार',
