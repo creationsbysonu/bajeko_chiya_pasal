@@ -1,0 +1,360 @@
+================================================================================
+BAJEKO CHIYA PASAL (बजेको चिया पसल) — PROJECT SUMMARY
+Nepali Music Radio & Nostalgia Platform
+"नेपाली संगीत, पुराना सम्झना।" / "Nepali Music, Timeless Memories."
+Repo: github.com/creationsbysonu/bajeko_chiya_pasal
+Live DB: Supabase project eyeoavhhsbnimosdmfhl
+Last updated: 2026-10-18 (HEAD df1c0fc)
+================================================================================
+
+--------------------------------------------------------------------------------
+1. WHAT IT IS
+--------------------------------------------------------------------------------
+A production-oriented web app that streams Nepali music as themed "radio worlds"
+— golden-age Radio Nepal classics, chiya-pasal (tea shop) mornings, bus-yatra
+highway anthems, lok dohori, prem geet, biraha, Nepali rock and modern indie —
+wrapped in the nostalgia of vintage radios, steaming tea glasses and festival
+seasons (Dashain, Tihar, Chhath).
+
+Every playback is an official YouTube embed. No audio files are downloaded,
+proxied, extracted or hosted by this project. There is no traditional backend
+server: the frontend is a static React SPA (Vercel) that talks directly to
+Supabase (Postgres + a locked-down SQL RPC layer).
+
+Formerly named "Purano Dhun"; rebranded to "Bajeko Chiya Pasal" across the
+entire codebase (UI strings, i18n, PWA manifest, metadata, storage keys,
+service-worker cache names, docs, SQL headers).
+
+--------------------------------------------------------------------------------
+2. TECH STACK
+--------------------------------------------------------------------------------
+Frontend
+  React 19.2 + TypeScript 6.0 + Vite 8            (SPA, no router library)
+  Tailwind CSS 3.4 + PostCSS + Autoprefixer       (design system via CSS vars)
+  lucide-react                                    (icons — zero emoji anywhere)
+  @supabase/supabase-js 2.118                     (DB + Auth client)
+  YouTube IFrame Player API (official embeds)     (all audio/video playback)
+  Vitest 5 + Testing Library + jsdom              (tests)
+  oxlint                                          (linting)
+  @electric-sql/pglite (dev/CI only)              (in-process Postgres for tests)
+
+Backend
+  Supabase (PostgreSQL) — schema, SECURITY DEFINER RPCs, deny-all RLS
+  Supabase Auth — anonymous sign-in identifies listeners (replaces the old
+    Django X-Session-Key header); favorites + telemetry bind to auth.uid()
+  No Django, no Render, no separate API server anymore (a legacy
+    legacy-dev-catalog.sqlite3 exists only as the seed source).
+
+Infra / Tooling
+  Vercel        — SPA hosting from a global CDN (no cold starts)
+  Supabase      — database + RPC backend
+  GitHub Actions— .github/workflows/ci.yml (SQL gate + frontend gate)
+
+--------------------------------------------------------------------------------
+3. REPO LAYOUT
+--------------------------------------------------------------------------------
+/                          README.md, DEPLOY.md, SECURITY.md, PRIVACY.md,
+                           COPYRIGHT.md, .env.example, summary.txt
+/frontend                  the SPA
+  public/                  manifest.webmanifest, sw.js, offline.html, icons/,
+                           favicon.svg, icons.svg, og-image.png
+  src/
+    App.tsx                top-level state, tab switch, modals, data loading
+    pages/                 Home, RadioWorldsPage, Catalog, FavoritesPage
+    components/            Hero, HomeShowcase, RadioWorlds, RadioTuner,
+                           Player, QueueDrawer, Navigation, SongCard,
+                           StationCard, FestiveSection, RecentlyPlayedSection,
+                           RecommendSongSection, ChiyaGraphics, FestivalGlyph,
+                           BrandMark, Footer, TakedownModal, AdminModal,
+                           motion/ (Reveal, Roller)
+    context/               PlayerContext, ThemeContext, I18nContext
+    hooks/                 useMotion.ts
+    services/              api.ts (the ONLY place that talks to Supabase)
+    types/                 index.ts (all shared interfaces)
+    locales/               ne.ts (Nepali, source of truth), en.ts (superset)
+    utils/                 genreTaxonomy.ts, festivalImagery.ts, motion.ts
+    test/                  9 test files + setup.ts
+/supabase
+  migrations/              0001…0012 (schema → functions → RLS → hardening →
+                           abuse controls → festival features → calendar →
+                           song requests → curated playlists)
+  seed.sql                 full catalog seed generated from the legacy SQLite
+  deploy/                  upgrade_festive.sql, festive_seed.sql (manual patches)
+  tools/                   build_festive_upgrade.mjs, verify_upgrade.mjs,
+                           generate_seed.py
+  verify.mjs               runs all migrations in PGlite + exercises every RPC
+/.github/workflows/ci.yml  both gates run on every push to main and on PRs
+
+--------------------------------------------------------------------------------
+4. ARCHITECTURE & DATA FLOW (end to end)
+--------------------------------------------------------------------------------
+1. Browser loads the SPA shell from Vercel's CDN.
+   - The service worker (sw.js) serves the shell network-first (so a fresh
+     deploy is live instantly) and falls back to cache, then offline.html.
+2. App.tsx mounts → api.ensureListenerSession() performs an anonymous Supabase
+   Auth sign-in (cached; catalog still works if anonymous auth is disabled).
+3. App.tsx loads the front page in parallel:
+     get_stations()          → 10 themed radio worlds
+     get_featured()          → featured / trending / new song lists
+     get_songs(sort=trending)→ trending
+     get_songs(sort=new)     → new releases
+     get_genres()            → genre list
+     get_genre_categories()  → 5 categories (classical_traditional, folk,
+                               popular, regional, special)
+     get_decades()           → 7 decades (1960s…2020s)
+     get_songs(mood=tea-shop)→ the chiya-pasal queue for the Tea Shop panel
+4. Every RPC goes through services/api.ts → supabase.rpc(fn, args) as the anon
+   role. Response shapes match the old Django REST API, so components consume
+   plain typed objects (src/types/index.ts).
+5. The user picks a song or station → PlayerContext queues it → the official
+   YouTube IFrame API plays it inside a single persistent hidden container
+   (#bajeko-chiya-pasal-yt-iframe-slot). The iframe is never removed from the
+   DOM, so audio survives route/tab changes.
+6. Playback telemetry: log_playback_event() RPC (identified, deduplicated,
+   flood-capped on the server).
+7. Favorites: add_favorite / remove_favorite / get_favorites, keyed to the
+   anonymous auth user; the locally-recent list (localStorage) powers
+   "Recently Played" even before the network answers.
+
+--------------------------------------------------------------------------------
+5. DATABASE (PostgreSQL via Supabase)
+--------------------------------------------------------------------------------
+Tables (0001_schema.sql + festival additions)
+  genre_categories        5 browse categories (slug, name, name_ne, order)
+  genres                  genres mapped to a category
+  artists                 artists (en + ne names)
+  songs                   the catalog: title/romanized/ne title, artist,
+                          language, decade, mood_tags[], festival_id,
+                          playback_provider + provider_video_id (YouTube),
+                          attribution, verification status, publication status,
+                          play_count, artwork
+  song_secondary_genres   many-to-many song ↔ genre
+  stations                10 radio worlds (slug, tagline, theme_color,
+                          ambient_type, cover_image)
+  station_songs           station ↔ song queue (weight/position)
+  favorites               listener favorites (user-bound)
+  playback_events         telemetry (identified + deduplicated + capped)
+  takedown_requests       DMCA/claim workflow tickets
+  audit_logs              admin action audit trail
+  admins                  allowlisted admin identities
+  festival_categories     festival taxonomy (Dashain, Tihar, Chhath, …)
+  festival_dates          calendar dates + per-festival mood_tags
+  song_requests           "Recommend a song" listener submissions
+
+Seed: supabase/seed.sql (~259 seed rows from the legacy SQLite catalog; the
+live DB currently holds ~273 published songs / ~163 artists, with an upgrade
+script pending — see §13).
+
+--------------------------------------------------------------------------------
+6. RPC SURFACE (all SQL, SECURITY DEFINER, allowlist-guarded)
+--------------------------------------------------------------------------------
+Public (anon-reachable)
+  get_stations, get_station_detail, get_songs, get_song_detail, get_artists,
+  get_genres, get_genre_categories, get_languages, get_decades, get_featured,
+  get_favorites, add_favorite, remove_favorite, log_playback_event,
+  get_festival_categories, get_festival_calendar, get_festival_songs,
+  submit_takedown, get_takedown_status,
+  submit_song_request, get_song_requests_recent
+
+Admin (email-allowlist guarded via is_admin()/admin_actor())
+  admin_stats, admin_insights, admin_current_user,
+  admin_songs, admin_song_create/update/detail/unpublish/bulk,
+  admin_artists (+ create/update/delete),
+  admin_genres, admin_genre_create/update/delete,
+  admin_genre_categories, admin_genre_categories_reorder,
+  admin_stations (+ create/update/delete),
+  admin_station_queue_get/add/remove/reorder,
+  admin_takedowns, admin_takedown_action,
+  admin_song_requests, admin_song_request_action,
+  admin_audit_logs
+
+Internal helpers are `_`-prefixed (e.g. _songs_payload, _audit, slugify) and
+have EXECUTE revoked from anon/authenticated.
+
+--------------------------------------------------------------------------------
+7. SECURITY MODEL
+--------------------------------------------------------------------------------
+- RLS: deny-all on every table; the public never reads a table directly —
+  everything goes through SECURITY DEFINER RPCs (0004_rls.sql).
+- 0005_security_hardening.sql: revokes EXECUTE on `_`-helpers, requires the
+  claimant email for takedown status lookups, bounds free-text input length.
+- 0006_abuse_controls.sql: playback telemetry is identified, deduplicated and
+  flood-capped; takedown submissions rate-limited (5/hour); public taxonomy
+  reads return active rows only.
+- 0009_song_requests.sql: validated + throttled "Recommend a song", a
+  contact-free public feed, and admin moderation RPCs.
+- The frontend only ever holds the anon key. service_role never ships to the
+  client. Auth: anonymous Supabase sessions; admin identity is an email
+  allowlist checked inside the SQL functions themselves.
+- Content licensing: only official YouTube embeds; oEmbed is used to verify
+  that each catalog entry points at a real, embeddable, correctly-attributed
+  video.
+
+--------------------------------------------------------------------------------
+8. FRONTEND ARCHITECTURE
+--------------------------------------------------------------------------------
+App.tsx          tab state (home / worlds / catalog / favorites), loads the
+                 catalog lists once and passes them down, owns the Takedown and
+                 Admin modals.
+Home.tsx         the landing composition, in order:
+                   Hero (headline, CTAs, RadioTuner, station ticker)
+                   HomeShowcase — "Five Worlds, One Wall" (एउटै भित्तामा पाँच
+                     संसार): panels for the Tea Shop (song list), Festival
+                     Calendar, Trending, New Releases, Featured
+                   RadioWorlds — the 10 themed stations (brighter covers,
+                     larger boxes, ON AIR / TUNED pills, equaliser bars)
+                   RecentlyPlayedSection
+                   Decades ("युगान्तर संगीत")
+                   Browse by genre/category
+                   FAQ
+                   RecommendSongSection
+PlayerContext    queue, history, shuffle/repeat, volume/mute, YouTube player
+                 lifecycle, keyboard shortcuts, Media Session metadata,
+                 background/visibility resume logic, Screen Wake Lock.
+ThemeContext     day/night theme; html.light / html.dark classes flip CSS
+                 variables; persisted in localStorage; honours
+                 prefers-color-scheme on first visit.
+I18nContext      Nepali (default, source of truth) + English; every user-facing
+                 string lives in src/locales.
+api.ts           the single Supabase gateway + listener session bootstrap.
+motion           Reveal / Roller scroll animations (IntersectionObserver based),
+                 theme-adaptive so they read correctly in day and night modes.
+pd-dark-zone     a CSS helper that forces the dark palette inside photographic
+                 panels so pictures always look right, in either theme.
+
+--------------------------------------------------------------------------------
+9. FEATURES (what is built in)
+--------------------------------------------------------------------------------
+Listening
+  • 10 themed radio worlds, each with its own colour, cover art, tagline and
+    hand-curated queue (Purano Radio, Chiya Pasal, Bus Yatra, Lok Dohori,
+    Prem Geet, Biraha, Nepali Rock, Naya Dhun, …)
+  • Persistent player bar: play/pause, next/prev, seek, volume + mute, shuffle,
+    repeat off/all/one, expandable view, queue drawer
+  • Station tuner ("RadioTuner") with station ticker on the hero
+  • "Tuned" / "House default" station state, ON AIR indicator, equaliser bars
+  • Recently played (locally persisted, instant on return visits)
+  • Keyboard shortcuts: Space (play/pause), N (next), P (prev), M (mute),
+    ↑/↓ volume, ⌘/Ctrl+←/→ seek
+
+Discovery
+  • Five Worlds wall (Tea Shop / Festival / Trending / New / Featured)
+  • Catalog page with search + genre / category / decade / language filters,
+    deep-linkable from the home page chips
+  • Decades row (1960s → 2020s)
+  • Festival calendar (Dashain, Tihar, Chhath, …) with themed playlists and
+    hand-drawn SVG glyphs; a daily "special" pick
+  • Favorites page
+
+Listener participation
+  • "Recommend a song" form (validated + throttled server-side)
+  • Takedown / claim request modal for rights holders
+
+Admin portal (modal, gated by email allowlist)
+  Tabs: stats, insights, songs (search/filter/paginate/create/edit/unpublish,
+  bulk actions), taxonomy (genres + categories + reorder), stations (+ station
+  queue add/remove/reorder), takedowns, song requests, audit log, security.
+
+Presentation & UX
+  • Day/night theme toggle applied consistently across every section
+  • Full Nepali/English bilingual UI (no emoji — SVG and handcrafted graphics)
+  • Scroll reveal / roller animations, theme-adaptive cards
+  • Fully responsive (mobile bottom sheet → desktop grid)
+
+Platform
+  • PWA: manifest.webmanifest (standalone, maskable icons), service worker with
+    app-shell network-first + immutable-asset cache-first, offline.html notice
+  • "Keep screen on while playing" toggle (Screen Wake Lock API) so the display
+    never auto-locks and kills playback; persisted per listener, re-acquired on
+    every foreground return, and the button is hidden where unsupported
+  • Background playback hardening: the page never pauses the player when it is
+    hidden; it retries resume at 400 ms and 2.5 s; the embed iframe carries
+    allow="autoplay; encrypted-media; picture-in-picture; fullscreen" and
+    loading="eager"; Media Session metadata + transport handlers are published
+    where the browser honours them.
+
+--------------------------------------------------------------------------------
+10. PLAYBACK ARCHITECTURE (important design constraint)
+--------------------------------------------------------------------------------
+All audio comes from the official YouTube IFrame Player API (youtube.com embed).
+This is deliberate: the project never downloads, proxies, extracts or hosts
+audio, which keeps it inside YouTube's terms of service.
+
+Consequences (by design, documented in PlayerContext):
+  • The media element belongs to YouTube's cross-origin document, so the OS
+    grants background/lock-screen playback to *that* document, not ours.
+  • Locking the phone therefore stops the music on iOS (near-certain) and
+    Android (usually). Our page cannot override it.
+  • The reliable in-browser mitigation shipped today is the Screen Wake Lock
+    toggle: keep the display awake while playing, so the lock never happens.
+  • The only way to get true lock-screen playback (controls, resume after
+    hours, screen off) is to own or license the audio and play it from a real
+    <audio> element with Media Session — a deliberate future option, not
+    implemented.
+
+--------------------------------------------------------------------------------
+11. CONTENT & CATALOG PROVENANCE
+--------------------------------------------------------------------------------
+• Every song entry points at a real YouTube video, verified via YouTube oEmbed
+  (embeddable, correct title/attribution).
+• "Heart touching" festival titles are mapped to thematically-close *real*
+  videos rather than invented tracks.
+• Editorial QA: no typos in Nepali copy, short labels only, no AI-sounding
+  filler, no emoji.
+• Attribution is stored per song and surfaced in the UI; rights holders have a
+  takedown path with an admin moderation queue.
+
+--------------------------------------------------------------------------------
+12. TESTING, LINTING, CI
+--------------------------------------------------------------------------------
+Commands
+  cd frontend && npm run build    # tsc -b && vite build
+  cd frontend && npm test         # Vitest (31 tests, 9 files)
+  cd frontend && npm run lint     # oxlint (11 baseline warnings, none new)
+  cd supabase  && npm run verify       # migrations + every RPC in PGlite
+  cd supabase  && npm run verify:upgrade
+
+Test suites: Hero, HomeShowcase, RadioWorlds, Catalog, Player, Theme,
+WakeLock, AppDefaultStation, api.integration.
+
+CI (.github/workflows/ci.yml) on every push to main and every PR:
+  1. supabase-sql — applies all migrations to an in-process PGlite Postgres
+     and exercises every public/admin RPC with PostgREST-style role switching.
+  2. frontend — Vitest suite + the production TypeScript/Vite build.
+
+--------------------------------------------------------------------------------
+13. DEPLOYMENT & ENVIRONMENT
+--------------------------------------------------------------------------------
+Env vars (frontend/.env, mirrored in Vercel project settings)
+  VITE_SUPABASE_URL       https://<project>.supabase.co
+  VITE_SUPABASE_ANON_KEY  anon public key (never service_role)
+
+Deploy order for the database (Supabase SQL Editor, in order):
+  0001_schema → 0002_functions_public → 0003_functions_admin → 0004_rls →
+  0005_security_hardening → 0006_abuse_controls → 0007_festival_features →
+  0008_festival_calendar → 0009_song_requests → 0010_chiya_pasal_playlist →
+  0011_nepali_rock_playlist → 0012_gorkha_groove_covers → seed.sql
+Then supabase/deploy/upgrade_festive.sql (idempotent, must end with commit;).
+
+Frontend: push to main → Vercel builds and serves the SPA from its CDN.
+Supabase free tier pauses a project after ~7 days of inactivity and wakes in
+about 2 minutes; a daily visit keeps it warm.
+
+Known / pending
+  • The live DB is still one upgrade behind (273 songs; the current
+    upgrade_festive.sql adds songs 1208–1220 + security fixes → 286 songs /
+    163 artists, Dashain 14 / Tihar 18 / Chhath 12). Only the project owner
+    can paste it into the Supabase SQL editor.
+  • The Vercel deployment must be redeployed from current main; an older
+    commit (4372d45) that failed to build may still be what the live URL is
+    serving.
+
+--------------------------------------------------------------------------------
+14. QUICK COMMAND CHEAT SHEET
+--------------------------------------------------------------------------------
+  git log --oneline -10          # history
+  cd frontend && npm run dev     # local dev server
+  cd supabase && npm run verify  # full SQL + RPC suite in PGlite
+  curl -X POST $VITE_SUPABASE_URL/rest/v1/rpc/get_stations       # anon smoke test
+    -H "apikey: $ANON" -H "Authorization: Bearer $ANON"
+================================================================================
