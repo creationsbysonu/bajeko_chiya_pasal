@@ -158,9 +158,9 @@ export const Hero: React.FC<HeroProps> = ({ stations, onExploreCatalog }) => {
               <div className="mb-5 flex items-center justify-center gap-3">
                 <span
                   aria-hidden="true"
-                  className="h-px w-8 bg-gradient-to-r from-transparent to-white/25 sm:w-16"
+                  className="h-px w-8 bg-gradient-to-r from-transparent to-neutral-300/70 sm:w-16"
                 />
-                <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3.5 py-1.5 backdrop-blur-sm">
+                <span className="inline-flex items-center gap-2 rounded-full border border-neutral-300/40 bg-white/[0.04] px-3.5 py-1.5 backdrop-blur-sm">
                   <Radio className="h-3.5 w-3.5 text-red-500" aria-hidden="true" />
                   <span className="text-[10px] font-mono uppercase tracking-[0.35em] text-neutral-400">
                     {t.hero.vibeLabel}
@@ -168,7 +168,7 @@ export const Hero: React.FC<HeroProps> = ({ stations, onExploreCatalog }) => {
                 </span>
                 <span
                   aria-hidden="true"
-                  className="h-px w-8 bg-gradient-to-l from-transparent to-white/25 sm:w-16"
+                  className="h-px w-8 bg-gradient-to-l from-transparent to-neutral-300/70 sm:w-16"
                 />
               </div>
 
@@ -200,10 +200,10 @@ export const Hero: React.FC<HeroProps> = ({ stations, onExploreCatalog }) => {
                             }
                           : undefined
                       }
-                      className={`group/vibe relative flex h-full w-full flex-col gap-1.5 overflow-hidden rounded-2xl border p-3.5 pl-4 text-left backdrop-blur-sm transition-all duration-300 ease-out hover:-translate-y-1 active:scale-[0.98] ${
+                      className={`group/vibe pd-dark-zone relative flex h-full w-full flex-col gap-1.5 overflow-hidden rounded-2xl border p-3.5 pl-4 text-left transition-all duration-300 ease-out hover:-translate-y-1 active:scale-[0.98] ${
                         isActive
-                          ? 'border-white/25 bg-white/[0.05]'
-                          : 'border-white/10 bg-white/[0.03] hover:border-white/25 hover:bg-white/[0.06]'
+                          ? 'border-white/25 bg-black'
+                          : 'border-white/10 bg-black hover:border-white/25'
                       }`}
                     >
                       {/* Station photograph — a glimpse of the world behind the words */}

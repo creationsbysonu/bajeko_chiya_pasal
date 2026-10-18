@@ -101,6 +101,20 @@ describe('Hero vibe picker', () => {
     });
   });
 
+  it('keeps the photo cards legible in the day theme', () => {
+    const { container } = renderHero();
+
+    const cards = container.querySelectorAll('button[aria-pressed]');
+    expect(cards).toHaveLength(STATIONS.length);
+    cards.forEach((card) => {
+      // photographic panels opt out of the day palette (white copy on a
+      // dark scrim) and keep a literal dark surface under the photo
+      expect(card.className).toContain('pd-dark-zone');
+      expect(card.className).toContain('bg-black');
+      expect(card.className).not.toContain('bg-white');
+    });
+  });
+
   it('shows each world\u2019s cover art behind the words', () => {
     const { container } = renderHero();
 
