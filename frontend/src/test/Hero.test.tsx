@@ -81,4 +81,23 @@ describe('Hero vibe picker', () => {
     });
     expect(getStationDetail).toHaveBeenCalledWith('bus-yatra');
   });
+
+  it('paints the tuned card with its own station colour', async () => {
+    renderHero();
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /Bus Yatra/ }));
+    });
+
+    const tuned = screen.getByRole('button', { name: /Bus Yatra/ });
+    expect(tuned).toHaveAttribute('aria-pressed', 'true');
+    // glow uses the station's theme color from the catalog
+    expect(tuned.getAttribute('style')).toContain('#B96B4A');
+    expect(screen.getByText('TUNED')).toBeInTheDocument();
+    // every card keeps its tagline visible for hover/readability
+    STATIONS.forEach((entry) => {
+      const card = screen.getByRole('button', { name: new RegExp(entry.title) });
+      expect(card.getAttribute('title')).toContain(entry.title);
+    });
+  });
 });
