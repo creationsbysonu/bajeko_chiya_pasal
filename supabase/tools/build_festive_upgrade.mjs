@@ -10,7 +10,7 @@
 //
 // Outputs (both committed so the SQL editor can copy-paste them):
 //   supabase/deploy/festive_seed.sql     — festival artists/songs + links (idempotent)
-//   supabase/deploy/upgrade_festive.sql  — 0007 + 0008 + festive_seed, one paste
+//   supabase/deploy/upgrade_festive.sql  — 0006…0013 + festive_seed, one paste
 
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -140,6 +140,7 @@ const upgradeSql = `-- Bajeko Chiya Pasal — one-shot festive upgrade for an al
 --   6. 0010_chiya_pasal_playlist.sql (the curated tea-shop playlist)
 --   7. 0011_nepali_rock_playlist.sql (the Nepali Rock station queue)
 --   8. 0012_gorkha_groove_covers.sql (Gorkha Groove cover tracks)
+--   9. 0013_security_persistence.sql (grant lockdown + takedown global cap)
 
 -- ===========================================================================
 -- 1. 0006_abuse_controls.sql
@@ -180,6 +181,11 @@ ${migration('0011_nepali_rock_playlist.sql')}
 -- 8. 0012_gorkha_groove_covers.sql
 -- ===========================================================================
 ${migration('0012_gorkha_groove_covers.sql')}
+
+-- ===========================================================================
+-- 9. 0013_security_persistence.sql
+-- ===========================================================================
+${migration('0013_security_persistence.sql')}
 `;
 
 writeFileSync(join(deploy, 'upgrade_festive.sql'), upgradeSql);

@@ -104,9 +104,10 @@ await script(`
   grant execute on function auth.uid() to anon, authenticated, service_role;
 `);
 
-// Supabase grants table privileges to these roles by default; RLS (with zero
-// policies) is the only barrier. Mirror that here so the lockdown tests test
-// RLS and not missing grants.
+// Supabase grants table privileges to these roles by default — and these are
+// the default-privilege rows 0013 later revokes. Mirror the setup so 0013 has
+// something real to revoke; the lockdown tests then cover both barriers (they
+// restore these grants inline where they assert RLS on its own).
 await script(`
   grant usage on schema public to anon, authenticated, service_role;
   grant all on all tables in schema public to anon, authenticated, service_role;
@@ -393,10 +394,29 @@ const christmas = await rpc('get_festival_songs', { p_festival_slug: 'christmas'
 check('festival playlist is never empty (fallback fills)', Array.isArray(christmas?.results) && christmas.results.length >= 2, `got ${christmas?.results?.length}`);
 
 // ---------------------------------------------------------------------------
-// RLS: direct table access must be denied for anon/authenticated
+// RLS + grant lockdown: direct table access must be denied for browser roles.
+//
+// Two independent barriers, both tested:
+//   0013 — anon/authenticated hold no table grants at all (the frontend is
+//          RPC-only), so a direct statement fails at the ACL;
+//   0004 — RLS stays enabled with zero policies; the Supabase-default grants
+//          are restored inline below to prove RLS alone still blocks, then
+//          revoked again so the suite ends in the locked-down state.
 // ---------------------------------------------------------------------------
 
 console.log('\n== RLS lockdown ==');
+
+const aclDenied = (m) => typeof m === 'string' && /permission denied/i.test(m);
+
+const anonReadErr = await execAs(asAnon, `select id from public.songs`).then(() => null).catch((e) => e.message);
+check('anon cannot read songs directly (no grants)', aclDenied(anonReadErr), anonReadErr);
+
+const insertNoGrant = await execAs(asAnon, `insert into public.songs (title, artist_id, provider_video_id) values ('hack', 1, 'x')`).then(() => null).catch((e) => e.message);
+check('anon cannot insert songs directly (no grants)', aclDenied(insertNoGrant), insertNoGrant);
+
+// Restore the Supabase-default grants to exercise the second barrier alone.
+await sql(`grant select, insert, delete on public.songs to anon`);
+await sql(`grant select on public.favorites to authenticated`);
 
 const anonReadRows = await execAs(asAnon, `select id from public.songs`);
 check('anon reads zero rows directly', Array.isArray(anonReadRows) && anonReadRows.length === 0, `got ${anonReadRows?.length} rows`);
@@ -410,6 +430,10 @@ check('anon deletes nothing directly', Array.isArray(anonDelete) || (typeof anon
 const authUser = await one(`insert into auth.users (email) values ('listener@example.com') returning id`);
 const authReadRows = await execAs((fn) => asUser(authUser.id, fn), `select id from public.favorites`);
 check('authenticated user reads zero favorites directly', Array.isArray(authReadRows) && authReadRows.length === 0, `got ${authReadRows?.length} rows`);
+
+// Leave the locked-down 0013 state: no browser-role table grants remain.
+await sql(`revoke select, insert, delete on public.songs from anon`);
+await sql(`revoke select on public.favorites from authenticated`);
 
 // ---------------------------------------------------------------------------
 // Favorites + playback events via RPCs (anonymous session identity)
@@ -766,6 +790,31 @@ check('anon cannot call _unique_slug (schema probing)', denied(h6), h6);
 const h7 = await rpcError('_apply_song_payload', { p_data: { artist: 1 } });
 check('anon cannot call _apply_song_payload', denied(h7), h7);
 
+// 0013 also revokes the only two non-definer functions in `public`: internal
+// utilities that were still executable by anyone holding the anon key.
+const h8 = await rpcError('slugify', { p_input: 'x' });
+check('anon cannot call slugify', denied(h8), h8);
+
+// Structural guard for FUTURE migrations: anything a browser role can execute
+// must be a non-underscore SECURITY DEFINER function. New functions ship with
+// an implicit PUBLIC EXECUTE grant (default privileges cannot revoke it), so
+// this fails the moment a helper is added without revoking where it is
+// created — the exact rule 0005 states in words only.
+const browserExposed = await sql(`
+  select p.proname
+  from pg_proc p
+  join pg_namespace n on n.oid = p.pronamespace
+  where n.nspname = 'public'
+    and has_function_privilege('anon', p.oid, 'execute')
+    and (not p.prosecdef or left(p.proname, 1) = '_')
+  order by 1
+`);
+check(
+  'browser-callable functions are only the definer RPC surface',
+  Array.isArray(browserExposed) && browserExposed.length === 0,
+  browserExposed?.map((r) => r.proname).join(', ')
+);
+
 // The helpers must still work for the SECURITY DEFINER RPCs that call them.
 const stillWorks = await rpc('get_song_detail', { p_id: firstSongId });
 check('public RPCs still resolve internally after lockdown', stillWorks?.id === firstSongId, JSON.stringify(stillWorks).slice(0, 80));
@@ -852,6 +901,38 @@ check(
   'submit_takedown rate limits to 5 per hour',
   throttleAllowed === 5 && throttleError?.includes('Too many reports'),
   `allowed=${throttleAllowed} err=${throttleError}`,
+);
+
+// Global flood cap (0013): the per-identity limit is farmable by rotating
+// emails, so 50 tickets/hour across ALL identities is the backstop. Fill the
+// window from fresh identities — the stop must come from the global check,
+// not from any single identity hitting 5.
+const recentBefore = await one(
+  `select count(*)::int as n from public.takedown_requests where created_at > now() - interval '1 hour'`
+);
+let floodFilled = 0;
+let floodErr = null;
+for (let i = 0; i < 10 && !floodErr; i++) {
+  for (let j = 0; j < 5 && !floodErr; j++) {
+    floodErr = await rpcError('submit_takedown', {
+      p_song: firstSongId,
+      p_claimant_name: 'Flood Reporter',
+      p_claimant_email: `flood${i}@example.com`,
+      p_reason: 'other',
+      p_details: 'flood',
+    });
+    if (!floodErr) floodFilled++;
+  }
+}
+check(
+  'submit_takedown fills the global window to exactly 50/hour',
+  recentBefore.n + floodFilled === 50,
+  `before=${recentBefore.n} filled=${floodFilled} stop=${floodErr}`,
+);
+check(
+  'submit_takedown caps the whole network, not one identity',
+  typeof floodErr === 'string' && floodErr.includes('Too many reports in the last hour'),
+  floodErr,
 );
 
 // ---------------------------------------------------------------------------

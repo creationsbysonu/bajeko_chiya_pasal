@@ -73,15 +73,20 @@ Files, in order:
     fits (biraha 8, nepali-rock 5, prem-geet 5, lok-dohori 5, purano-radio 5,
     himalayan-acoustic 1). Idempotent, so it is safe to paste into an existing
     database.
-13. `supabase/seed.sql` — the full catalog (349 songs, 185 artists, 10 stations,
+13. `supabase/migrations/0013_security_persistence.sql` — grant lockdown: drops
+    the Supabase-style table/sequence grants `anon`/`authenticated` hold (the
+    frontend is RPC-only) plus the default privileges for future objects, pins
+    every public function to the explicit `SECURITY DEFINER` RPC surface, and
+    adds a global 50/hour backstop to `submit_takedown()`. Idempotent.
+14. `supabase/seed.sql` — the full catalog (349 songs, 185 artists, 10 stations,
    23 festivals, taxonomies)
 
 > **Already deployed?** Run the new migrations once (`supabase db push` applies
-> `0006` through `0012`). Because `supabase/seed.sql` is only safe on an empty
+> `0006` through `0013`). Because `supabase/seed.sql` is only safe on an empty
 > database, existing installs should instead paste the generated
 > **`supabase/deploy/upgrade_festive.sql`** into the SQL Editor — it bundles
-> `0006` + `0007` + `0008` + `0009` + `0010` + `0011` + `0012` + just the festival
-> rows, and is safe to re-run. Regenerate it after changing the seed or migrations with
+> `0006` + `0007` + `0008` + `0009` + `0010` + `0011` + `0012` + `0013` + just
+> the festival rows, and is safe to re-run. Regenerate it after changing the seed or migrations with
 > `cd supabase && npm run build:upgrade` (`npm run verify:upgrade` proves it
 > upgrades a pre-festival database, and CI runs it on every push).
 

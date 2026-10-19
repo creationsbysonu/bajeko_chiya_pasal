@@ -75,9 +75,9 @@ Infra / Tooling
     utils/                 genreTaxonomy.ts, festivalImagery.ts, motion.ts
     test/                  9 test files + setup.ts
 /supabase
-  migrations/              0001…0012 (schema → functions → RLS → hardening →
+  migrations/              0001…0013 (schema → functions → RLS → hardening →
                            abuse controls → festival features → calendar →
-                           song requests → curated playlists)
+                           song requests → curated playlists → grant lockdown)
   seed.sql                 full catalog seed generated from the legacy SQLite
   deploy/                  upgrade_festive.sql, festive_seed.sql (manual patches)
   tools/                   build_festive_upgrade.mjs, verify_upgrade.mjs,
@@ -183,6 +183,12 @@ have EXECUTE revoked from anon/authenticated.
   reads return active rows only.
 - 0009_song_requests.sql: validated + throttled "Recommend a song", a
   contact-free public feed, and admin moderation RPCs.
+- 0013_security_persistence.sql: anon/authenticated lose their direct table
+  and sequence grants entirely (the frontend is RPC-only) — including default
+  privileges for future objects — every public function is re-granted only to
+  the non-underscore SECURITY DEFINER RPC surface (slugify/song_sync_decade
+  included), and submit_takedown() gains a global 50/hour flood cap behind the
+  unchanged 5/hour-per-identity limit.
 - The frontend only ever holds the anon key. service_role never ships to the
   client. Auth: anonymous Supabase sessions; admin identity is an email
   allowlist checked inside the SQL functions themselves.
@@ -333,7 +339,8 @@ Deploy order for the database (Supabase SQL Editor, in order):
   0001_schema → 0002_functions_public → 0003_functions_admin → 0004_rls →
   0005_security_hardening → 0006_abuse_controls → 0007_festival_features →
   0008_festival_calendar → 0009_song_requests → 0010_chiya_pasal_playlist →
-  0011_nepali_rock_playlist → 0012_gorkha_groove_covers → seed.sql
+  0011_nepali_rock_playlist → 0012_gorkha_groove_covers →
+  0013_security_persistence → seed.sql
 Then supabase/deploy/upgrade_festive.sql (idempotent, must end with commit;).
 
 Frontend: push to main → Vercel builds and serves the SPA from its CDN.
