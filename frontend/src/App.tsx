@@ -65,6 +65,9 @@ const FestivalsPage = React.lazy(() =>
 const FestivalPage = React.lazy(() =>
   import('./pages/FestivalPage').then((m) => ({ default: m.FestivalPage }))
 );
+const AboutPage = React.lazy(() =>
+  import('./pages/AboutPage').then((m) => ({ default: m.AboutPage }))
+);
 
 // Both modals are on-demand too: the admin portal is ~164 kB of source that no
 // listener needs at first paint, so it is fetched only when the button is hit.
@@ -239,7 +242,7 @@ function MainApp() {
           </div>
         )}
 
-        {currentTab === 'home' && (
+        {route.name === 'home' && (
           <Home
             stations={stations}
             featuredSongs={featuredSongs}
@@ -272,6 +275,9 @@ function MainApp() {
           {route.name === 'festival' && <FestivalPage key={route.slug} slug={route.slug} />}
           {route.name === 'song' && <SongPage key={route.id} id={route.id} />}
           {route.name === 'artist' && <ArtistPage key={route.id} id={route.id} />}
+          {route.name === 'about' && (
+            <AboutPage onOpenTakedown={() => setTakedownOpen(true)} />
+          )}
         </Suspense>
       </main>
 

@@ -14,6 +14,7 @@
  *   /festivals/:slug        one festival playlist
  *   /songs/:id/:slug        one song
  *   /artists/:id/:slug      one artist
+ *   /about                  about / trust page
  *   /favorites              personal list (noindex)
  *
  * Vercel answers 200 for unrecognised paths (the SPA rewrite), so anything that
@@ -110,6 +111,7 @@ export type AppRoute =
   | { name: 'artists' }
   | { name: 'decades' }
   | { name: 'festivals' }
+  | { name: 'about' }
   | { name: 'decade'; decade: string }
   | { name: 'festival'; slug: string };
 
@@ -154,6 +156,7 @@ export function parseRoute(pathname: string): AppRoute | null {
     if (first === 'artists') return { name: 'artists' };
     if (first === 'decades') return { name: 'decades' };
     if (first === 'festivals') return { name: 'festivals' };
+    if (first === 'about') return { name: 'about' };
     return null;
   }
 
@@ -188,6 +191,9 @@ export function routeTab(route: AppRoute): RouteTab {
   if (route.name === 'home' || route.name === 'stations' || route.name === 'catalog' || route.name === 'favorites') {
     return route.name;
   }
+  // About is a brand/trust page, not a catalog surface. Highlighting Home is
+  // less misleading than lighting up the catalog tab.
+  if (route.name === 'about') return 'home';
   if (route.name === 'station') return 'stations';
   return 'catalog';
 }

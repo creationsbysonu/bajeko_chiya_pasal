@@ -103,6 +103,7 @@ export const GENRES_PATH = '/genres';
 export const ARTISTS_PATH = '/artists';
 export const DECADES_PATH = '/decades';
 export const FESTIVALS_PATH = '/festivals';
+export const ABOUT_PATH = '/about';
 export const FAVORITES_PATH = '/favorites';
 
 /** Only absolute http(s) image URLs are usable in og:image / JSON-LD. */
@@ -663,6 +664,50 @@ export function decadesSeo(locale: Locale = 'ne'): SeoMeta {
     ogType: 'website',
     ogImage: DEFAULT_OG_IMAGE,
     ogImageAlt: 'Nepali songs by decade',
+  };
+}
+
+export function aboutSeo(locale: Locale = 'ne'): SeoMeta {
+  return {
+    title:
+      locale === 'ne'
+        ? `बजेको चिया पसलको बारेमा — नेपाली संगीत रेडियो | ${SITE_NAME}`
+        : `About Bajeko Chiya Pasal — Nepali Music Radio & Song Archive`,
+    description: clip(
+      locale === 'ne'
+        ? 'बजेको चिया पसल एक स्वतन्त्र नेपाली संगीत रेडियो र गीत संग्रह हो — पुराना गीत, लोक दोहोरी, रेडियो नेपालका सम्झना र चाडपर्वका धुन। आधिकारिक युट्युब इम्बेडमा निःशुल्क सुन्नुहोस्।'
+        : 'Bajeko Chiya Pasal is an independent Nepali music radio and song archive — old classics, lok dohori, Radio Nepal memories and festival playlists, streamed through official YouTube embeds.'
+    ),
+    canonical: `${SITE_URL}${ABOUT_PATH}`,
+    robots: INDEX_ROBOTS,
+    ogType: 'website',
+    ogImage: DEFAULT_OG_IMAGE,
+    ogImageAlt: `${SITE_NAME} — about the Nepali music radio`,
+  };
+}
+
+export function aboutJsonLd(locale: Locale = 'ne'): Record<string, unknown> {
+  return {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'AboutPage',
+        '@id': `${SITE_URL}${ABOUT_PATH}#page`,
+        name: locale === 'ne' ? 'बजेको चिया पसलको बारेमा' : 'About Bajeko Chiya Pasal',
+        description:
+          locale === 'ne'
+            ? 'स्वतन्त्र नेपाली संगीत रेडियो र गीत संग्रह — पुराना गीत, लोक दोहोरी र चाडपर्वका धुन।'
+            : 'An independent Nepali music radio and song archive of old classics, lok dohori and festival playlists.',
+        url: `${SITE_URL}${ABOUT_PATH}`,
+        inLanguage: locale === 'ne' ? 'ne-NP' : 'en',
+        isPartOf: { '@type': 'WebSite', '@id': `${SITE_URL}/#website` },
+        about: { '@type': 'Organization', '@id': `${SITE_URL}/#organization` },
+      },
+      breadcrumbJsonLd([
+        { name: 'Home', path: HOME_PATH },
+        { name: 'About', path: ABOUT_PATH },
+      ]),
+    ],
   };
 }
 

@@ -126,6 +126,14 @@ export const Footer: React.FC<FooterProps> = ({
               </h4>
               <ul className="space-y-2 text-xs">
                 <li>
+                  <AppLink
+                    href="/about"
+                    className="text-neutral-300 hover:text-white transition-colors duration-150"
+                  >
+                    {locale === 'ne' ? 'हाम्रो बारेमा' : 'About'}
+                  </AppLink>
+                </li>
+                <li>
                   <button
                     onClick={onOpenTakedown}
                     className="flex items-center gap-1.5 text-red-500 hover:text-red-400 transition-colors duration-150"
