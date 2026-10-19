@@ -17,8 +17,8 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Bajeko Chiya Pasal" />
     <meta name="format-detection" content="telephone=no" />
-    <meta name="description" content="बजेको चिया पसल (Bajeko Chiya Pasal) - नेपाली संगीत र पुराना सम्झना। Original Nepali music discovery and nostalgic browser-based radio stations covering classical, folk, dohori, rock, film songs, and festive tunes." />
-    <meta name="keywords" content="Nepali music, Bajeko Chiya Pasal, Nepali radio, Narayan Gopal, Tara Devi, Lok Dohori, Chiya Pasal, Nepathya, 1974 AD, नेपाली संगीत, बजेको चिया पसल" />
+    <meta name="description" content="Nepali music radio and song catalog — stream timeless Nepali classics, lok dohori, rock and festival songs free. बजेको चिया पसल, नेपाली संगीत, पुराना गीत।" />
+    <meta name="keywords" content="Nepali music, Nepali radio, old Nepali songs, purano nepali geet, Nepali music online, Bajeko Chiya Pasal, बजेको चिया पसल, नेपाली संगीत, पुराना नेपाली गीत, Narayan Gopal, Tara Devi, Lok Dohori, Nepathya, 1974 AD, Dashain songs, Tihar songs, Nepali song catalog" />
     <!-- Large image previews + long snippets: both are eligibility gates for
          the rich results this site qualifies for (sitelinks, FAQ, search box). -->
     <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1" />
@@ -26,8 +26,8 @@
     <link rel="canonical" href="https://bajeko-chiya-pasal.vercel.app/" />
 
     <!-- Social previews MUST be absolute — crawlers do not resolve /og-image.png -->
-    <meta property="og:title" content="Bajeko Chiya Pasal | बजेको चिया पसल — Nepali Music Radio & Nostalgia" />
-    <meta property="og:description" content="नेपाली संगीत, पुराना सम्झना। Timeless Nepali melodies across vintage radio stations, tea shops, bus journeys, and mountain acoustic vibes." />
+    <meta property="og:title" content="Bajeko Chiya Pasal — Nepali Music Radio & Old Nepali Songs | बजेको चिया पसल" />
+    <meta property="og:description" content="Nepali music radio and song catalog — stream timeless Nepali classics, lok dohori, rock and festival songs free. बजेको चिया पसल, नेपाली संगीत, पुराना गीत।" />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://bajeko-chiya-pasal.vercel.app/" />
     <meta property="og:site_name" content="Bajeko Chiya Pasal" />
@@ -38,19 +38,22 @@
     <meta property="og:image:height" content="630" />
     <meta property="og:image:alt" content="Bajeko Chiya Pasal — बजेको चिया पसल, a heritage Nepali music radio" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Bajeko Chiya Pasal | बजेको चिया पसल — Nepali Music Radio & Nostalgia" />
-    <meta name="twitter:description" content="नेपाली संगीत, पुराना सम्झना। Timeless Nepali melodies across vintage radio stations, tea shops, bus journeys, and mountain acoustic vibes." />
+    <meta name="twitter:title" content="Bajeko Chiya Pasal — Nepali Music Radio & Old Nepali Songs | बजेको चिया पसल" />
+    <meta name="twitter:description" content="Nepali music radio and song catalog — stream timeless Nepali classics, lok dohori, rock and festival songs free. बजेको चिया पसल, नेपाली संगीत, पुराना गीत।" />
     <meta name="twitter:image" content="https://bajeko-chiya-pasal.vercel.app/og-image.png" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
     <link rel="manifest" href="/manifest.webmanifest" />
+    <!-- New songs are announced here; also linked from every prerendered page. -->
+    <link rel="alternate" type="application/rss+xml" title="Bajeko Chiya Pasal — new Nepali songs" href="https://bajeko-chiya-pasal.vercel.app/feed.xml" />
+    <meta name="application-name" content="Bajeko Chiya Pasal" />
 
     <!-- Google Fonts for Nepali and English Editorial Vintage Typography -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@600;700;900&family=Inter:wght@300;400;500;600;700&family=Mukta:wght@300;400;500;600;700;800&family=Yatra+One&display=swap" rel="stylesheet">
 
-    <title>Bajeko Chiya Pasal | बजेको चिया पसल — नेपाली संगीत, पुराना सम्झना</title>
+    <title>बजेको चिया पसल | Bajeko Chiya Pasal — नेपाली संगीत रेडियो, पुराना गीत</title>
 
     <!-- Static structured data (identity + site search box). The screen-specific
          blocks — FAQ and the station list — are attached by src/components/JsonLd.tsx
@@ -63,8 +66,9 @@
           "@type": "WebSite",
           "@id": "https://bajeko-chiya-pasal.vercel.app/#website",
           "name": "Bajeko Chiya Pasal",
-          "alternateName": "बजेको चिया पसल",
+          "alternateName": ["बजेको चिया पसल", "Bajeko Chiya Pasal — Nepali Music Radio"],
           "url": "https://bajeko-chiya-pasal.vercel.app/",
+          "description": "Stream timeless Nepali music through themed radio worlds — tea shop classics, vintage Radio Nepal, highway bus songs, lok dohori, rock and festival playlists.",
           "inLanguage": ["ne-NP", "en"],
           "potentialAction": {
             "@type": "SearchAction",
@@ -81,8 +85,9 @@
           "name": "Bajeko Chiya Pasal",
           "alternateName": "बजेको चिया पसल",
           "url": "https://bajeko-chiya-pasal.vercel.app/",
-          "logo": "https://bajeko-chiya-pasal.vercel.app/og-image.png",
-          "slogan": "नेपाली संगीत, पुराना सम्झना"
+          "logo": "https://bajeko-chiya-pasal.vercel.app/icons/icon-512.png",
+          "slogan": "नेपाली संगीत, पुराना सम्झना",
+          "sameAs": ["https://github.com/creationsbysonu/bajeko_chiya_pasal"]
         }
       ]
     }
@@ -95,6 +100,26 @@
     </a>
     
     <div id="root"></div>
+
+    <!-- Crawlers that execute JavaScript see the full catalog; this gives
+         no-JS readers and older bots a real path into every collection. -->
+    <noscript>
+      <div style="max-width: 56rem; margin: 0 auto; padding: 2rem 1.25rem; font-family: system-ui, sans-serif; color: #e5e5e5;">
+        <h1 style="font-size: 1.5rem; color: #fff;">Bajeko Chiya Pasal — बजेको चिया पसल</h1>
+        <p style="color: #a3a3a3; line-height: 1.6;">
+          Nepali music radio and song catalog. JavaScript is required for playback,
+          but every collection can be browsed here:
+        </p>
+        <ul style="line-height: 1.9;">
+          <li><a href="/stations" style="color: #f87171;">Radio Worlds</a></li>
+          <li><a href="/catalog" style="color: #f87171;">Song Catalog</a></li>
+          <li><a href="/genres" style="color: #f87171;">Music Genres</a></li>
+          <li><a href="/feed.xml" style="color: #f87171;">New songs (RSS)</a></li>
+          <li><a href="/sitemap.xml" style="color: #f87171;">Sitemap</a></li>
+        </ul>
+      </div>
+    </noscript>
+
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

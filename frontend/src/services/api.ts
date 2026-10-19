@@ -113,6 +113,9 @@ export const api = {
     verification?: string;
     ordering?: string;
     page?: number;
+    /** 1–100; the RPC clamps larger values. Used by entity pages that list a
+     *  whole artist/genre/decade in one go. */
+    pageSize?: number;
   } = {}): Promise<{ count: number; next: string | null; previous: string | null; results: Song[] }> {
     try {
       return await rpc('get_songs', args({
@@ -123,6 +126,7 @@ export const api = {
         p_verification: params.verification,
         p_ordering: params.ordering,
         p_page: params.page,
+        p_page_size: params.pageSize,
       }));
     } catch {
       throw new Error('Failed to fetch catalog songs');

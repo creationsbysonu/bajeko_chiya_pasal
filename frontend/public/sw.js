@@ -8,7 +8,7 @@
 //   - Static assets: CACHE-FIRST (bundle filenames are content-hashed, so they
 //     are immutable and safe to cache).
 //   - API + YouTube media requests: never intercepted.
-const CACHE_NAME = 'bajeko-chiya-pasal-v1';
+const CACHE_NAME = 'bajeko-chiya-pasal-v2';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
@@ -78,10 +78,15 @@ self.addEventListener('fetch', (event) => {
   // Navigations (the HTML shell): network-first so new deploys go live
   // immediately, refreshing the cached copy as they are served.
   if (request.mode === 'navigate') {
+    const { pathname } = new URL(url);
     event.respondWith(
       fetch(request)
         .then((response) => {
-          if (response && response.ok) {
+          // Only the home shell replaces the offline app shell. Prerendered
+          // /songs/… and /artists/… pages are full documents too, but caching
+          // one as /index.html would make the offline fallback show a random
+          // song page instead of the home screen.
+          if (response && response.ok && (pathname === '/' || pathname === '/index.html')) {
             const copy = response.clone();
             caches.open(CACHE_NAME).then((cache) => cache.put('/index.html', copy));
           }

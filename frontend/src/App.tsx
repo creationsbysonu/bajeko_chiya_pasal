@@ -13,10 +13,10 @@ import { Station, Song, Genre, GenreCategory } from './types';
 import { api } from './services/api';
 import {
   applyRouteSeo,
-  isUnknownPath,
   navigateTo,
-  pathToTab,
-  RouteTab,
+  parseRoute,
+  routeTab,
+  type AppRoute,
 } from './utils/seo';
 
 // The three secondary screens are split into their own chunks so the home page
@@ -30,6 +30,40 @@ const Catalog = React.lazy(() =>
 );
 const FavoritesPage = React.lazy(() =>
   import('./pages/FavoritesPage').then((m) => ({ default: m.FavoritesPage }))
+);
+
+// Entity pages: each one is a separately indexed URL (song/artist/station/
+// genre/decade/festival). Code-splitting keeps the home entry bundle small while
+// the build-time prerenderer gives every route real HTML for crawlers.
+const SongPage = React.lazy(() =>
+  import('./pages/SongPage').then((m) => ({ default: m.SongPage }))
+);
+const ArtistPage = React.lazy(() =>
+  import('./pages/ArtistPage').then((m) => ({ default: m.ArtistPage }))
+);
+const StationPage = React.lazy(() =>
+  import('./pages/StationPage').then((m) => ({ default: m.StationPage }))
+);
+const GenrePage = React.lazy(() =>
+  import('./pages/GenrePage').then((m) => ({ default: m.GenrePage }))
+);
+const GenresPage = React.lazy(() =>
+  import('./pages/GenresPage').then((m) => ({ default: m.GenresPage }))
+);
+const DecadePage = React.lazy(() =>
+  import('./pages/DecadePage').then((m) => ({ default: m.DecadePage }))
+);
+const DecadesIndexPage = React.lazy(() =>
+  import('./pages/DecadesIndexPage').then((m) => ({ default: m.DecadesIndexPage }))
+);
+const ArtistsPage = React.lazy(() =>
+  import('./pages/ArtistsPage').then((m) => ({ default: m.ArtistsPage }))
+);
+const FestivalsPage = React.lazy(() =>
+  import('./pages/FestivalsPage').then((m) => ({ default: m.FestivalsPage }))
+);
+const FestivalPage = React.lazy(() =>
+  import('./pages/FestivalPage').then((m) => ({ default: m.FestivalPage }))
 );
 
 // Both modals are on-demand too: the admin portal is ~164 kB of source that no
@@ -52,30 +86,38 @@ function MainApp() {
   const { currentStation, playStation } = usePlayer();
   const { locale } = useI18n();
   const defaultTunedRef = useRef(false);
-  const [currentTab, setCurrentTab] = useState<RouteTab>(() => pathToTab(window.location.pathname));
+  const [route, setRoute] = useState<AppRoute>(
+    () => parseRoute(window.location.pathname) ?? { name: 'home' }
+  );
+  const currentTab = routeTab(route);
 
-  // Address bar ↔ tab state. Back/forward must move between the four screens
-  // like the real pages they now are, and an unknown path is collapsed to "/"
-  // — Vercel answers 200 for every path, so /whatever would otherwise be an
-  // indexed soft-404 duplicating the home page.
+  // Address bar ↔ screen state. Back/forward moves between real pages, and an
+  // unknown path is collapsed to "/" — Vercel answers 200 for every path, so
+  // /whatever would otherwise be an indexed soft-404 duplicating the home page.
   useEffect(() => {
-    if (isUnknownPath(window.location.pathname)) {
+    if (!parseRoute(window.location.pathname)) {
       window.history.replaceState(null, '', '/');
     }
-    const onPopState = () => setCurrentTab(pathToTab(window.location.pathname));
+    const onPopState = () =>
+      setRoute(parseRoute(window.location.pathname) ?? { name: 'home' });
     window.addEventListener('popstate', onPopState);
     return () => window.removeEventListener('popstate', onPopState);
   }, []);
 
-  // Every route change (nav, footer links, back/forward) funnels through
-  // `navigateTo`, which pushes the URL and announces it via popstate.
-  const navigate = (tab: RouteTab) => navigateTo(tab);
-
   // Keep <title>, description, canonical and robots pointing at what is
-  // actually on screen (and in the reader's language) for the active route.
+  // actually on screen for the four tab routes. Entity pages own their tags
+  // (see usePageSeo): applying the tab fallback here after their effect would
+  // overwrite a correct song/artist title with the generic catalog one.
   useEffect(() => {
-    applyRouteSeo(currentTab, locale);
-  }, [currentTab, locale]);
+    if (
+      route.name === 'home' ||
+      route.name === 'stations' ||
+      route.name === 'catalog' ||
+      route.name === 'favorites'
+    ) {
+      applyRouteSeo(route.name, locale);
+    }
+  }, [route, locale]);
   const [stations, setStations] = useState<Station[]>([]);
   const [featuredSongs, setFeaturedSongs] = useState<Song[]>([]);
   const [newSongs, setNewSongs] = useState<Song[]>([]);
@@ -84,10 +126,6 @@ function MainApp() {
   const [genres, setGenres] = useState<Genre[]>([]);
   const [categories, setCategories] = useState<GenreCategory[]>([]);
   const [decades, setDecades] = useState<{ decade: string; count: number }[]>([]);
-
-  // Selected filters for Catalog deep-linking
-  const [selectedGenreFilter, setSelectedGenreFilter] = useState<string>('');
-  const [selectedDecadeFilter, setSelectedDecadeFilter] = useState<string>('');
 
   // Modals state
   const [takedownOpen, setTakedownOpen] = useState(false);
@@ -163,23 +201,7 @@ function MainApp() {
     if (houseDefault) void playStation(houseDefault);
   }, [stations, currentStation, playStation]);
 
-  const handleSelectGenre = (genreSlug: string) => {
-    setSelectedGenreFilter(genreSlug);
-    setSelectedDecadeFilter('');
-    navigate('catalog');
-  };
-
-  const handleSelectDecade = (decade: string) => {
-    setSelectedDecadeFilter(decade);
-    setSelectedGenreFilter('');
-    navigate('catalog');
-  };
-
-  const handleExploreCatalog = () => {
-    setSelectedGenreFilter('');
-    setSelectedDecadeFilter('');
-    navigate('catalog');
-  };
+  const handleExploreCatalog = () => navigateTo('catalog');
 
   return (
     <div className="min-h-screen flex flex-col bg-black text-white selection:bg-red-600 selection:text-white font-sans">
@@ -187,7 +209,7 @@ function MainApp() {
       {/* Navigation Header */}
       <Navigation
         currentTab={currentTab}
-        setCurrentTab={navigate}
+        setCurrentTab={navigateTo}
         onOpenTakedown={() => setTakedownOpen(true)}
       />
 
@@ -227,24 +249,29 @@ function MainApp() {
             genres={genres}
             categories={categories}
             decades={decades}
-            onSelectGenre={handleSelectGenre}
-            onSelectDecade={handleSelectDecade}
             onExploreCatalog={handleExploreCatalog}
           />
         )}
 
         {/* Secondary routes arrive as separate chunks; only they suspend. */}
         <Suspense fallback={<RouteFallback />}>
-          {currentTab === 'stations' && <RadioWorldsPage stations={stations} />}
-
-          {currentTab === 'catalog' && (
-            <Catalog
-              initialGenre={selectedGenreFilter}
-              initialDecade={selectedDecadeFilter}
-            />
+          {route.name === 'stations' && <RadioWorldsPage stations={stations} />}
+          {route.name === 'station' && (
+            <StationPage key={route.slug} slug={route.slug} stations={stations} />
           )}
 
-          {currentTab === 'favorites' && <FavoritesPage />}
+          {route.name === 'catalog' && <Catalog />}
+          {route.name === 'favorites' && <FavoritesPage />}
+
+          {route.name === 'genres' && <GenresPage />}
+          {route.name === 'artists' && <ArtistsPage />}
+          {route.name === 'decades' && <DecadesIndexPage />}
+          {route.name === 'festivals' && <FestivalsPage />}
+          {route.name === 'genre' && <GenrePage key={route.slug} slug={route.slug} />}
+          {route.name === 'decade' && <DecadePage key={route.decade} decade={route.decade} />}
+          {route.name === 'festival' && <FestivalPage key={route.slug} slug={route.slug} />}
+          {route.name === 'song' && <SongPage key={route.id} id={route.id} />}
+          {route.name === 'artist' && <ArtistPage key={route.id} id={route.id} />}
         </Suspense>
       </main>
 
@@ -279,6 +306,7 @@ function MainApp() {
       {/* Footer */}
       <Footer
         stations={stations}
+        genres={genres}
         onOpenTakedown={() => setTakedownOpen(true)}
         onOpenAdmin={() => setAdminOpen(true)}
       />

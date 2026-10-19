@@ -1,21 +1,40 @@
 /**
- * Crawlable routes + the document metadata each one needs.
+ * Crawlable routes + document metadata.
  *
  * The app used to be four `<button>` tabs with no URL, so search engines saw a
- * single page: no distinct titles, no canonicals, no sitemap entries and no
- * internal links to follow. Every tab now owns a real path (Vercel already
- * rewrites all paths to index.html), and switching tab rewrites `<title>`,
- * the description, the canonical and the robots directive so each route
- * competes for its own queries instead of cannibalising `/`.
+ * single page. Every screen now owns a real path:
  *
- * Keep this file in sync with `public/sitemap.xml` and `vercel.json`.
+ *   /                       home
+ *   /stations               all radio worlds
+ *   /stations/:slug         one radio world
+ *   /catalog                searchable catalog
+ *   /genres                 genre index
+ *   /genres/:slug           one genre
+ *   /decades/:decade        one decade
+ *   /festivals/:slug        one festival playlist
+ *   /songs/:id/:slug        one song
+ *   /artists/:id/:slug      one artist
+ *   /favorites              personal list (noindex)
+ *
+ * Vercel answers 200 for unrecognised paths (the SPA rewrite), so anything that
+ * does not parse is collapsed to "/" instead of being indexed as a soft-404.
+ *
+ * Entity metadata and paths live in `pageMeta.ts` so the build-time prerenderer
+ * can emit the exact same head tags without loading React.
  */
 
-export type RouteTab = 'home' | 'stations' | 'catalog' | 'favorites';
+import {
+  DEFAULT_OG_IMAGE,
+  NOINDEX_ROBOTS,
+  SITE_NAME,
+  SITE_URL,
+  type SeoMeta,
+} from './pageMeta.ts';
 
-/** Production origin — canonicals, sitemap and social cards all hardcode it. */
-export const SITE_URL = 'https://bajeko-chiya-pasal.vercel.app';
-export const SITE_NAME = 'Bajeko Chiya Pasal';
+export { SITE_NAME, SITE_URL };
+export type { SeoMeta };
+
+export type RouteTab = 'home' | 'stations' | 'catalog' | 'favorites';
 
 type Localised = { ne: string; en: string };
 
@@ -31,14 +50,15 @@ export const ROUTES: Record<RouteTab, RouteMeta> = {
   home: {
     path: '/',
     title: {
-      ne: 'बजेको चिया पसल | Bajeko Chiya Pasal — नेपाली संगीत, पुराना सम्झना',
-      en: 'Bajeko Chiya Pasal | Nepali Music Radio & Nostalgia — बजेको चिया पसल',
+      ne: 'बजेको चिया पसल | Bajeko Chiya Pasal — नेपाली संगीत रेडियो, पुराना गीत',
+      en: 'Bajeko Chiya Pasal — Nepali Music Radio & Old Nepali Songs | बजेको चिया पसल',
     },
     description: {
-      ne: 'बजेको चिया पसल — नेपाली संगीत रेडियो। चिया पसल, पुरानो रेडियो, बस यात्रा जस्ता विषयमा कालजयी नेपाली गीतहरू निरन्तर बजाउनुहोस्।',
-      en: 'Bajeko Chiya Pasal — a Nepali music radio. Stream timeless Nepali classics through themed stations: tea shop, vintage radio, bus journey and more.',
+      ne: 'Nepali music radio and song catalog — stream timeless Nepali classics, lok dohori, rock and festival songs free. बजेको चिया पसल, नेपाली संगीत, पुराना गीत।',
+      en: 'Nepali music radio and song catalog — stream timeless Nepali classics, lok dohori, rock and festival songs free. बजेको चिया पसल, नेपाली संगीत, पुराना गीत।',
     },
-    robots: 'index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1',
+    robots:
+      'index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1',
   },
   stations: {
     path: '/stations',
@@ -71,20 +91,111 @@ export const ROUTES: Record<RouteTab, RouteMeta> = {
       en: 'Favorites | Bajeko Chiya Pasal',
     },
     description: {
-      ne: 'आफ्ना मनपरेको नेपाली गीतहरू एकै ठाउँमा सुनुहोस्।',
+      ne: 'आफ्ना मनपरेको नेपाली गीतहरू एकै ठाउँमा सुन्नुहोस्।',
       en: 'Your saved Nepali songs, all in one place.',
     },
     // Personal, empty for guests and duplicated by no other URL.
-    robots: 'noindex,follow',
+    robots: NOINDEX_ROBOTS,
   },
 };
 
+/** Every route the app understands. Tab routes are the four navigation items. */
+export type AppRoute =
+  | { name: RouteTab }
+  | { name: 'station'; slug: string }
+  | { name: 'song'; id: number }
+  | { name: 'artist'; id: number }
+  | { name: 'genre'; slug: string }
+  | { name: 'genres' }
+  | { name: 'artists' }
+  | { name: 'decades' }
+  | { name: 'festivals' }
+  | { name: 'decade'; decade: string }
+  | { name: 'festival'; slug: string };
+
 const TABS = Object.keys(ROUTES) as RouteTab[];
+
+function decodeSegment(segment: string): string {
+  try {
+    return decodeURIComponent(segment);
+  } catch {
+    return segment;
+  }
+}
+
+function segmentsOf(pathname: string): string[] {
+  return pathname
+    .split('?')[0]
+    .split('#')[0]
+    .split('/')
+    .filter(Boolean)
+    .map(decodeSegment);
+}
+
+function positiveId(value: string | undefined): number | null {
+  if (!value) return null;
+  const id = Number.parseInt(value.split('-')[0], 10);
+  return Number.isFinite(id) && id > 0 ? id : null;
+}
+
+/**
+ * Parse the address bar into a route. Returns `null` for paths this app does
+ * not own so callers can collapse them to `/` (the Vercel rewrite makes every
+ * unknown path a 200 response).
+ */
+export function parseRoute(pathname: string): AppRoute | null {
+  const segments = segmentsOf(pathname);
+  if (segments.length === 0) return { name: 'home' };
+
+  if (segments.length === 1) {
+    const [first] = segments;
+    if (TABS.includes(first as RouteTab)) return { name: first as RouteTab };
+    if (first === 'genres') return { name: 'genres' };
+    if (first === 'artists') return { name: 'artists' };
+    if (first === 'decades') return { name: 'decades' };
+    if (first === 'festivals') return { name: 'festivals' };
+    return null;
+  }
+
+  if (segments.length === 2) {
+    const [first, second] = segments;
+    if (first === 'stations' && second) return { name: 'station', slug: second };
+    if (first === 'genres' && second) return { name: 'genre', slug: second };
+    if (first === 'festivals' && second) return { name: 'festival', slug: second };
+    if (first === 'decades' && second) return { name: 'decade', decade: second };
+    // Slug-less variants are accepted so old/shared links keep working; the
+    // page canonicalises to the current title.
+    if (first === 'songs' || first === 'artists') {
+      const id = positiveId(second);
+      return id ? { name: first === 'songs' ? 'song' : 'artist', id } : null;
+    }
+    return null;
+  }
+
+  if (segments.length === 3) {
+    const [first, second] = segments;
+    if (first !== 'songs' && first !== 'artists') return null;
+    const id = positiveId(second);
+    if (!id) return null;
+    return { name: first === 'songs' ? 'song' : 'artist', id };
+  }
+
+  return null;
+}
+
+/** Which navigation tab a route belongs to (used for active link styling). */
+export function routeTab(route: AppRoute): RouteTab {
+  if (route.name === 'home' || route.name === 'stations' || route.name === 'catalog' || route.name === 'favorites') {
+    return route.name;
+  }
+  if (route.name === 'station') return 'stations';
+  return 'catalog';
+}
 
 /** `"/catalog/"` → `catalog`, unknown paths → `home`. */
 export function pathToTab(pathname: string): RouteTab {
-  const clean = pathname.replace(/\/+$/, '') || '/';
-  return TABS.find((tab) => ROUTES[tab].path === clean) ?? 'home';
+  const route = parseRoute(pathname);
+  return route ? routeTab(route) : 'home';
 }
 
 export function tabToPath(tab: RouteTab): string {
@@ -92,27 +203,31 @@ export function tabToPath(tab: RouteTab): string {
 }
 
 /**
- * Programmatic navigation for links that are real `<a href>` elements (footer,
- * in-content CTAs): push the path, then notify the app through `popstate` so
- * there is exactly one code path that moves the UI between screens.
+ * Programmatic navigation for links that are real `<a href>` elements: push the
+ * path, then notify the app through `popstate` so there is exactly one code
+ * path that moves the UI between screens.
  *
  * Modified clicks are left alone by callers, so "open in new tab" still works.
  */
-export function navigateTo(tab: RouteTab): void {
-  const path = tabToPath(tab);
+export function navigate(path: string): void {
   if (window.location.pathname !== path) {
     window.history.pushState(null, '', path);
   }
   window.dispatchEvent(new PopStateEvent('popstate'));
 }
 
-/** True when the address bar shows a path we do not own. The Vercel rewrite
- * answers 200 for every path, so `/whatever` would otherwise be an indexed
- * soft-404 duplicating the home page.
- */
-export function isUnknownPath(pathname: string): boolean {
-  return !TABS.some((tab) => ROUTES[tab].path === (pathname.replace(/\/+$/, '') || '/'));
+export function navigateTo(tab: RouteTab): void {
+  navigate(tabToPath(tab));
 }
+
+/** True when the address bar shows a path we do not own. */
+export function isUnknownPath(pathname: string): boolean {
+  return parseRoute(pathname) === null;
+}
+
+// ---------------------------------------------------------------------------
+// <head> rewriting
+// ---------------------------------------------------------------------------
 
 function upsertMeta(attribute: 'name' | 'property', key: string, content: string): void {
   let el = document.head.querySelector<HTMLMetaElement>(`meta[${attribute}="${key}"]`);
@@ -122,6 +237,10 @@ function upsertMeta(attribute: 'name' | 'property', key: string, content: string
     document.head.appendChild(el);
   }
   el.setAttribute('content', content);
+}
+
+function removeMeta(attribute: 'name' | 'property', key: string): void {
+  document.head.querySelectorAll(`meta[${attribute}="${key}"]`).forEach((el) => el.remove());
 }
 
 function upsertLink(rel: string, href: string): void {
@@ -135,22 +254,58 @@ function upsertLink(rel: string, href: string): void {
 }
 
 /**
- * Rewrites every ranking-relevant tag in `<head>` for the active route and
- * language. Social scrapers do not run JavaScript, so `og:*` here only affects
- * engines that render — the static values in `index.html` are what Facebook,
- * Slack and Discord read (keep both aligned).
+ * Rewrite every ranking-relevant tag in `<head>`.
+ *
+ * Social scrapers do not run JavaScript, so `og:*` here only affects engines
+ * that render — the static values in `index.html`, and the prerendered values
+ * emitted by `scripts/prerender.ts`, are what Facebook, Slack and Discord read.
+ */
+export function applySeoMeta(meta: SeoMeta): void {
+  document.title = meta.title;
+  upsertMeta('name', 'description', meta.description);
+  upsertMeta('name', 'robots', meta.robots);
+  upsertLink('canonical', meta.canonical);
+
+  upsertMeta('property', 'og:title', meta.title);
+  upsertMeta('property', 'og:description', meta.description);
+  upsertMeta('property', 'og:url', meta.canonical);
+  upsertMeta('property', 'og:type', meta.ogType);
+
+  if (meta.ogImage) {
+    upsertMeta('property', 'og:image', meta.ogImage);
+    upsertMeta('name', 'twitter:image', meta.ogImage);
+    if (meta.ogImage === DEFAULT_OG_IMAGE) {
+      upsertMeta('property', 'og:image:width', '1200');
+      upsertMeta('property', 'og:image:height', '630');
+    } else {
+      // Artwork dimensions vary per song/station, so a stale 1200×630 pair
+      // would be a lie for most of them.
+      removeMeta('property', 'og:image:width');
+      removeMeta('property', 'og:image:height');
+    }
+  }
+  if (meta.ogImageAlt) {
+    upsertMeta('property', 'og:image:alt', meta.ogImageAlt);
+    upsertMeta('name', 'twitter:image:alt', meta.ogImageAlt);
+  }
+
+  upsertMeta('name', 'twitter:card', 'summary_large_image');
+  upsertMeta('name', 'twitter:title', meta.title);
+  upsertMeta('name', 'twitter:description', meta.description);
+}
+
+/**
+ * Rewrites every ranking-relevant tag for the four tab routes and language.
  */
 export function applyRouteSeo(tab: RouteTab, locale: 'ne' | 'en' = 'ne'): void {
   const route = ROUTES[tab];
-  const canonical = SITE_URL + route.path;
-  const lang = locale === 'en' ? 'en' : 'ne';
-
-  document.title = route.title[lang];
-  upsertMeta('name', 'description', route.description[lang]);
-  upsertMeta('name', 'robots', route.robots);
-  upsertLink('canonical', canonical);
-
-  upsertMeta('property', 'og:title', route.title[lang]);
-  upsertMeta('property', 'og:description', route.description[lang]);
-  upsertMeta('property', 'og:url', canonical);
+  applySeoMeta({
+    title: route.title[locale === 'en' ? 'en' : 'ne'],
+    description: route.description[locale === 'en' ? 'en' : 'ne'],
+    canonical: SITE_URL + route.path,
+    robots: route.robots,
+    ogType: 'website',
+    ogImage: DEFAULT_OG_IMAGE,
+    ogImageAlt: `${SITE_NAME} — Nepali music radio`,
+  });
 }

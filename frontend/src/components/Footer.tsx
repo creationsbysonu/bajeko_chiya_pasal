@@ -2,35 +2,33 @@ import React from 'react';
 import { useI18n } from '../context/I18nContext';
 import { ShieldCheck, Heart, ExternalLink, Lock } from 'lucide-react';
 import { BrandMark } from './BrandMark';
-import { Station } from '../types';
-import { navigateTo, RouteTab } from '../utils/seo';
+import { Genre, Station } from '../types';
+import { AppLink } from './AppLink';
+import { genrePath, stationPath } from '../utils/pageMeta';
 
 interface FooterProps {
-  /** Live station list — links out to the worlds page instead of static text. */
+  /** Live station list — every entry links to its own landing page. */
   stations?: Station[];
+  /** Live genre list — more internal edges for crawlers (and listeners). */
+  genres?: Genre[];
   onOpenTakedown: () => void;
   onOpenAdmin: () => void;
 }
 
-export const Footer: React.FC<FooterProps> = ({ stations = [], onOpenTakedown, onOpenAdmin }) => {
+export const Footer: React.FC<FooterProps> = ({
+  stations = [],
+  genres = [],
+  onOpenTakedown,
+  onOpenAdmin,
+}) => {
   const { locale, t } = useI18n();
-
-  // Real anchors: crawlers see six more internal edges out of every page, and
-  // modified clicks still open a new tab.
-  const handleWorldLink = (event: React.MouseEvent<HTMLAnchorElement>, tab: RouteTab) => {
-    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) {
-      return;
-    }
-    event.preventDefault();
-    navigateTo(tab);
-  };
 
   return (
     <footer className="bg-black border-t border-white/8 pt-14 pb-[calc(7rem+env(safe-area-inset-bottom))] text-neutral-400">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
-        {/* 3-col layout */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-10 mb-12">
+        {/* Responsive link columns */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 mb-12">
 
           {/* Brand */}
           <div className="space-y-4">
@@ -56,16 +54,67 @@ export const Footer: React.FC<FooterProps> = ({ stations = [], onOpenTakedown, o
               <ul className="space-y-2">
                 {stations.map((s) => (
                   <li key={s.slug}>
-                    <a
-                      href="/stations"
-                      onClick={(e) => handleWorldLink(e, 'stations')}
+                    <AppLink
+                      href={stationPath(s)}
                       className="block text-xs font-nepali hover:text-white transition-colors duration-150"
                     >
                       {locale === 'ne' ? s.title_ne || s.title : s.title}
-                    </a>
+                    </AppLink>
                   </li>
                 ))}
               </ul>
+              <AppLink
+                href="/stations"
+                className="mt-3 inline-block text-[11px] font-mono uppercase tracking-widest text-red-500 hover:text-red-400"
+              >
+                {t.pages.browseStations} →
+              </AppLink>
+            </div>
+          )}
+
+          {genres.length > 0 && (
+            <div>
+              <h4 className="text-xs font-bold text-white uppercase tracking-widest mb-4">
+                {t.pages.genres}
+              </h4>
+              <ul className="space-y-2">
+                {genres.slice(0, 8).map((g) => (
+                  <li key={g.slug}>
+                    <AppLink
+                      href={genrePath(g)}
+                      className="block text-xs font-nepali hover:text-white transition-colors duration-150"
+                    >
+                      {locale === 'ne' ? g.name_ne || g.name : g.name}
+                    </AppLink>
+                  </li>
+                ))}
+              </ul>
+              <div className="mt-3 space-y-1">
+                <AppLink
+                  href="/genres"
+                  className="block text-[11px] font-mono uppercase tracking-widest text-red-500 hover:text-red-400"
+                >
+                  {t.pages.browseGenres} →
+                </AppLink>
+                <AppLink
+                  href="/artists"
+                  className="block text-[11px] font-mono uppercase tracking-widest text-neutral-500 hover:text-white"
+                >
+                  {locale === 'ne' ? 'सबै कलाकार' : 'All artists'} →
+                </AppLink>
+                <AppLink
+                  href="/decades"
+                  className="block text-[11px] font-mono uppercase tracking-widest text-neutral-500 hover:text-white"
+                >
+                  {locale === 'ne' ? 'दशक अनुसार' : 'Songs by decade'} →
+                </AppLink>
+                <AppLink
+                  href="/festivals"
+                  className="block text-[11px] font-mono uppercase tracking-widest text-neutral-500 hover:text-white"
+                >
+                  {locale === 'ne' ? 'चाडपर्वका गीत' : 'Festival playlists'} →
+                </AppLink>
+              </div>
             </div>
           )}
 

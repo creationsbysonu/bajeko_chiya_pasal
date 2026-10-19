@@ -5,6 +5,7 @@ import { usePlayer } from '../context/PlayerContext';
 import { useTheme } from '../context/ThemeContext';
 import { useScrollProgress } from '../hooks/useMotion';
 import { BrandMark } from './BrandMark';
+import { AppLink } from './AppLink';
 import { RouteTab, tabToPath } from '../utils/seo';
 
 interface NavigationProps {
@@ -105,6 +106,13 @@ export const Navigation: React.FC<NavigationProps> = ({
                 </a>
               );
             })}
+            {/* Not a tab: the genre hub is its own crawlable collection. */}
+            <AppLink
+              href="/genres"
+              className="relative hidden lg:inline-block text-xs tracking-widest uppercase font-medium pb-0.5 text-neutral-400 hover:text-white transition-colors duration-200"
+            >
+              {t.pages.genres}
+            </AppLink>
           </nav>
 
           {/* Right side actions */}
@@ -233,6 +241,13 @@ export const Navigation: React.FC<NavigationProps> = ({
               </a>
             );
           })}
+          <AppLink
+            href="/genres"
+            onClick={() => setMobileOpen(false)}
+            className="block w-full text-left px-3 py-2.5 rounded text-sm font-medium text-neutral-400 hover:text-white hover:bg-white/5"
+          >
+            {t.pages.genres}
+          </AppLink>
 
           <div className="pt-3 flex items-center gap-3 border-t border-white/8">
             <button

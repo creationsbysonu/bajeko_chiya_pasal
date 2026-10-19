@@ -10,6 +10,8 @@ import { ChevronDown, ChevronUp, ArrowUp } from 'lucide-react';
 import { resolveCategories } from '../utils/genreTaxonomy';
 import { RecommendSongSection } from '../components/RecommendSongSection';
 import { JsonLd } from '../components/JsonLd';
+import { AppLink } from '../components/AppLink';
+import { decadePath, genrePath, songPath } from '../utils/pageMeta';
 
 interface HomeProps {
   stations: Station[];
@@ -21,8 +23,6 @@ interface HomeProps {
   genres: Genre[];
   categories?: GenreCategory[];
   decades: { decade: string; count: number }[];
-  onSelectGenre: (genreSlug: string) => void;
-  onSelectDecade: (decade: string) => void;
   onExploreCatalog: () => void;
 }
 
@@ -35,8 +35,6 @@ export const Home: React.FC<HomeProps> = ({
   genres,
   categories,
   decades,
-  onSelectGenre,
-  onSelectDecade,
   onExploreCatalog,
 }) => {
   const { locale } = useI18n();
@@ -123,15 +121,18 @@ export const Home: React.FC<HomeProps> = ({
 
           <div className="space-y-6">
             {decades.map((d) => (
-              <button
+              <AppLink
                 key={d.decade}
-                onClick={() => onSelectDecade(d.decade)}
-                className="pd-lift p-4 rounded-2xl bg-black/60 hover:bg-red-600 text-center transition-all duration-300 ease-out hover:scale-105 active:scale-95 border border-white/10 hover:border-red-500/50 shadow-md group"
+                href={decadePath(d.decade)}
+                className="pd-lift block p-4 rounded-2xl bg-black/60 hover:bg-red-600 text-center transition-all duration-300 ease-out hover:scale-105 active:scale-95 border border-white/10 hover:border-red-500/50 shadow-md group"
               >
                 <span className="font-serif text-lg font-bold block text-white group-hover:text-white">
                   {d.decade}
                 </span>
-              </button>
+                <span className="mt-0.5 block text-[11px] font-mono text-neutral-500 group-hover:text-white/80">
+                  {d.count} {locale === 'ne' ? 'गीत' : 'songs'}
+                </span>
+              </AppLink>
             ))}
           </div>
         </section>
@@ -184,7 +185,12 @@ export const Home: React.FC<HomeProps> = ({
                           <div key={song.id} className="flex items-start gap-2">
                             <div className="w-2 h-2 bg-red-400 rounded mt-0.5"></div>
                             <div>
-                              <div className="text-white">{song.title}</div>
+                              <AppLink
+                                href={songPath(song)}
+                                className="block text-white hover:text-red-400"
+                              >
+                                {song.title}
+                              </AppLink>
                               {song.artist_name && (
                                 <div className="text-sm text-gray-400">
                                   {song.artist_name}
@@ -204,24 +210,33 @@ export const Home: React.FC<HomeProps> = ({
                     // Show genre grid
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
                       {categoryGenres.map((g) => (
-                        <button
+                        <AppLink
                           key={g.slug}
-                          onClick={() => onSelectGenre(g.slug)}
-                          className="pd-lift p-3.5 rounded-xl bg-black hover:bg-white/4 border border-white/8 hover:border-white/20 text-left transition-all duration-200 ease-out hover:scale-105 active:scale-95 group"
+                          href={genrePath(g)}
+                          className="pd-lift block p-3.5 rounded-xl bg-black hover:bg-white/4 border border-white/8 hover:border-white/20 text-left transition-all duration-200 ease-out hover:scale-105 active:scale-95 group"
                         >
                           <h4 className="font-serif text-xs font-bold text-white truncate group-hover:text-red-400 transition-colors">
                             {locale === 'ne' ? g.name_ne || g.name : g.name}
                           </h4>
                           <p className="text-xs text-red-400 font-mono mt-0.5 font-bold">
-                            {category.label.toUpperCase()}
+                            {g.songs_count ?? 0} {locale === 'ne' ? 'गीत' : 'songs'}
                           </p>
-                        </button>
+                        </AppLink>
                       ))}
                     </div>
                   )}
                 </div>
               );
             })}
+          </div>
+
+          <div className="text-center pt-2">
+            <AppLink
+              href="/genres"
+              className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-5 py-2 text-xs font-semibold text-neutral-200 transition-colors hover:bg-white/10 hover:text-white"
+            >
+              {locale === 'ne' ? 'सबै विधा हेर्नुहोस्' : 'Browse all genres'}
+            </AppLink>
           </div>
         </section>
 

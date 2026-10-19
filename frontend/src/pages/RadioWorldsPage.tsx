@@ -3,7 +3,9 @@ import { Station } from '../types';
 import { StationCard } from '../components/StationCard';
 import { useI18n } from '../context/I18nContext';
 import { JsonLd } from '../components/JsonLd';
+import { Breadcrumbs } from '../components/Breadcrumbs';
 import { SITE_URL } from '../utils/seo';
+import { stationPath } from '../utils/pageMeta';
 
 interface RadioWorldsPageProps {
   stations: Station[];
@@ -38,11 +40,18 @@ export const RadioWorldsPage: React.FC<RadioWorldsPageProps> = ({ stations }) =>
                   ? station.tagline_ne || station.tagline
                   : station.tagline,
                 genre: station.title,
-                url: `${SITE_URL}/stations`,
+                url: `${SITE_URL}${stationPath(station)}`,
               },
             })),
           },
         }}
+      />
+
+      <Breadcrumbs
+        items={[
+          { name: ne ? 'गृहपृष्ठ' : 'Home', path: '/' },
+          { name: ne ? 'रेडियो संसार' : 'Radio Worlds', path: '/stations' },
+        ]}
       />
 
       <div className="mb-8">

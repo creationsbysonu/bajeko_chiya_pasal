@@ -5,6 +5,8 @@ import { usePlayer } from '../context/PlayerContext';
 import { Play, Pause, Heart, ShieldCheck, Calendar, Music } from 'lucide-react';
 import { api } from '../services/api';
 import { songArtwork, hideBrokenImage } from '../utils/urlSafety';
+import { AppLink } from './AppLink';
+import { artistPathById, songPath } from '../utils/pageMeta';
 
 interface SongCardProps {
   song: Song;
@@ -154,15 +156,26 @@ export const SongCard: React.FC<SongCardProps> = ({
 
         {/* 2. Metadata Section */}
         <div className="p-4">
-          <h4 className="text-sm font-semibold text-white group-hover:text-red-400 transition-colors duration-150 line-clamp-1">
-            {locale === 'ne' ? song.title_ne || song.title : song.title}
+          <h4 className="text-sm font-semibold text-white transition-colors duration-150 line-clamp-1">
+            <AppLink
+              href={songPath(song)}
+              className="hover:text-red-400"
+              title={locale === 'ne' ? song.title_ne || song.title : song.title}
+            >
+              {locale === 'ne' ? song.title_ne || song.title : song.title}
+            </AppLink>
           </h4>
           <p className="text-xs text-neutral-500 font-nepali line-clamp-1 mt-0.5">
             {locale === 'ne' ? song.title : song.title_ne}
           </p>
 
           <p className="text-xs text-white/70 font-medium font-nepali mt-2 line-clamp-1">
-            {locale === 'ne' ? song.artist_name_ne || song.artist_name : song.artist_name}
+            <AppLink
+              href={artistPathById(song.artist, song.artist_name)}
+              className="hover:text-red-400"
+            >
+              {locale === 'ne' ? song.artist_name_ne || song.artist_name : song.artist_name}
+            </AppLink>
           </p>
 
           {song.featured_artists && (

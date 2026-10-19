@@ -9,6 +9,10 @@
 
     /* Bundler mode */
     "moduleResolution": "bundler",
+    /* The build-time prerenderer (scripts/prerender.ts) imports these modules
+       directly with Node's TypeScript loader, which requires explicit .ts
+       extensions; Vite and tsc both accept them. */
+    "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": false,
     "moduleDetection": "force",
     "noEmit": true,

@@ -4,6 +4,8 @@ import { useI18n } from '../context/I18nContext';
 import { usePlayer } from '../context/PlayerContext';
 import { Play, Volume2, Coffee, Bus, Mountain, Flame, Heart, Radio, Sun } from 'lucide-react';
 import { safeImageUrl, hideBrokenImage } from '../utils/urlSafety';
+import { AppLink } from './AppLink';
+import { stationPath } from '../utils/pageMeta';
 
 interface StationCardProps {
   station: Station;
@@ -96,8 +98,10 @@ export const StationCard: React.FC<StationCardProps> = ({ station }) => {
       {/* 2. Metadata Body */}
       <div className="p-4 flex-1 flex flex-col justify-between">
         <div>
-          <h3 className="text-sm font-semibold text-white group-hover:text-red-400 transition-colors duration-150 mb-0.5">
-            {locale === 'ne' ? station.title_ne || station.title : station.title}
+          <h3 className="text-sm font-semibold text-white transition-colors duration-150 mb-0.5">
+            <AppLink href={stationPath(station)} className="hover:text-red-400">
+              {locale === 'ne' ? station.title_ne || station.title : station.title}
+            </AppLink>
           </h3>
           <p className="font-nepali text-xs text-neutral-500 mb-2">
             {locale === 'ne' ? station.title : station.title_ne}

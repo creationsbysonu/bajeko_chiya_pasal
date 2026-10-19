@@ -59,6 +59,10 @@ jobs:
         working-directory: frontend
         run: npm run lint
 
+      - name: Typecheck the prerender script
+        working-directory: frontend
+        run: npm run typecheck:prerender
+
       - name: Production build
         working-directory: frontend
         run: npm run build

@@ -5,6 +5,7 @@ import { useI18n } from '../context/I18nContext';
 import { api } from '../services/api';
 import { Search, X, Music, RefreshCw } from 'lucide-react';
 import { groupGenresByCategory } from '../utils/genreTaxonomy';
+import { Breadcrumbs } from '../components/Breadcrumbs';
 
 interface CatalogProps {
   initialGenre?: string;
@@ -159,6 +160,13 @@ export const Catalog: React.FC<CatalogProps> = ({ initialGenre, initialDecade, i
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
       
+      <Breadcrumbs
+        items={[
+          { name: t.pages.home, path: '/' },
+          { name: t.pages.catalog, path: '/catalog' },
+        ]}
+      />
+
       {/* Header */}
       <div className="mb-8">
         <h1 className="font-serif text-3xl sm:text-4xl font-black text-white mb-2 drop-shadow-sm">

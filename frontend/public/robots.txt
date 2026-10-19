@@ -1,8 +1,18 @@
 # Bajeko Chiya Pasal — https://bajeko-chiya-pasal.vercel.app
 #
-# Every indexable screen is one hop away from the header nav (/, /stations,
-# /catalog). /favorites is per-listener state — empty for guests and carrying
-# its own noindex meta — so crawlers are told not to waste budget on it.
+# Crawlable surfaces (all linked from the home page, the footer and the sitemap):
+#   /                       home
+#   /stations, /stations/*  radio worlds
+#   /catalog                searchable catalog
+#   /genres, /genres/*      genre hub + genre collections
+#   /artists, /artists/*    artist hub + one page per artist (Person schema)
+#   /decades, /decades/*    decade hub + decade collections
+#   /festivals, /festivals/* festival hub + festival playlists
+#   /songs/*                one page per song (MusicRecording schema)
+#   /feed.xml               newest songs (RSS)
+#
+# /favorites is per-listener state — empty for guests and carrying its own
+# noindex meta — so crawlers are told not to waste budget on it.
 User-agent: *
 Allow: /
 Disallow: /favorites

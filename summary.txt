@@ -368,41 +368,75 @@ Known / pending
 --------------------------------------------------------------------------------
 15. SEO & CRAWLABLE ROUTES
 --------------------------------------------------------------------------------
-The site was a four-button SPA with no URLs, so search engines saw exactly one
-page. It now exposes four:
+The site was originally a four-button SPA with no URLs, so search engines saw
+exactly one page. Every indexable entity now owns a real, prerendered URL:
 
-  /            home          index,follow
-  /stations    radio worlds  index,follow
-  /catalog     song catalog  index,follow  (?q= is the SearchAction target)
-  /favorites   personal list noindex,follow (also Disallowed in robots.txt)
+  /                         home (static body + SPA)
+  /stations                 radio world index
+  /stations/:slug           10 themed station pages
+  /catalog                  searchable catalog
+  /genres, /genres/:slug    genre index + every genre collection
+  /artists                  A-Z artist hub (177 artists)
+  /artists/:id/:slug        one page per artist (Person + discography)
+  /decades                  1960s ... 2020s decade hub
+  /decades/:decade          golden-oldies collections per decade
+  /festivals                festival hub (23 festivals)
+  /festivals/:slug          Dashain, Tihar, Chhath, Teej ... playlists
+  /songs/:id/:slug          one page per song (MusicRecording + VideoObject)
+  /favorites                personal list, noindex + Disallowed in robots.txt
 
-frontend/src/utils/seo.ts is the single source of truth: route paths, bilingual
-(ne/en) titles, descriptions, the SITE_URL constant, and applyRouteSeo() which
-rewrites <title>, meta description, meta robots and the canonical on every tab
-or language change. Unknown paths are collapsed to "/" with replaceState so the
-Vercel SPA rewrite cannot create an indexed soft-404. App.tsx owns the
-address-bar state (initial path + popstate listener); Navigation.tsx and
-Footer.tsx render real <a href> links that intercept plain clicks only, so
-middle/cmd-click still opens a new tab.
+BUILD-TIME PRERENDER (frontend/scripts/prerender.ts)
+  Runs as the last step of `npm run build`, after Vite. Reads the public catalog
+  through the same anon RPCs the browser uses and writes complete HTML files
+  into dist/ (e.g. dist/songs/123/euta-manche-ko-mayale.html). vercel.json sets
+  cleanUrls: true, so the file is served at /songs/123/euta-manche-ko-mayale;
+  static files win over the SPA catch-all rewrite.
+  Each document has a unique title, description, canonical, og:*/twitter tags,
+  one H1, breadcrumbs, internal links and JSON-LD. The body is injected inside
+  #root; React replaces it on load, so crawlers and no-JS readers get content
+  while visitors still get the full player.
+  The step also regenerates dist/sitemap.xml (500+ URLs) and dist/feed.xml
+  (50 newest songs). Without Supabase env vars it skips with a warning and the
+  fallback public/sitemap.xml is deployed, so local/CI builds still succeed.
 
-Structured data (src/components/JsonLd.tsx attaches dynamic blocks via
-script.textContent with "<" escaped — never JSX, or a `</script>` inside a
-catalog title would break out of the block):
-  index.html       WebSite + Organization + SearchAction (static)
-  Home.tsx         FAQPage, in the language actually on screen
-  RadioWorldsPage  CollectionPage + ItemList of RadioStation
+SOURCE OF TRUTH
+  frontend/src/utils/pageMeta.ts owns SITE_URL, entity URLs (songPath,
+  artistPath, stationPath, genrePath, decadePath, festivalPath), titles,
+  descriptions, OG images and JSON-LD builders. Both the browser app and the
+  prerenderer import it, so static and React-rendered heads cannot drift.
+  frontend/src/utils/seo.ts owns parseRoute() for every route, the four tab
+  metadata records, applySeoMeta()/applyRouteSeo() and the soft-404 collapse:
+  unknown paths are replaced with "/" so the Vercel rewrite cannot create an
+  indexed soft-404. App.tsx owns address-bar state (initial path + popstate);
+  Navigation/Footer/SongCard/StationCard render real <a href> links (AppLink)
+  that intercept plain clicks only, so cmd/ctrl-click still opens a new tab.
 
-Static files: frontend/public/robots.txt, frontend/public/sitemap.xml. Both are
-asserted against seo.ts by frontend/src/test/Routing.test.tsx (6 tests: path
-mapping, canonical per route, noindex on favorites, popstate/back behaviour,
-sitemap coverage).
+STRUCTURED DATA
+  index.html        WebSite + Organization + SearchAction (static)
+  Home.tsx          FAQPage in the displayed language
+  song pages        MusicRecording + VideoObject + BreadcrumbList
+  artist pages      Person + ItemList + BreadcrumbList
+  station pages     RadioStation + ItemList + BreadcrumbList
+  genre/decade/     CollectionPage + ItemList + BreadcrumbList
+  festival pages
+  RadioWorldsPage   CollectionPage + ItemList of RadioStation
 
-Performance side of ranking: secondary routes (stations/catalog/favorites) and
-the AdminModal + TakedownModal are React.lazy chunks — entry bundle went
-739 kB -> 617 kB raw (191 -> 172 kB gzip); AdminModal is 98 kB on its own. The
-service worker serves navigations network-first, so crawlers never read a stale
-shell; static assets stay cache-first (content-hashed filenames).
+CRON / OWNER ACTIONS (DEPLOY.md section 8, SEO.md)
+  Search Console uses the HTML-tag verification method (DNS TXT is not possible
+  for a *.vercel.app subdomain), then submit sitemap.xml, request indexing for
+  the hubs and a song/artist page, import the site into Bing Webmaster Tools,
+  and run the Rich Results Test + PageSpeed Insights. A custom domain is
+  strongly recommended; SITE_URL and the absolute URLs in index.html, robots.txt
+  and the fallback sitemap must move together.
 
-Owner to-dos are in DEPLOY.md section 8: Search Console verification via a DNS
-TXT record, then submit sitemap.xml and request indexing for "/".
+TESTS
+  frontend/src/test/Routing.test.tsx (tab routes, canonical, noindex, back/forward,
+  fallback sitemap/robots) and frontend/src/test/EntityRoutes.test.tsx (dynamic
+  route parsing, unique metadata, MusicRecording JSON-LD, rendered song page and
+  every entity page type).
+
+Performance: entity pages and both modals are React.lazy chunks; the entry
+bundle stays ~637 kB raw / 177 kB gzip. The service worker serves navigations
+network-first so crawlers never read a stale shell and only caches the home
+shell for offline use; static assets stay cache-first (content-hashed names).
 ================================================================================
