@@ -1,12 +1,13 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Reveal } from './motion/Reveal';
 import { api } from '../services/api';
-import { FestivalCalendarEntry, FestivalSong, Song } from '../types';
+import { FestivalCalendarEntry, FestivalSong } from '../types';
 import { useI18n } from '../context/I18nContext';
 import { usePlayer } from '../context/PlayerContext';
 import { Play, Pause, Music, Music2, CalendarDays, ChevronRight, Flame, Camera } from 'lucide-react';
 import { festivalImage } from '../utils/festivalImagery';
-import { hideBrokenImage, isPlayableVideoId } from '../utils/urlSafety';
+import { hideBrokenImage } from '../utils/urlSafety';
+import { festivalPlayback } from '../utils/festivalPlaylist';
 import { FestivalGlyph } from './FestivalGlyph';
 
 /* --------------------------------------------------------------------------- */
@@ -31,36 +32,6 @@ const formatDate = (value: string | null | undefined, locale: string): string =>
     day: 'numeric',
   });
 };
-
-/**
- * Festival songs come from a lighter RPC payload than catalog songs; widen them
- * to the `Song` shape the player expects (only playback-critical fields matter).
- */
-const toPlayableSong = (song: FestivalSong): Song => ({
-  id: song.id,
-  title: song.title,
-  title_ne: song.title_ne,
-  romanized_title: song.title,
-  artist: 0,
-  artist_name: song.artist_name,
-  artist_name_ne: song.artist_name_ne,
-  primary_genre_name: song.primary_genre_name,
-  primary_genre_category: song.primary_genre_category,
-  mood_tags: song.mood_tags ?? [],
-  decade: '',
-  duration_seconds: song.duration_seconds,
-  artwork_url: song.artwork_url,
-  playback_provider: song.playback_provider ?? 'youtube',
-  provider_video_id: song.provider_video_id ?? '',
-  provider_url: song.provider_url,
-  language: '',
-  attribution: '',
-  metadata_verification_status: 'verified',
-  publication_status: 'published',
-  play_count: song.play_count ?? 0,
-  release_year: song.release_year,
-  created_at: '',
-});
 
 const artworkFor = (song: FestivalSong): string | null =>
   song.artwork_url ||
@@ -116,9 +87,13 @@ const TONE_STYLES: Record<Tone, { pill: string; text: string; border: string; gl
 /* Playable song row                                                           */
 /* --------------------------------------------------------------------------- */
 
-const FestiveSongRow: React.FC<{ song: FestivalSong; index: number }> = ({ song, index }) => {
+const FestiveSongRow: React.FC<{
+  song: FestivalSong;
+  index: number;
+  onPlay: (song: FestivalSong) => void;
+}> = ({ song, index, onPlay }) => {
   const { locale, t } = useI18n();
-  const { currentSong, status, playSong, togglePlayPause } = usePlayer();
+  const { currentSong, status, togglePlayPause } = usePlayer();
   const ne = locale === 'ne';
   const isCurrent = currentSong?.id === song.id;
   const isPlaying = isCurrent && status === 'playing';
@@ -127,9 +102,9 @@ const FestiveSongRow: React.FC<{ song: FestivalSong; index: number }> = ({ song,
   const handlePlay = (event: React.MouseEvent) => {
     event.stopPropagation();
     if (isCurrent) togglePlayPause();
-    // A row without a usable video id would raise YouTube error 2 and get
-    // auto-skipped, which can cascade into skipping the entire mix.
-    else if (isPlayableVideoId(song.provider_video_id)) playSong(toPlayableSong(song));
+    // The parent queues the rest of this festival so a single row tap keeps the
+    // festival playlist going instead of falling back to the previous queue.
+    else onPlay(song);
   };
 
   return (
@@ -326,12 +301,14 @@ export const FestiveSection: React.FC<{ embedded?: boolean }> = ({ embedded = fa
   const heroImage = curated?.url ?? (playlist[0] ? artworkFor(playlist[0]) : null);
 
   const playMix = () => {
-    // Drop entries with a missing/invalid video id up front: the first of them
-    // would error and auto-skip the listener through the whole festival mix.
-    const playable = playlist.filter((s) => isPlayableVideoId(s.provider_video_id));
-    if (!playable.length) return;
-    const [first, ...rest] = playable.map(toPlayableSong);
-    playSong(first, undefined, rest);
+    const mix = festivalPlayback(playlist);
+    if (mix) playSong(mix.song, undefined, mix.queue);
+  };
+
+  /** Queue the rest of the selected festival so its playlist keeps playing. */
+  const playFestivalSong = (song: FestivalSong) => {
+    const playback = festivalPlayback(playlist, song.id);
+    if (playback) playSong(playback.song, undefined, playback.queue);
   };
 
   const Wrapper: React.ElementType = embedded ? 'div' : 'section';
@@ -480,7 +457,12 @@ export const FestiveSection: React.FC<{ embedded?: boolean }> = ({ embedded = fa
                     ) : (
                       <div className="space-y-1">
                         {playlist.map((song, i) => (
-                          <FestiveSongRow key={song.id} song={song} index={i} />
+                          <FestiveSongRow
+                            key={song.id}
+                            song={song}
+                            index={i}
+                            onPlay={playFestivalSong}
+                          />
                         ))}
                       </div>
                     )}
