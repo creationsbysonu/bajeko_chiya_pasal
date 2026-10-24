@@ -9,6 +9,6 @@
     "verify:upgrade": "node tools/build_festive_upgrade.mjs && node tools/verify_upgrade.mjs"
   },
   "devDependencies": {
-    "@electric-sql/pglite": "^0.3.14"
+    "@electric-sql/pglite": "^0.5.10"
   }
 }
